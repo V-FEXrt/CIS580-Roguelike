@@ -1,0 +1,6 @@
+canvas#screen {
+  /*cursor: none;*/
+  border: 2px solid #333;
+  box-shadow: 4px 4px 4px #777;
+  position: relative;
+}
