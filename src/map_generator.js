@@ -3,6 +3,8 @@
 module.exports = exports = MapGenerator;
 
 
+//Hello everyone
+
 function MapGenerator(edges, width, height){
   this.map = [];
   this.width = width;

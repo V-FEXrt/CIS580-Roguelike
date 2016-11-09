@@ -144,6 +144,8 @@ Game.prototype.loop = function(newTime) {
 module.exports = exports = MapGenerator;
 
 
+//Hello everyone
+
 function MapGenerator(edges, width, height){
   this.map = [];
   this.width = width;
@@ -440,7 +442,7 @@ Tilemap.prototype.tileAt = function(x, y) {
 module.exports={
  "tileheight":96,
  "tilewidth":96,
- "image":".\/tilesets\/TileReference1.png",
+ "image":".\/tilesets\/tset.png",
  "imageheight":768,
  "imagewidth":768,
  "edges":{
