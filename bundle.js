@@ -378,8 +378,6 @@ function Tilemap(canvas, smoothScroll, width, height, tileset, options){
     this.data = new Uint16Array(map.map);
   else
     this.data = new Uint32Array(map.map);
-
-    window.map = this;
 }
 
 Tilemap.prototype.moveTo = function(position){
