@@ -111,6 +111,10 @@ Tilemap.prototype.render = function(screenCtx) {
   }
 }
 
+Tilemap.prototype.isWall = function(x, y){
+  return this.data[x + this.mapWidth * y] != 0;
+}
+
 Tilemap.prototype.tileAt = function(x, y) {
   // sanity check
   if(x < 0 || y < 0 || x > this.mapWidth || y > this.mapHeight)
