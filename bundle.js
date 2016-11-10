@@ -16,32 +16,69 @@ var tilemap = new Tilemap({width: canvas.width, height: canvas.height}, 64, 64, 
   }
 });
 
+var input = {
+  up: false,
+  down: false,
+  left: false,
+  right: false
+}
+
 /**
- * @function onkeyup
+ * @function onkeydown
  * Handles keydown events
  */
- var position = {x: 0, y: 0};
- window.onkeydown = function(event) {
+var position = {x: 0, y: 0};
+window.onkeydown = function(event) {
    switch(event.key) {
      case "ArrowUp":
      case "w":
        position.y--;
+       input.up = true;
        break;
      case "ArrowDown":
      case "s":
        position.y++;
+       input.down = true;
        break;
      case "ArrowLeft":
      case "a":
        position.x--;
+       input.left = true;
        break;
      case "ArrowRight":
      case "d":
        position.x++;
+       input.right = true;
        break;
    }
    tilemap.moveTo({x: position.x, y: position.y});
  }
+
+ /**
+  * @function onkeyup
+  * Handles keyup events
+  */
+window.onkeyup = function(event) {
+    processTurn();
+    switch(event.key) {
+      case "ArrowUp":
+      case "w":
+        input.up = false;
+        break;
+      case "ArrowDown":
+      case "s":
+        input.down = false;
+        break;
+      case "ArrowLeft":
+      case "a":
+        input.left = false;
+        break;
+      case "ArrowRight":
+      case "d":
+        input.right = false;
+        break;
+    }
+  }
 /**
  * @function masterLoop
  * Advances the game in sync with the refresh rate of the screen
@@ -75,7 +112,14 @@ function render(elapsedTime, ctx) {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   tilemap.render(ctx);
+}
 
+/**
+  * @function processTurn
+  * Proccesses one turn, updating the states of all entities.
+  */
+function processTurn(){
+  console.log(input);
 }
 
 },{"../tilemaps/tiledef.json":5,"./game":2,"./tilemap":4}],2:[function(require,module,exports){
