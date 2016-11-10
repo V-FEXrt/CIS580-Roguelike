@@ -2,12 +2,14 @@
 
 /* Classes and Libraries */
 const Game = require('./game');
+const EntityManager = require('./entity_manager');
 const Tilemap = require('./tilemap');
 const tileset = require('../tilemaps/tiledef.json');
 
 /* Global variables */
 var canvas = document.getElementById('screen');
 var game = new Game(canvas, update, render);
+var entityManager = new EntityManager();
 
 var tilemap = new Tilemap({width: canvas.width, height: canvas.height}, 64, 64, tileset, {
   onload: function() {
@@ -97,6 +99,7 @@ var masterLoop = function(timestamp) {
  * the number of milliseconds passed since the last frame.
  */
 function update(elapsedTime) {
+  entityManager.update(elapsedTime);
 }
 
 /**
@@ -111,6 +114,8 @@ function render(elapsedTime, ctx) {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   tilemap.render(ctx);
+
+  entityManager.render(elapsedTime, ctx);
 }
 
 /**
@@ -118,5 +123,5 @@ function render(elapsedTime, ctx) {
   * Proccesses one turn, updating the states of all entities.
   */
 function processTurn(){
-  console.log(input);
+  entityManager.processTurn(input);
 }
