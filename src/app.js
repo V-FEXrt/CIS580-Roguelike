@@ -3,13 +3,13 @@
 /* Classes and Libraries */
 const Game = require('./game');
 const Tilemap = require('./tilemap');
-const tileset = require('../tilemaps/map3.json');
+const tileset = require('../tilemaps/tiledef.json');
 
 /* Global variables */
 var canvas = document.getElementById('screen');
 var game = new Game(canvas, update, render);
 
-var tilemap = new Tilemap({width: canvas.width * 3, height: canvas.height * 3}, true, 64, 64, tileset, {
+var tilemap = new Tilemap({width: canvas.width, height: canvas.height}, 64, 64, tileset, {
   onload: function() {
     masterLoop(performance.now());
   }
@@ -39,7 +39,7 @@ var tilemap = new Tilemap({width: canvas.width * 3, height: canvas.height * 3}, 
        position.x++;
        break;
    }
-   tilemap.moveTo({x: position.x * 32, y: position.y * 32});
+   tilemap.moveTo({x: position.x, y: position.y});
  }
 /**
  * @function masterLoop
@@ -73,8 +73,6 @@ function render(elapsedTime, ctx) {
   ctx.fillStyle = "gray";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  ctx.save();
-  ctx.scale((1/3), (1/3));
   tilemap.render(ctx);
-  ctx.restore();
+
 }

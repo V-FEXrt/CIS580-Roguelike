@@ -1,8 +1,8 @@
 {
  "tileheight":96,
  "tilewidth":96,
- "image":".\/tilesets\/TileReference1.png",
- "imageheight":768,
+ "image":".\/tilesets\/tset.png",
+ "imageheight":672,
  "imagewidth":768,
  "edges":{
 	0: 47,
@@ -260,6 +260,7 @@
 	252: 44,
 	253: 37,
 	254: 45,
-	255: 48
+	255: 48,
+	256: 48
 	}
 }
