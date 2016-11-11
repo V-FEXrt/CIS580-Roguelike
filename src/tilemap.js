@@ -72,9 +72,9 @@ Tilemap.prototype.moveTo = function(position){
     x: position.x,
     y: position.y
   }
-
   // don't allow the map to move beyond the edge
   if(origin.x < 0 || origin.y < 0) return;
+
   if(origin.x + this.draw.size.width > this.mapWidth || origin.y + this.draw.size.height > this.mapHeight) return;
 
   this.draw.origin = origin;
@@ -106,7 +106,12 @@ Tilemap.prototype.render = function(screenCtx) {
 }
 
 Tilemap.prototype.isWall = function(x, y){
-  return this.data[x + this.mapWidth * y] != 0;
+  //return this.data[x + this.mapWidth * y] != 0;
+  
+  //Tiles that are not solid are hard coded here for now
+  //Potentially add "solid" property to tiles
+  var type = this.data[x + this.draw.origin.x + this.mapWidth * (y+this.draw.origin.y)];
+  return(!(type >= 49 && type <= 56 ))
 }
 
 Tilemap.prototype.tileAt = function(x, y) {

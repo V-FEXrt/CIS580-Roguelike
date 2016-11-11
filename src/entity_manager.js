@@ -103,7 +103,7 @@ EntityManager.prototype.update = function(elapsedTime) {
   })
 }
 
-EntityManager.prototype.render = function(elapsedTime, ctx) {
+EntityManager.prototype.render = function(elapsedTime, ctx) { 
   this.entities.forEach(function(entity){
     entity.render(elapsedTime, ctx);
   });
