@@ -295,7 +295,7 @@ EntityManager.prototype.update = function(elapsedTime) {
   })
 }
 
-EntityManager.prototype.render = function(elapsedTime, ctx) { 
+EntityManager.prototype.render = function(elapsedTime, ctx) {
   this.entities.forEach(function(entity){
     entity.render(elapsedTime, ctx);
   });
@@ -320,6 +320,7 @@ function checkType(entity){
   if(typeof entity.retain == 'undefined') failType();
   if(typeof entity.update == 'undefined') failType();
   if(typeof entity.render == 'undefined') failType();
+  if(typeof entity.type == 'undefined') failType();
 }
 
 function failType(){
@@ -341,6 +342,9 @@ function failType(){
 
   // Tells entity manager if this entity should be destroyed.
   entity.retain() // return true to to stay in game, return false to be removed from the game
+
+  // Name of the class as a string. Pascal case
+  // entity.type = "Type"
   */
 }
 
@@ -609,6 +613,7 @@ function Player(position, tilemap) {
 	this.spritesheet  = new Image();
 	this.tilemap = tilemap;
 	this.spritesheet.src = './spritesheets/sprites.png';
+	this.type = "Player";
 }
 
 /**
@@ -616,7 +621,7 @@ function Player(position, tilemap) {
  * {DOMHighResTimeStamp} time the elapsed time since the last frame
  */
 Player.prototype.update = function(time) {
-  
+
 }
 
 /**
@@ -628,10 +633,10 @@ Player.prototype.processTurn = function(input)
 	var oldPos = {x: this.position.x, y: this.position.y};
 	if(input.up) this.position.y--;
 	else if(input.down) this.position.y++;
-	
+
 	if (input.right) this.position.x++;
 	else if(input.left) this.position.x--;
-	
+
 	if(this.tilemap.isWall(this.position.x, this.position.y)) this.position = oldPos;
 }
 
@@ -649,12 +654,12 @@ Player.prototype.retain = function()
  * {CanvasRenderingContext2D} ctx the context to render into
  */
 Player.prototype.render = function(elapsedTime, ctx) {
-  
+
   ctx.drawImage(
-	this.spritesheet, 
-	96, 480, 
-	96, 96, 
-	this.position.x*this.size.height, this.position.y*this.size.width, 
+	this.spritesheet,
+	96, 480,
+	96, 96,
+	this.position.x*this.size.height, this.position.y*this.size.width,
 	96,96
 	);
 
