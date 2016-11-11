@@ -1,6 +1,37 @@
 canvas#screen {
   /*cursor: none;*/
+  margin-left: auto;
+  margin-right: auto;
+  display: block;
+  box-shadow: 4px 4px 4px #777;
+}
+
+canvas#instructions {
+  margin-left: auto;
+  margin-right: auto;
+  display: block;
   border: 2px solid #333;
   box-shadow: 4px 4px 4px #777;
-  position: relative;
+}
+
+h1
+{
+	text-align: center;
+}
+
+h2
+{
+	text-align: center;
+}
+
+p
+{
+	font-size: 20px;
+	text-align: center;
+}
+
+p.credit
+{
+	font-size: 12px;
+	text-align: center;
 }

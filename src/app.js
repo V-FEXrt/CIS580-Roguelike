@@ -5,11 +5,13 @@ const Game = require('./game');
 const EntityManager = require('./entity_manager');
 const Tilemap = require('./tilemap');
 const tileset = require('../tilemaps/tiledef.json');
+const Player = require('./player');
 
 /* Global variables */
 var canvas = document.getElementById('screen');
 var game = new Game(canvas, update, render);
 var entityManager = new EntityManager();
+
 
 var tilemap = new Tilemap({width: canvas.width, height: canvas.height}, 64, 64, tileset, {
   onload: function() {
@@ -24,6 +26,25 @@ var input = {
   right: false
 }
 
+var randX;
+var randY;
+var turnTimer = 0;
+var defaultTurnDelay = 400; 	  //Default turn between turns
+var turnDelay = defaultTurnDelay; //current time between turns
+var autoTurn = false; 			  //If true, reduces time between turns and turns happen automatically
+var resetTimer = true; 			  //Take turn immediately on movement key press if true
+var loopCount = 0; //Temporary until camera movement is done
+do
+{
+	randX = Math.floor(Math.random()*tilemap.draw.size.width-1);//tilemap.mapWidth);
+	randY = Math.floor(Math.random()*tilemap.draw.size.height-1);//tilemap.mapHeight);
+	loopCount++;
+}while(tilemap.isWall(randX, randY) && loopCount < 1000);
+
+var player = new Player({x: randX, y: randY}, tilemap);
+entityManager.addEntity(player);
+//tilemap.moveTo({x: player.position.x, y: player.position.y});
+
 /**
  * @function onkeydown
  * Handles keydown events
@@ -33,26 +54,54 @@ window.onkeydown = function(event) {
    switch(event.key) {
      case "ArrowUp":
      case "w":
-       position.y--;
+       //position.y--;
        input.up = true;
+	   if(resetTimer)
+	   {
+		   turnTimer = turnDelay;
+		   resetTimer = false;
+	   }
+	   event.preventDefault();
        break;
      case "ArrowDown":
      case "s":
-       position.y++;
+       //position.y++;
        input.down = true;
+	   if(resetTimer)
+	   {
+		   turnTimer = turnDelay;
+		   resetTimer = false;
+	   }
+	   event.preventDefault();
        break;
      case "ArrowLeft":
      case "a":
-       position.x--;
+       //position.x--;
        input.left = true;
+	   if(resetTimer)
+	   {
+		   turnTimer = turnDelay;
+		   resetTimer = false;
+	   }
+	   event.preventDefault();
        break;
      case "ArrowRight":
      case "d":
-       position.x++;
+       //position.x++;
        input.right = true;
+	   if(resetTimer)
+	   {
+		   turnTimer = turnDelay;
+		   resetTimer = false;
+	   }
+	   event.preventDefault();
        break;
+	 case "Shift":
+		event.preventDefault();
+		turnDelay=defaultTurnDelay/2;
+		autoTurn = true;
+		break;
    }
-   tilemap.moveTo({x: position.x, y: position.y});
  }
 
  /**
@@ -60,7 +109,6 @@ window.onkeydown = function(event) {
   * Handles keyup events
   */
 window.onkeyup = function(event) {
-    processTurn();
     switch(event.key) {
       case "ArrowUp":
       case "w":
@@ -78,7 +126,12 @@ window.onkeyup = function(event) {
       case "d":
         input.right = false;
         break;
+	  case "Shift":
+	    turnDelay=defaultTurnDelay;
+		autoTurn = true;
+		break;
     }
+	if(!(input.left || input.right || input.up || input.down)) resetTimer = true;
   }
 /**
  * @function masterLoop
@@ -99,6 +152,16 @@ var masterLoop = function(timestamp) {
  * the number of milliseconds passed since the last frame.
  */
 function update(elapsedTime) {
+
+  if(input.left || input.right || input.up || input.down || autoTurn)
+  {
+	  turnTimer += elapsedTime;
+	  if(turnTimer >= turnDelay)
+	  {
+		turnTimer = 0;
+		processTurn();
+	  }
+  }
   entityManager.update(elapsedTime);
 }
 
@@ -114,7 +177,6 @@ function render(elapsedTime, ctx) {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   tilemap.render(ctx);
-
   entityManager.render(elapsedTime, ctx);
 }
 
@@ -123,5 +185,5 @@ function render(elapsedTime, ctx) {
   * Proccesses one turn, updating the states of all entities.
   */
 function processTurn(){
-  entityManager.processTurn(input);
+	entityManager.processTurn(input);
 }

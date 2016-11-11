@@ -6,11 +6,13 @@ const Game = require('./game');
 const EntityManager = require('./entity_manager');
 const Tilemap = require('./tilemap');
 const tileset = require('../tilemaps/tiledef.json');
+const Player = require('./player');
 
 /* Global variables */
 var canvas = document.getElementById('screen');
 var game = new Game(canvas, update, render);
 var entityManager = new EntityManager();
+
 
 var tilemap = new Tilemap({width: canvas.width, height: canvas.height}, 64, 64, tileset, {
   onload: function() {
@@ -25,6 +27,25 @@ var input = {
   right: false
 }
 
+var randX;
+var randY;
+var turnTimer = 0;
+var defaultTurnDelay = 400; 	  //Default turn between turns
+var turnDelay = defaultTurnDelay; //current time between turns
+var autoTurn = false; 			  //If true, reduces time between turns and turns happen automatically
+var resetTimer = true; 			  //Take turn immediately on movement key press if true
+var loopCount = 0; //Temporary until camera movement is done
+do
+{
+	randX = Math.floor(Math.random()*tilemap.draw.size.width-1);//tilemap.mapWidth);
+	randY = Math.floor(Math.random()*tilemap.draw.size.height-1);//tilemap.mapHeight);
+	loopCount++;
+}while(tilemap.isWall(randX, randY) && loopCount < 1000);
+
+var player = new Player({x: randX, y: randY}, tilemap);
+entityManager.addEntity(player);
+//tilemap.moveTo({x: player.position.x, y: player.position.y});
+
 /**
  * @function onkeydown
  * Handles keydown events
@@ -34,26 +55,54 @@ window.onkeydown = function(event) {
    switch(event.key) {
      case "ArrowUp":
      case "w":
-       position.y--;
+       //position.y--;
        input.up = true;
+	   if(resetTimer)
+	   {
+		   turnTimer = turnDelay;
+		   resetTimer = false;
+	   }
+	   event.preventDefault();
        break;
      case "ArrowDown":
      case "s":
-       position.y++;
+       //position.y++;
        input.down = true;
+	   if(resetTimer)
+	   {
+		   turnTimer = turnDelay;
+		   resetTimer = false;
+	   }
+	   event.preventDefault();
        break;
      case "ArrowLeft":
      case "a":
-       position.x--;
+       //position.x--;
        input.left = true;
+	   if(resetTimer)
+	   {
+		   turnTimer = turnDelay;
+		   resetTimer = false;
+	   }
+	   event.preventDefault();
        break;
      case "ArrowRight":
      case "d":
-       position.x++;
+       //position.x++;
        input.right = true;
+	   if(resetTimer)
+	   {
+		   turnTimer = turnDelay;
+		   resetTimer = false;
+	   }
+	   event.preventDefault();
        break;
+	 case "Shift":
+		event.preventDefault();
+		turnDelay=defaultTurnDelay/2;
+		autoTurn = true;
+		break;
    }
-   tilemap.moveTo({x: position.x, y: position.y});
  }
 
  /**
@@ -61,7 +110,6 @@ window.onkeydown = function(event) {
   * Handles keyup events
   */
 window.onkeyup = function(event) {
-    processTurn();
     switch(event.key) {
       case "ArrowUp":
       case "w":
@@ -79,7 +127,12 @@ window.onkeyup = function(event) {
       case "d":
         input.right = false;
         break;
+	  case "Shift":
+	    turnDelay=defaultTurnDelay;
+		autoTurn = true;
+		break;
     }
+	if(!(input.left || input.right || input.up || input.down)) resetTimer = true;
   }
 /**
  * @function masterLoop
@@ -100,6 +153,16 @@ var masterLoop = function(timestamp) {
  * the number of milliseconds passed since the last frame.
  */
 function update(elapsedTime) {
+
+  if(input.left || input.right || input.up || input.down || autoTurn)
+  {
+	  turnTimer += elapsedTime;
+	  if(turnTimer >= turnDelay)
+	  {
+		turnTimer = 0;
+		processTurn();
+	  }
+  }
   entityManager.update(elapsedTime);
 }
 
@@ -115,7 +178,6 @@ function render(elapsedTime, ctx) {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   tilemap.render(ctx);
-
   entityManager.render(elapsedTime, ctx);
 }
 
@@ -124,10 +186,10 @@ function render(elapsedTime, ctx) {
   * Proccesses one turn, updating the states of all entities.
   */
 function processTurn(){
-  entityManager.processTurn(input);
+	entityManager.processTurn(input);
 }
 
-},{"../tilemaps/tiledef.json":6,"./entity_manager":2,"./game":3,"./tilemap":5}],2:[function(require,module,exports){
+},{"../tilemaps/tiledef.json":7,"./entity_manager":2,"./game":3,"./player":5,"./tilemap":6}],2:[function(require,module,exports){
 "use strict";
 
 /**
@@ -233,7 +295,7 @@ EntityManager.prototype.update = function(elapsedTime) {
   })
 }
 
-EntityManager.prototype.render = function(elapsedTime, ctx) {
+EntityManager.prototype.render = function(elapsedTime, ctx) { 
   this.entities.forEach(function(entity){
     entity.render(elapsedTime, ctx);
   });
@@ -528,6 +590,79 @@ function rand(upper){
 },{}],5:[function(require,module,exports){
 "use strict";
 
+const Tilemap = require('./tilemap');
+
+/**
+ * @module exports the Player class
+ */
+module.exports = exports = Player;
+
+/**
+ * @constructor Player
+ * Creates a new player object
+ * @param {postition} position object specifying an x and y
+ */
+function Player(position, tilemap) {
+	this.state = "idle";
+	this.position = {x: position.x, y: position.y};
+	this.size = {width: 96, height: 96};
+	this.spritesheet  = new Image();
+	this.tilemap = tilemap;
+	this.spritesheet.src = './spritesheets/sprites.png';
+}
+
+/**
+ * @function updates the player object
+ * {DOMHighResTimeStamp} time the elapsed time since the last frame
+ */
+Player.prototype.update = function(time) {
+  
+}
+
+/**
+ *@function handles the players turn
+ *{input} keyboard input given for this turn
+ */
+Player.prototype.processTurn = function(input)
+{
+	var oldPos = {x: this.position.x, y: this.position.y};
+	if(input.up) this.position.y--;
+	else if(input.down) this.position.y++;
+	
+	if (input.right) this.position.x++;
+	else if(input.left) this.position.x--;
+	
+	if(this.tilemap.isWall(this.position.x, this.position.y)) this.position = oldPos;
+}
+
+Player.prototype.collided = function(entity)
+{
+}
+
+Player.prototype.retain = function()
+{
+	return true;
+}
+
+/**
+ * @function renders the player into the provided context
+ * {CanvasRenderingContext2D} ctx the context to render into
+ */
+Player.prototype.render = function(elapsedTime, ctx) {
+  
+  ctx.drawImage(
+	this.spritesheet, 
+	96, 480, 
+	96, 96, 
+	this.position.x*this.size.height, this.position.y*this.size.width, 
+	96,96
+	);
+
+}
+
+},{"./tilemap":6}],6:[function(require,module,exports){
+"use strict";
+
 const MapGenerator = require('./map_generator');
 
 module.exports = exports = Tilemap;
@@ -600,9 +735,9 @@ Tilemap.prototype.moveTo = function(position){
     x: position.x,
     y: position.y
   }
-
   // don't allow the map to move beyond the edge
   if(origin.x < 0 || origin.y < 0) return;
+
   if(origin.x + this.draw.size.width > this.mapWidth || origin.y + this.draw.size.height > this.mapHeight) return;
 
   this.draw.origin = origin;
@@ -634,7 +769,12 @@ Tilemap.prototype.render = function(screenCtx) {
 }
 
 Tilemap.prototype.isWall = function(x, y){
-  return this.data[x + this.mapWidth * y] != 0;
+  //return this.data[x + this.mapWidth * y] != 0;
+  
+  //Tiles that are not solid are hard coded here for now
+  //Potentially add "solid" property to tiles
+  var type = this.data[x + this.draw.origin.x + this.mapWidth * (y+this.draw.origin.y)];
+  return(!(type >= 49 && type <= 56 ))
 }
 
 Tilemap.prototype.tileAt = function(x, y) {
@@ -648,7 +788,7 @@ function rand(max){
   return Math.floor(Math.random() * max);
 }
 
-},{"./map_generator":4}],6:[function(require,module,exports){
+},{"./map_generator":4}],7:[function(require,module,exports){
 module.exports={
  "tileheight":96,
  "tilewidth":96,
