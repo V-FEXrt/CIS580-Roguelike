@@ -103,7 +103,7 @@ EntityManager.prototype.update = function(elapsedTime) {
   })
 }
 
-EntityManager.prototype.render = function(elapsedTime, ctx) { 
+EntityManager.prototype.render = function(elapsedTime, ctx) {
   this.entities.forEach(function(entity){
     entity.render(elapsedTime, ctx);
   });
@@ -128,6 +128,7 @@ function checkType(entity){
   if(typeof entity.retain == 'undefined') failType();
   if(typeof entity.update == 'undefined') failType();
   if(typeof entity.render == 'undefined') failType();
+  if(typeof entity.type == 'undefined') failType();
 }
 
 function failType(){
@@ -149,6 +150,9 @@ function failType(){
 
   // Tells entity manager if this entity should be destroyed.
   entity.retain() // return true to to stay in game, return false to be removed from the game
+
+  // Name of the class as a string. Pascal case
+  // entity.type = "Type"
   */
 }
 
