@@ -1,5 +1,7 @@
 "use strict";
 
+window.debug = false;
+
 /* Classes and Libraries */
 const Game = require('./game');
 const EntityManager = require('./entity_manager');
@@ -175,7 +177,7 @@ function update(elapsedTime) {
   * @param {CanvasRenderingContext2D} ctx the context to render to
   */
 function render(elapsedTime, ctx) {
-  ctx.fillStyle = "gray";
+  ctx.fillStyle = "black";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   tilemap.render(ctx);
