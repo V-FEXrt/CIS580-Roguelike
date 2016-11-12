@@ -18,8 +18,8 @@ function Tilemap(canvas, width, height, tileset, options){
 
   // We add one so that we go slightly beyond the canvas
   this.draw.size = {
-    width: Math.floor(canvas.width / this.tileWidth) + 1,
-    height: Math.floor(canvas.height / this.tileHeight) + 1
+    width: Math.floor(canvas.width / this.tileWidth),
+    height: Math.floor(canvas.height / this.tileHeight)
   }
 
   // Load the tileset(s)
@@ -75,7 +75,7 @@ Tilemap.prototype.moveTo = function(position){
   // don't allow the map to move beyond the edge
   if(origin.x < 0 || origin.y < 0) return;
 
-  if(origin.x + this.draw.size.width > this.mapWidth || origin.y + this.draw.size.height > this.mapHeight) return;
+  if(origin.x + this.draw.size.width > this.mapWidth + 1 || origin.y + this.draw.size.height > this.mapHeight + 1) return;
 
   this.draw.origin = origin;
 }
@@ -98,8 +98,8 @@ Tilemap.prototype.render = function(screenCtx) {
   // layers are sorted back-to-front so foreground
   // layers obscure background ones.
   // see http://en.wikipedia.org/wiki/Painter%27s_algorithm
-  for(var y = this.draw.origin.y; y - this.draw.origin.y < Math.min(this.mapHeight, this.draw.size.height); y++) {
-    for(var x = this.draw.origin.x; x - this.draw.origin.x < Math.min(this.mapWidth, this.draw.size.width); x++) {
+  for(var y = this.draw.origin.y; y - this.draw.origin.y < Math.min(this.mapHeight - this.draw.origin.y, this.draw.size.height); y++) {
+    for(var x = this.draw.origin.x; x - this.draw.origin.x < Math.min(this.mapWidth - this.draw.origin.x, this.draw.size.width); x++) {
       var tileId = this.data[x + this.mapWidth * y];
 
       var tile = this.tiles[tileId - 1];

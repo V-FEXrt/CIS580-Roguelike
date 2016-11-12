@@ -38,13 +38,8 @@ MapGenerator.prototype.randomFillMap = function(){
         // y * width + x
         this.map[row * this.width + column] = this.filled;
       }
-      // Make the middle 0?
-      else if(row == mapMiddle){
-        this.map[row * this.width + column] = this.open;
-      }
-      // Else, fill with a wall a random percent of the time
       else{
-        this.map[row * this.width + column] = this.pickTile();
+        if(!window.debug) this.map[row * this.width + column] = this.pickTile();
       }
     }
   }

@@ -1,6 +1,8 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 "use strict";
 
+window.debug = false;
+
 /* Classes and Libraries */
 const Game = require('./game');
 const EntityManager = require('./entity_manager');
@@ -176,7 +178,7 @@ function update(elapsedTime) {
   * @param {CanvasRenderingContext2D} ctx the context to render to
   */
 function render(elapsedTime, ctx) {
-  ctx.fillStyle = "gray";
+  ctx.fillStyle = "black";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   tilemap.render(ctx);
@@ -496,13 +498,8 @@ MapGenerator.prototype.randomFillMap = function(){
         // y * width + x
         this.map[row * this.width + column] = this.filled;
       }
-      // Make the middle 0?
-      else if(row == mapMiddle){
-        this.map[row * this.width + column] = this.open;
-      }
-      // Else, fill with a wall a random percent of the time
       else{
-        this.map[row * this.width + column] = this.pickTile();
+        if(!window.debug) this.map[row * this.width + column] = this.pickTile();
       }
     }
   }
@@ -727,8 +724,8 @@ function Tilemap(canvas, width, height, tileset, options){
 
   // We add one so that we go slightly beyond the canvas
   this.draw.size = {
-    width: Math.floor(canvas.width / this.tileWidth) + 1,
-    height: Math.floor(canvas.height / this.tileHeight) + 1
+    width: Math.floor(canvas.width / this.tileWidth),
+    height: Math.floor(canvas.height / this.tileHeight)
   }
 
   // Load the tileset(s)
@@ -784,7 +781,7 @@ Tilemap.prototype.moveTo = function(position){
   // don't allow the map to move beyond the edge
   if(origin.x < 0 || origin.y < 0) return;
 
-  if(origin.x + this.draw.size.width > this.mapWidth || origin.y + this.draw.size.height > this.mapHeight) return;
+  if(origin.x + this.draw.size.width > this.mapWidth + 1 || origin.y + this.draw.size.height > this.mapHeight + 1) return;
 
   this.draw.origin = origin;
 }
@@ -807,8 +804,8 @@ Tilemap.prototype.render = function(screenCtx) {
   // layers are sorted back-to-front so foreground
   // layers obscure background ones.
   // see http://en.wikipedia.org/wiki/Painter%27s_algorithm
-  for(var y = this.draw.origin.y; y - this.draw.origin.y < Math.min(this.mapHeight, this.draw.size.height); y++) {
-    for(var x = this.draw.origin.x; x - this.draw.origin.x < Math.min(this.mapWidth, this.draw.size.width); x++) {
+  for(var y = this.draw.origin.y; y - this.draw.origin.y < Math.min(this.mapHeight - this.draw.origin.y, this.draw.size.height); y++) {
+    for(var x = this.draw.origin.x; x - this.draw.origin.x < Math.min(this.mapWidth - this.draw.origin.x, this.draw.size.width); x++) {
       var tileId = this.data[x + this.mapWidth * y];
 
       var tile = this.tiles[tileId - 1];
