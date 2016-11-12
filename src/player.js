@@ -65,7 +65,7 @@ Player.prototype.render = function(elapsedTime, ctx) {
 	this.spritesheet,
 	96, 480,
 	96, 96,
-	this.position.x*this.size.height, this.position.y*this.size.width,
+	this.position.x*this.size.width, this.position.y*this.size.height,
 	96,96
 	);
 

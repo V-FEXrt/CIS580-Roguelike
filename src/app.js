@@ -6,6 +6,7 @@ const EntityManager = require('./entity_manager');
 const Tilemap = require('./tilemap');
 const tileset = require('../tilemaps/tiledef.json');
 const Player = require('./player');
+const Camera = require('./camera');
 
 /* Global variables */
 var canvas = document.getElementById('screen');
@@ -36,15 +37,16 @@ var resetTimer = true; 			  //Take turn immediately on movement key press if tru
 var loopCount = 0; //Temporary until camera movement is done
 do
 {
-	randX = Math.floor(Math.random()*tilemap.draw.size.width-1);//tilemap.mapWidth);
-	randY = Math.floor(Math.random()*tilemap.draw.size.height-1);//tilemap.mapHeight);
+	randX = Math.floor(Math.random()*(tilemap.mapWidth - 1 - 3)) + 3;//tilemap.mapWidth);
+	randY = Math.floor(Math.random()*(tilemap.mapWidth - 1 - 4)) + 4;//tilemap.mapHeight);
 	loopCount++;
 }while(tilemap.isWall(randX, randY) && loopCount < 1000);
 
-var player = new Player({x: randX, y: randY}, tilemap);
-entityManager.addEntity(player);
-//tilemap.moveTo({x: player.position.x, y: player.position.y});
+var player = new Player({x: 3, y: 4}, tilemap);
+var camera = new Camera(player, tilemap);
 
+entityManager.addEntity(player);
+tilemap.moveTo({x: randX - 3, y: randY - 4});
 /**
  * @function onkeydown
  * Handles keydown events
@@ -186,4 +188,5 @@ function render(elapsedTime, ctx) {
   */
 function processTurn(){
 	entityManager.processTurn(input);
+  camera.processTurn();
 }
