@@ -80,6 +80,15 @@ Tilemap.prototype.moveTo = function(position){
   this.draw.origin = origin;
 }
 
+Tilemap.prototype.moveBy = function(position){
+  this.moveTo(
+    {
+      x: this.draw.origin.x + position.x,
+      y: this.draw.origin.y + position.y
+    }
+  );
+}
+
 Tilemap.prototype.getDrawOrigin = function(){
   return {x: this.draw.origin.x, y: this.draw.origin.y};
 }
@@ -107,7 +116,7 @@ Tilemap.prototype.render = function(screenCtx) {
 
 Tilemap.prototype.isWall = function(x, y){
   //return this.data[x + this.mapWidth * y] != 0;
-  
+
   //Tiles that are not solid are hard coded here for now
   //Potentially add "solid" property to tiles
   var type = this.data[x + this.draw.origin.x + this.mapWidth * (y+this.draw.origin.y)];

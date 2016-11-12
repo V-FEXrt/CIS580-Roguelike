@@ -7,6 +7,7 @@ const EntityManager = require('./entity_manager');
 const Tilemap = require('./tilemap');
 const tileset = require('../tilemaps/tiledef.json');
 const Player = require('./player');
+const Camera = require('./camera');
 
 /* Global variables */
 var canvas = document.getElementById('screen');
@@ -37,15 +38,16 @@ var resetTimer = true; 			  //Take turn immediately on movement key press if tru
 var loopCount = 0; //Temporary until camera movement is done
 do
 {
-	randX = Math.floor(Math.random()*tilemap.draw.size.width-1);//tilemap.mapWidth);
-	randY = Math.floor(Math.random()*tilemap.draw.size.height-1);//tilemap.mapHeight);
+	randX = Math.floor(Math.random()*(tilemap.mapWidth - 1 - 3)) + 3;//tilemap.mapWidth);
+	randY = Math.floor(Math.random()*(tilemap.mapWidth - 1 - 4)) + 4;//tilemap.mapHeight);
 	loopCount++;
 }while(tilemap.isWall(randX, randY) && loopCount < 1000);
 
-var player = new Player({x: randX, y: randY}, tilemap);
-entityManager.addEntity(player);
-//tilemap.moveTo({x: player.position.x, y: player.position.y});
+var player = new Player({x: 3, y: 4}, tilemap);
+var camera = new Camera(player, tilemap);
 
+entityManager.addEntity(player);
+tilemap.moveTo({x: randX - 3, y: randY - 4});
 /**
  * @function onkeydown
  * Handles keydown events
@@ -187,9 +189,48 @@ function render(elapsedTime, ctx) {
   */
 function processTurn(){
 	entityManager.processTurn(input);
+  camera.processTurn();
 }
 
-},{"../tilemaps/tiledef.json":7,"./entity_manager":2,"./game":3,"./player":5,"./tilemap":6}],2:[function(require,module,exports){
+},{"../tilemaps/tiledef.json":8,"./camera":2,"./entity_manager":3,"./game":4,"./player":6,"./tilemap":7}],2:[function(require,module,exports){
+"use strict";
+
+/**
+ * @module exports the Car class
+ */
+module.exports = exports = Camera;
+
+/**
+ * @constructor Camera
+ * Creates a new Camera object
+ */
+function Camera(player, tilemap) {
+  this.player = player;
+  this.tilemap = tilemap;
+  this.position = {x: 0, y: 0};
+}
+
+Camera.prototype.processTurn = function() {
+  if(this.player.position.y == 0){
+    this.player.position.y++;
+    this.tilemap.moveBy({x: 0, y:-1});
+  }
+  if(this.player.position.y == this.tilemap.draw.size.height - 2){
+    this.player.position.y--;
+    this.tilemap.moveBy({x: 0, y:1});
+  }
+  if(this.player.position.x == 0){
+    this.player.position.x++;
+    this.tilemap.moveBy({x: -1, y:0});
+  }
+  if(this.player.position.x == this.tilemap.draw.size.width - 2){
+    this.player.position.x--;
+    this.tilemap.moveBy({x: 1, y:0});
+  }
+  this.position = this.tilemap.draw.origin;
+}
+
+},{}],3:[function(require,module,exports){
 "use strict";
 
 /**
@@ -356,7 +397,7 @@ function collision(entity1, entity2){
     (entity1.position.x + entity1.size.width < entity2.position.x))
 }
 
-},{}],3:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 "use strict";
 
 /**
@@ -414,7 +455,7 @@ Game.prototype.loop = function(newTime) {
   this.frontCtx.drawImage(this.backBuffer, 0, 0);
 }
 
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 "use strict";
 
 module.exports = exports = MapGenerator;
@@ -591,7 +632,7 @@ function rand(upper){
   return Math.floor(Math.random() * upper);
 }
 
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 "use strict";
 
 const Tilemap = require('./tilemap');
@@ -659,13 +700,13 @@ Player.prototype.render = function(elapsedTime, ctx) {
 	this.spritesheet,
 	96, 480,
 	96, 96,
-	this.position.x*this.size.height, this.position.y*this.size.width,
+	this.position.x*this.size.width, this.position.y*this.size.height,
 	96,96
 	);
 
 }
 
-},{"./tilemap":6}],6:[function(require,module,exports){
+},{"./tilemap":7}],7:[function(require,module,exports){
 "use strict";
 
 const MapGenerator = require('./map_generator');
@@ -748,6 +789,15 @@ Tilemap.prototype.moveTo = function(position){
   this.draw.origin = origin;
 }
 
+Tilemap.prototype.moveBy = function(position){
+  this.moveTo(
+    {
+      x: this.draw.origin.x + position.x,
+      y: this.draw.origin.y + position.y
+    }
+  );
+}
+
 Tilemap.prototype.getDrawOrigin = function(){
   return {x: this.draw.origin.x, y: this.draw.origin.y};
 }
@@ -775,7 +825,7 @@ Tilemap.prototype.render = function(screenCtx) {
 
 Tilemap.prototype.isWall = function(x, y){
   //return this.data[x + this.mapWidth * y] != 0;
-  
+
   //Tiles that are not solid are hard coded here for now
   //Potentially add "solid" property to tiles
   var type = this.data[x + this.draw.origin.x + this.mapWidth * (y+this.draw.origin.y)];
@@ -793,7 +843,7 @@ function rand(max){
   return Math.floor(Math.random() * max);
 }
 
-},{"./map_generator":4}],7:[function(require,module,exports){
+},{"./map_generator":5}],8:[function(require,module,exports){
 module.exports={
  "tileheight":96,
  "tilewidth":96,
