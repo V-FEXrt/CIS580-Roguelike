@@ -1,6 +1,7 @@
 "use strict";
 
 const Tilemap = require('./tilemap');
+const Vector = require('./vector');
 
 /**
  * @module exports the Player class
@@ -36,14 +37,36 @@ Player.prototype.update = function(time) {
  */
 Player.prototype.processTurn = function(input)
 {
-	var oldPos = {x: this.position.x, y: this.position.y};
-	if(input.up) this.position.y--;
-	else if(input.down) this.position.y++;
+	var change = {x: 0, y: 0};
+	if(input.up) change.y--;
+	else if(input.down) change.y++;
 
-	if (input.right) this.position.x++;
-	else if(input.left) this.position.x--;
+	if (input.right) change.x++;
+	else if(input.left) change.x--;
 
-	if(this.tilemap.isWall(this.position.x, this.position.y)) this.position = oldPos;
+	var position = Vector.add(this.position, change);
+	if(this.tilemap.isWall(position.x, position.y)) return;
+
+	this.position = position;
+
+	var screenCoor = Vector.subtract(position, this.tilemap.draw.origin);
+
+	if(screenCoor.y < 1){
+		this.tilemap.moveBy({x: 0, y: -1});
+	}
+
+	if(screenCoor.y + 1 == this.tilemap.draw.size.height){
+		this.tilemap.moveBy({x: 0, y: 1});
+	}
+
+	if(screenCoor.x < 1){
+		this.tilemap.moveBy({x: -1, y: 0});
+	}
+
+	if(screenCoor.x + 1 == this.tilemap.draw.size.width){
+		this.tilemap.moveBy({x: 1, y: 0});
+	}
+
 }
 
 Player.prototype.collided = function(entity)
@@ -60,12 +83,13 @@ Player.prototype.retain = function()
  * {CanvasRenderingContext2D} ctx the context to render into
  */
 Player.prototype.render = function(elapsedTime, ctx) {
+	var position = Vector.subtract(this.position, this.tilemap.draw.origin);
 
   ctx.drawImage(
 	this.spritesheet,
 	96, 480,
 	96, 96,
-	this.position.x*this.size.width, this.position.y*this.size.height,
+	position.x*this.size.width, position.y*this.size.height,
 	96,96
 	);
 
