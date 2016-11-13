@@ -9,7 +9,8 @@ const EntityManager = require('./entity_manager');
 const Tilemap = require('./tilemap');
 const tileset = require('../tilemaps/tiledef.json');
 const Player = require('./player');
-const Camera = require('./camera');
+const Pathfinder = require('./pathfinder.js');
+const Vector = require('./vector');
 
 /* Global variables */
 var canvas = document.getElementById('screen');
@@ -22,6 +23,9 @@ var tilemap = new Tilemap({width: canvas.width, height: canvas.height}, 64, 64, 
     masterLoop(performance.now());
   }
 });
+
+var pathfinder = new Pathfinder(tilemap);
+window.pathfinder = pathfinder;
 
 var input = {
   up: false,
@@ -40,16 +44,33 @@ var resetTimer = true; 			  //Take turn immediately on movement key press if tru
 var loopCount = 0; //Temporary until camera movement is done
 do
 {
-	randX = Math.floor(Math.random()*(tilemap.mapWidth - 1 - 3)) + 3;//tilemap.mapWidth);
-	randY = Math.floor(Math.random()*(tilemap.mapWidth - 1 - 4)) + 4;//tilemap.mapHeight);
+	randX = Math.floor(Math.random()*(tilemap.mapWidth - 1));//tilemap.mapWidth);
+	randY = Math.floor(Math.random()*(tilemap.mapWidth - 1));//tilemap.mapHeight);
 	loopCount++;
 }while(tilemap.isWall(randX, randY) && loopCount < 1000);
 
-var player = new Player({x: 3, y: 4}, tilemap);
-var camera = new Camera(player, tilemap);
+var player = new Player({x: randX, y: randY}, tilemap);
+
+window.player = player;
 
 entityManager.addEntity(player);
 tilemap.moveTo({x: randX - 3, y: randY - 4});
+
+canvas.onclick = function(event){
+  var node = {
+    x: parseInt(event.offsetX / 96),
+    y: parseInt(event.offsetY / 96)
+  }
+
+  turnDelay=defaultTurnDelay/2;
+  autoTurn = true;
+
+  player.walkPath(pathfinder.findPath(player.position, Vector.add(tilemap.draw.origin, node)), function(){
+    turnDelay=defaultTurnDelay;
+    autoTurn = false;
+  });
+}
+
 /**
  * @function onkeydown
  * Handles keydown events
@@ -132,8 +153,8 @@ window.onkeyup = function(event) {
         input.right = false;
         break;
 	  case "Shift":
-	    turnDelay=defaultTurnDelay;
-		autoTurn = true;
+        turnDelay=defaultTurnDelay;
+        autoTurn = false;
 		break;
     }
 	if(!(input.left || input.right || input.up || input.down)) resetTimer = true;
@@ -191,48 +212,9 @@ function render(elapsedTime, ctx) {
   */
 function processTurn(){
 	entityManager.processTurn(input);
-  camera.processTurn();
 }
 
-},{"../tilemaps/tiledef.json":8,"./camera":2,"./entity_manager":3,"./game":4,"./player":6,"./tilemap":7}],2:[function(require,module,exports){
-"use strict";
-
-/**
- * @module exports the Car class
- */
-module.exports = exports = Camera;
-
-/**
- * @constructor Camera
- * Creates a new Camera object
- */
-function Camera(player, tilemap) {
-  this.player = player;
-  this.tilemap = tilemap;
-  this.position = {x: 0, y: 0};
-}
-
-Camera.prototype.processTurn = function() {
-  if(this.player.position.y == 0){
-    this.player.position.y++;
-    this.tilemap.moveBy({x: 0, y:-1});
-  }
-  if(this.player.position.y == this.tilemap.draw.size.height - 2){
-    this.player.position.y--;
-    this.tilemap.moveBy({x: 0, y:1});
-  }
-  if(this.player.position.x == 0){
-    this.player.position.x++;
-    this.tilemap.moveBy({x: -1, y:0});
-  }
-  if(this.player.position.x == this.tilemap.draw.size.width - 2){
-    this.player.position.x--;
-    this.tilemap.moveBy({x: 1, y:0});
-  }
-  this.position = this.tilemap.draw.origin;
-}
-
-},{}],3:[function(require,module,exports){
+},{"../tilemaps/tiledef.json":9,"./entity_manager":2,"./game":3,"./pathfinder.js":5,"./player":6,"./tilemap":7,"./vector":8}],2:[function(require,module,exports){
 "use strict";
 
 /**
@@ -399,7 +381,7 @@ function collision(entity1, entity2){
     (entity1.position.x + entity1.size.width < entity2.position.x))
 }
 
-},{}],4:[function(require,module,exports){
+},{}],3:[function(require,module,exports){
 "use strict";
 
 /**
@@ -457,7 +439,7 @@ Game.prototype.loop = function(newTime) {
   this.frontCtx.drawImage(this.backBuffer, 0, 0);
 }
 
-},{}],5:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 "use strict";
 
 module.exports = exports = MapGenerator;
@@ -629,10 +611,252 @@ function rand(upper){
   return Math.floor(Math.random() * upper);
 }
 
+},{}],5:[function(require,module,exports){
+/**
+ * @module A pathfinding module providing
+ * a visualizaiton of common tree-search
+ * algorithms  used in conjunction with
+ * a tilemap.
+ */
+module.exports = exports = Pathfinder;
+
+/**
+ * @constructor Pathfinder
+ * Constructs a new Pathfinder for the
+ * supplied tilemap.  By default it uses
+ * breadth-first.
+ * @param {Tilemap} tilemap - the tilemap to
+ * use in finding paths.
+ */
+function Pathfinder(tilemap) {
+  this.tilemap = tilemap;
+  this.algorithm = 'a-star';
+}
+
+Pathfinder.prototype.findPath = function(start, end) {
+  this.setStartNode(start);
+  this.setGoalNode(end);
+
+  var path;
+  while (typeof path == 'undefined') {
+    path = this.step();
+  }
+
+  return path;
+}
+
+/**
+ * Set a starting node for the pathfinding algorithm
+ * @param {Object} node has an x and y property corresponding
+ * to a tile in our tilemap.
+ */
+Pathfinder.prototype.setStartNode = function(node) {
+  // Set the starting node
+  this.start = {
+    x: node.x,
+    y: node.y,
+    cost: 0
+  }
+  // Add the start node to the frontier and explored lists
+  this.frontier = [[this.start]];
+  this.explored = [this.start];
+
+}
+
+/**
+ * Set a goal node for the pathfinding algorithm
+ * @param {Object} node has an x and y property corresponding
+ * to a tile in our tilemap.
+ */
+Pathfinder.prototype.setGoalNode = function(node) {
+  this.goal = {
+    x: node.x,
+    y: node.y
+  }
+}
+
+/**
+ * Sets the algorithm to use in finding a path.
+ * @param {string} algorithm - the algorithm to use
+ * Supported values are:
+ * - 'depth-first'
+ * - 'best-first'
+ * - 'greedy'
+ * - 'a-star' (default)
+ */
+Pathfinder.prototype.setAlgorithm = function(algorithm) {
+  this.algorithm = algorithm;
+}
+
+/**
+ * @function isExplored
+ * A helper function to determine if a node has
+ * already been explored.
+ * @param {Object} node - an object with an x and y
+ * property corresponding to a tile position.
+ * @returns true if explored, false if not.
+ */
+Pathfinder.prototype.isExplored = function(node) {
+  return this.explored.findIndex(function(n){
+    return n.x == node.x && n.y == node.y;
+  }) != -1;
+}
+
+/**
+ * @function isImpassible
+ * A helper function to determine if a node is
+ * impassible - either becuase it is impossible to
+ * move through, or it does not exist.
+ * @param {Object} node - an object with an x and y
+ * property corresponding to a tile position.
+ * @returns true if impassible, false if not.
+ */
+Pathfinder.prototype.isImpassible = function(node) {
+  return this.tilemap.isWall(node.x, node.y);
+}
+
+/**
+ * @function expand
+ * Helper function to identify neighboring unexplored nodes
+ * and add them to the explored list.  It also calculates
+ * the path cost to reach these nodes and thier distance
+ * from the goal.
+ * @param {Object} node - an object with an x and y
+ * property corresponding to a tile position that
+ * we want to find unexplored tiles adjacent to.
+ * Expanded nodes are rendered into the provided context.
+ * @param {RenderingContext2D} ctx - the rendering
+ * context in which to display our visualizaiton of
+ * expanded nodes.
+ * @returns An array of expaned nodes.
+ */
+Pathfinder.prototype.expand = function(node) {
+  var actions = [];
+  for(var x = -1; x < 2; x++){
+    for(var y = -1; y < 2; y++){
+      var newNode = {
+        x: node.x - x,
+        y: node.y - y
+      }
+      if((x != 0 || y != 0) &&
+        !this.isExplored(newNode) &&
+        !this.isImpassible(newNode))
+      {
+        // Add the path distance to reach this node
+        var movement = 1; //this.tilemap.tileAt(node.x, node.y, 0).movement;
+        newNode.cost = movement + node.cost;
+
+        // Add the estimated distance to the goal
+        // We'll use straight-line distance
+        newNode.distance = Math.sqrt(
+          Math.pow(newNode.x - this.goal.x, 2) +
+          Math.pow(newNode.y - this.goal.y, 2)
+        );
+
+        // push the new node to action and explored lists
+        actions.push(newNode);
+        this.explored.push(newNode);
+      }
+    }
+  }
+  return actions;
+}
+
+/**
+ * @function step
+ * Advances the current pathfinding algorithm by one step,
+ * displaying the result on-screen.  Used to animate the
+ * process; normally this would happen within a loop
+ * (see findPath() below)
+ * @param {RenderingContext2D} ctx - the context to render into
+ * @returns a path to the goal as an array of nodes, an empty
+ * array if no such path exists, or undefined if there are still
+ * possible paths to explore.
+ */
+Pathfinder.prototype.step = function() {
+  // If there are no paths left in the frontier,
+  // we cannot reach our goal
+  if(this.frontier.length == 0) {
+    return [];
+  }
+
+  // Select a path from the frontier to explore
+  // The method of selection is what defines our
+  // algorithm
+  var path;
+  switch(this.algorithm) {
+    case 'breadth-first':
+      // In breadth-first, we process the paths
+      // in the order they were added to the frontier
+      path = this.frontier.shift();
+      break;
+    case 'best-first':
+      // In best-first, we process the paths in order
+      // using a heuristic that helps us pick the
+      // "best" option.  We often use straight-line
+      // distance between the last node in the path
+      // and the goal node.
+      this.frontier.sort(function(pathA, pathB){
+        var a = pathA[pathA.length-1].distance;
+        var b = pathB[pathB.length-1].distance;
+        return a - b;
+      });
+      path = this.frontier.shift();
+      break;
+    case 'greedy':
+      // In greedy search, we pick the path that has
+      // the lowest cost to reach
+      this.frontier.sort(function(pathA, pathB){
+        var a = pathA[pathA.length-1].cost;
+        var b = pathB[pathB.length-1].cost;
+        return a - b;
+      });
+      path = this.frontier.shift();
+      break;
+    case 'a-star':
+      // In A*, we pick the path with the lowest combined
+      // path cost and distance heurisitic
+      this.frontier.sort(function(pathA, pathB){
+        var a = pathA[pathA.length-1].cost + pathA[pathA.length-1].distance;
+        var b = pathB[pathB.length-1].cost + pathB[pathB.length-1].distance;
+        return a - b;
+      });
+      path = this.frontier.shift();
+      break;
+  }
+
+  // If the path we chose leads to the goal,
+  // we found a solution; return it.
+  var lastNode = path[path.length-1];
+  if(lastNode.x == this.goal.x && lastNode.y == this.goal.y)
+    return path;
+
+  // Otherwise, add any new nodes not already explored
+  // that we can reach from the last node in the current path
+  var frontier = this.frontier;
+  this.expand(lastNode).forEach(function(node){
+    var newPath = path.slice()
+    newPath.push(node)
+    frontier.push(newPath);
+  });
+
+  function nodeToString(node) {
+    return '(' + node.x + ',' + node.y + ')';
+  }
+
+  function pathToString(path) {
+    return path.map(nodeToString).join('->');
+  }
+
+  // If we reach this point, we have not yet found a path
+  return undefined;
+}
+
 },{}],6:[function(require,module,exports){
 "use strict";
 
 const Tilemap = require('./tilemap');
+const Vector = require('./vector');
 
 /**
  * @module exports the Player class
@@ -652,6 +876,7 @@ function Player(position, tilemap) {
 	this.tilemap = tilemap;
 	this.spritesheet.src = './spritesheets/sprites.png';
 	this.type = "Player";
+	this.walk = [];
 }
 
 /**
@@ -662,20 +887,59 @@ Player.prototype.update = function(time) {
 
 }
 
+Player.prototype.walkPath = function (path, completion) {
+	path.shift();
+	this.walk = path;
+	this.walkCompletion = completion;
+
+	if(this.walk.length == 0) completion();
+};
+
 /**
  *@function handles the players turn
  *{input} keyboard input given for this turn
  */
 Player.prototype.processTurn = function(input)
 {
-	var oldPos = {x: this.position.x, y: this.position.y};
-	if(input.up) this.position.y--;
-	else if(input.down) this.position.y++;
 
-	if (input.right) this.position.x++;
-	else if(input.left) this.position.x--;
+	if(this.walk.length > 0){
+		// walk
+		this.position = {x:this.walk[0].x, y: this.walk[0].y};
+		this.walk.shift();
+		var self = this;
+		if(this.walk.length == 0) self.walkCompletion();
+	}else{
+		var change = {x: 0, y: 0};
+		if(input.up) change.y--;
+		else if(input.down) change.y++;
 
-	if(this.tilemap.isWall(this.position.x, this.position.y)) this.position = oldPos;
+		if (input.right) change.x++;
+		else if(input.left) change.x--;
+
+		var position = Vector.add(this.position, change);
+		if(this.tilemap.isWall(position.x, position.y)) return;
+
+		this.position = position;
+	}
+
+	var screenCoor = Vector.subtract(this.position, this.tilemap.draw.origin);
+
+	if(screenCoor.y < 1){
+		this.tilemap.moveBy({x: 0, y: -1});
+	}
+
+	if(screenCoor.y + 1 == this.tilemap.draw.size.height){
+		this.tilemap.moveBy({x: 0, y: 1});
+	}
+
+	if(screenCoor.x < 1){
+		this.tilemap.moveBy({x: -1, y: 0});
+	}
+
+	if(screenCoor.x + 1 == this.tilemap.draw.size.width){
+		this.tilemap.moveBy({x: 1, y: 0});
+	}
+
 }
 
 Player.prototype.collided = function(entity)
@@ -692,18 +956,19 @@ Player.prototype.retain = function()
  * {CanvasRenderingContext2D} ctx the context to render into
  */
 Player.prototype.render = function(elapsedTime, ctx) {
+	var position = Vector.subtract(this.position, this.tilemap.draw.origin);
 
   ctx.drawImage(
 	this.spritesheet,
 	96, 480,
 	96, 96,
-	this.position.x*this.size.width, this.position.y*this.size.height,
+	position.x*this.size.width, position.y*this.size.height,
 	96,96
 	);
 
 }
 
-},{"./tilemap":7}],7:[function(require,module,exports){
+},{"./tilemap":7,"./vector":8}],7:[function(require,module,exports){
 "use strict";
 
 const MapGenerator = require('./map_generator');
@@ -825,7 +1090,7 @@ Tilemap.prototype.isWall = function(x, y){
 
   //Tiles that are not solid are hard coded here for now
   //Potentially add "solid" property to tiles
-  var type = this.data[x + this.draw.origin.x + this.mapWidth * (y+this.draw.origin.y)];
+  var type = this.data[x + this.mapWidth * y];
   return(!(type >= 49 && type <= 56 ))
 }
 
@@ -840,7 +1105,104 @@ function rand(max){
   return Math.floor(Math.random() * max);
 }
 
-},{"./map_generator":5}],8:[function(require,module,exports){
+},{"./map_generator":4}],8:[function(require,module,exports){
+"use strict";
+
+/**
+ * @module Vector
+ * A library of vector functions.
+ */
+module.exports = exports = {
+  add: add,
+  subtract: subtract,
+  scale: scale,
+  rotate: rotate,
+  dotProduct: dotProduct,
+  magnitude: magnitude,
+  normalize: normalize
+}
+
+
+/**
+ * @function rotate
+ * Scales a vector
+ * @param {Vector} a - the vector to scale
+ * @param {float} scale - the scalar to multiply the vector by
+ * @returns a new vector representing the scaled original
+ */
+function scale(a, scale) {
+ return {x: a.x * scale, y: a.y * scale};
+}
+
+/**
+ * @function add
+ * Computes the sum of two vectors
+ * @param {Vector} a the first vector
+ * @param {Vector} b the second vector
+ * @return the computed sum
+*/
+function add(a, b) {
+ return {x: a.x + b.x, y: a.y + b.y};
+}
+
+/**
+ * @function subtract
+ * Computes the difference of two vectors
+ * @param {Vector} a the first vector
+ * @param {Vector} b the second vector
+ * @return the computed difference
+ */
+function subtract(a, b) {
+  return {x: a.x - b.x, y: a.y - b.y};
+}
+
+/**
+ * @function rotate
+ * Rotates a vector about the Z-axis
+ * @param {Vector} a - the vector to rotate
+ * @param {float} angle - the angle to roatate by (in radians)
+ * @returns a new vector representing the rotated original
+ */
+function rotate(a, angle) {
+  return {
+    x: a.x * Math.cos(angle) - a.y * Math.sin(angle),
+    y: a.x * Math.sin(angle) + a.y * Math.cos(angle)
+  }
+}
+
+/**
+ * @function dotProduct
+ * Computes the dot product of two vectors
+ * @param {Vector} a the first vector
+ * @param {Vector} b the second vector
+ * @return the computed dot product
+ */
+function dotProduct(a, b) {
+  return a.x * b.x + a.y * b.y
+}
+
+/**
+ * @function magnitude
+ * Computes the magnitude of a vector
+ * @param {Vector} a the vector
+ * @returns the calculated magnitude
+ */
+function magnitude(a) {
+  return Math.sqrt(a.x * a.x + a.y * a.y);
+}
+
+/**
+ * @function normalize
+ * Normalizes the vector
+ * @param {Vector} a the vector to normalize
+ * @returns a new vector that is the normalized original
+ */
+function normalize(a) {
+  var mag = magnitude(a);
+  return {x: a.x / mag, y: a.y / mag};
+}
+
+},{}],9:[function(require,module,exports){
 module.exports={
  "tileheight":96,
  "tilewidth":96,

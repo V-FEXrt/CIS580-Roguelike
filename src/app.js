@@ -8,7 +8,8 @@ const EntityManager = require('./entity_manager');
 const Tilemap = require('./tilemap');
 const tileset = require('../tilemaps/tiledef.json');
 const Player = require('./player');
-const Camera = require('./camera');
+const Pathfinder = require('./pathfinder.js');
+const Vector = require('./vector');
 
 /* Global variables */
 var canvas = document.getElementById('screen');
@@ -21,6 +22,9 @@ var tilemap = new Tilemap({width: canvas.width, height: canvas.height}, 64, 64, 
     masterLoop(performance.now());
   }
 });
+
+var pathfinder = new Pathfinder(tilemap);
+window.pathfinder = pathfinder;
 
 var input = {
   up: false,
@@ -39,16 +43,33 @@ var resetTimer = true; 			  //Take turn immediately on movement key press if tru
 var loopCount = 0; //Temporary until camera movement is done
 do
 {
-	randX = Math.floor(Math.random()*(tilemap.mapWidth - 1 - 3)) + 3;//tilemap.mapWidth);
-	randY = Math.floor(Math.random()*(tilemap.mapWidth - 1 - 4)) + 4;//tilemap.mapHeight);
+	randX = Math.floor(Math.random()*(tilemap.mapWidth - 1));//tilemap.mapWidth);
+	randY = Math.floor(Math.random()*(tilemap.mapWidth - 1));//tilemap.mapHeight);
 	loopCount++;
 }while(tilemap.isWall(randX, randY) && loopCount < 1000);
 
-var player = new Player({x: 3, y: 4}, tilemap);
-var camera = new Camera(player, tilemap);
+var player = new Player({x: randX, y: randY}, tilemap);
+
+window.player = player;
 
 entityManager.addEntity(player);
 tilemap.moveTo({x: randX - 3, y: randY - 4});
+
+canvas.onclick = function(event){
+  var node = {
+    x: parseInt(event.offsetX / 96),
+    y: parseInt(event.offsetY / 96)
+  }
+
+  turnDelay=defaultTurnDelay/2;
+  autoTurn = true;
+
+  player.walkPath(pathfinder.findPath(player.position, Vector.add(tilemap.draw.origin, node)), function(){
+    turnDelay=defaultTurnDelay;
+    autoTurn = false;
+  });
+}
+
 /**
  * @function onkeydown
  * Handles keydown events
@@ -131,8 +152,8 @@ window.onkeyup = function(event) {
         input.right = false;
         break;
 	  case "Shift":
-	    turnDelay=defaultTurnDelay;
-		autoTurn = true;
+        turnDelay=defaultTurnDelay;
+        autoTurn = false;
 		break;
     }
 	if(!(input.left || input.right || input.up || input.down)) resetTimer = true;
@@ -190,5 +211,4 @@ function render(elapsedTime, ctx) {
   */
 function processTurn(){
 	entityManager.processTurn(input);
-  camera.processTurn();
 }

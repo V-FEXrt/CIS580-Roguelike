@@ -19,18 +19,22 @@ Camera.prototype.processTurn = function() {
   if(this.player.position.y == 0){
     this.player.position.y++;
     this.tilemap.moveBy({x: 0, y:-1});
+    console.log('a');
   }
   if(this.player.position.y == this.tilemap.draw.size.height - 2){
     this.player.position.y--;
     this.tilemap.moveBy({x: 0, y:1});
+    console.log('b');
   }
   if(this.player.position.x == 0){
     this.player.position.x++;
     this.tilemap.moveBy({x: -1, y:0});
+    console.log('c');
   }
   if(this.player.position.x == this.tilemap.draw.size.width - 2){
     this.player.position.x--;
     this.tilemap.moveBy({x: 1, y:0});
+    console.log('d');
   }
   this.position = this.tilemap.draw.origin;
 }

@@ -119,7 +119,7 @@ Tilemap.prototype.isWall = function(x, y){
 
   //Tiles that are not solid are hard coded here for now
   //Potentially add "solid" property to tiles
-  var type = this.data[x + this.draw.origin.x + this.mapWidth * (y+this.draw.origin.y)];
+  var type = this.data[x + this.mapWidth * y];
   return(!(type >= 49 && type <= 56 ))
 }
 
