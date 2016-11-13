@@ -21,6 +21,7 @@ function Player(position, tilemap) {
 	this.tilemap = tilemap;
 	this.spritesheet.src = './spritesheets/sprites.png';
 	this.type = "Player";
+	this.walk = [];
 }
 
 /**
@@ -31,25 +32,42 @@ Player.prototype.update = function(time) {
 
 }
 
+Player.prototype.walkPath = function (path, completion) {
+	path.shift();
+	this.walk = path;
+	this.walkCompletion = completion;
+
+	if(this.walk.length == 0) completion();
+};
+
 /**
  *@function handles the players turn
  *{input} keyboard input given for this turn
  */
 Player.prototype.processTurn = function(input)
 {
-	var change = {x: 0, y: 0};
-	if(input.up) change.y--;
-	else if(input.down) change.y++;
 
-	if (input.right) change.x++;
-	else if(input.left) change.x--;
+	if(this.walk.length > 0){
+		// walk
+		this.position = {x:this.walk[0].x, y: this.walk[0].y};
+		this.walk.shift();
+		var self = this;
+		if(this.walk.length == 0) self.walkCompletion();
+	}else{
+		var change = {x: 0, y: 0};
+		if(input.up) change.y--;
+		else if(input.down) change.y++;
 
-	var position = Vector.add(this.position, change);
-	if(this.tilemap.isWall(position.x, position.y)) return;
+		if (input.right) change.x++;
+		else if(input.left) change.x--;
 
-	this.position = position;
+		var position = Vector.add(this.position, change);
+		if(this.tilemap.isWall(position.x, position.y)) return;
 
-	var screenCoor = Vector.subtract(position, this.tilemap.draw.origin);
+		this.position = position;
+	}
+
+	var screenCoor = Vector.subtract(this.position, this.tilemap.draw.origin);
 
 	if(screenCoor.y < 1){
 		this.tilemap.moveBy({x: 0, y: -1});

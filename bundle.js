@@ -10,6 +10,7 @@ const Tilemap = require('./tilemap');
 const tileset = require('../tilemaps/tiledef.json');
 const Player = require('./player');
 const Pathfinder = require('./pathfinder.js');
+const Vector = require('./vector');
 
 /* Global variables */
 var canvas = document.getElementById('screen');
@@ -54,6 +55,22 @@ window.player = player;
 
 entityManager.addEntity(player);
 tilemap.moveTo({x: randX - 3, y: randY - 4});
+
+canvas.onclick = function(event){
+  var node = {
+    x: parseInt(event.offsetX / 96),
+    y: parseInt(event.offsetY / 96)
+  }
+
+  turnDelay=defaultTurnDelay/2;
+  autoTurn = true;
+
+  player.walkPath(pathfinder.findPath(player.position, Vector.add(tilemap.draw.origin, node)), function(){
+    turnDelay=defaultTurnDelay;
+    autoTurn = false;
+  });
+}
+
 /**
  * @function onkeydown
  * Handles keydown events
@@ -136,8 +153,8 @@ window.onkeyup = function(event) {
         input.right = false;
         break;
 	  case "Shift":
-	    turnDelay=defaultTurnDelay;
-		autoTurn = true;
+        turnDelay=defaultTurnDelay;
+        autoTurn = false;
 		break;
     }
 	if(!(input.left || input.right || input.up || input.down)) resetTimer = true;
@@ -197,7 +214,7 @@ function processTurn(){
 	entityManager.processTurn(input);
 }
 
-},{"../tilemaps/tiledef.json":9,"./entity_manager":2,"./game":3,"./pathfinder.js":5,"./player":6,"./tilemap":7}],2:[function(require,module,exports){
+},{"../tilemaps/tiledef.json":9,"./entity_manager":2,"./game":3,"./pathfinder.js":5,"./player":6,"./tilemap":7,"./vector":8}],2:[function(require,module,exports){
 "use strict";
 
 /**
@@ -859,6 +876,7 @@ function Player(position, tilemap) {
 	this.tilemap = tilemap;
 	this.spritesheet.src = './spritesheets/sprites.png';
 	this.type = "Player";
+	this.walk = [];
 }
 
 /**
@@ -869,25 +887,42 @@ Player.prototype.update = function(time) {
 
 }
 
+Player.prototype.walkPath = function (path, completion) {
+	path.shift();
+	this.walk = path;
+	this.walkCompletion = completion;
+
+	if(this.walk.length == 0) completion();
+};
+
 /**
  *@function handles the players turn
  *{input} keyboard input given for this turn
  */
 Player.prototype.processTurn = function(input)
 {
-	var change = {x: 0, y: 0};
-	if(input.up) change.y--;
-	else if(input.down) change.y++;
 
-	if (input.right) change.x++;
-	else if(input.left) change.x--;
+	if(this.walk.length > 0){
+		// walk
+		this.position = {x:this.walk[0].x, y: this.walk[0].y};
+		this.walk.shift();
+		var self = this;
+		if(this.walk.length == 0) self.walkCompletion();
+	}else{
+		var change = {x: 0, y: 0};
+		if(input.up) change.y--;
+		else if(input.down) change.y++;
 
-	var position = Vector.add(this.position, change);
-	if(this.tilemap.isWall(position.x, position.y)) return;
+		if (input.right) change.x++;
+		else if(input.left) change.x--;
 
-	this.position = position;
+		var position = Vector.add(this.position, change);
+		if(this.tilemap.isWall(position.x, position.y)) return;
 
-	var screenCoor = Vector.subtract(position, this.tilemap.draw.origin);
+		this.position = position;
+	}
+
+	var screenCoor = Vector.subtract(this.position, this.tilemap.draw.origin);
 
 	if(screenCoor.y < 1){
 		this.tilemap.moveBy({x: 0, y: -1});
