@@ -454,7 +454,7 @@ function MapGenerator(edges, width, height){
   this.randomFillMap();
   this.makeCaverns();
   this.processEdges();
-
+  
 }
 
 MapGenerator.prototype.randomFillMap = function(){
@@ -1104,24 +1104,29 @@ function rand(max){
 //Finds an open tile space randomly across the entire map
 Tilemap.prototype.findOpenSpace = function()
 {
-	var randX = 0;
-	var randY = 0;
-	var loopCount = 0;
+	var randIndex = 0;
 	var spotFound = false;
+  var tileIndexes = [];
+  var tile;
+  
+  for(var i = 0; i < this.mapWidth * this.mapHeight; i++)
+  {
+    tileIndexes.push(i);
+  }
   
 	do
 	{
-		randX = Math.floor(Math.random()*this.mapWidth);
-		randY = Math.floor(Math.random()*this.mapHeight);
-		loopCount++;
-    spotFound = !this.isWall(randX, randY);
-	}while(!spotFound && loopCount < this.mapWidth*this.mapHeight);
+		randIndex = Math.floor(Math.random()*tileIndexes.length);
+    tile = tileIndexes[randIndex];
+    spotFound = !this.isWall(tile % this.mapWidth , Math.floor(tile / this.mapWidth));
+    tileIndexes.splice(randIndex, 1);
+	}while(!spotFound && tileIndexes.length > 0);
 
   if(!spotFound)
   {
     throw new Error("Could not find free space. Check map generation algorithms and definition of empty spaces.")
   }
-	return {x: randX, y: randY};
+	return {x: randIndex % this.mapWidth, y: Math.floor(randIndex/this.mapWidth)};
 }
 },{"./map_generator":4}],8:[function(require,module,exports){
 "use strict";
