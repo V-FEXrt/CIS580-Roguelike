@@ -34,27 +34,22 @@ var input = {
   right: false
 }
 
-var randX;
-var randY;
+var randPos;                    //{x: , y: }
 var turnTimer = 0;
 var defaultTurnDelay = 400; 	  //Default turn between turns
 var turnDelay = defaultTurnDelay; //current time between turns
 var autoTurn = false; 			  //If true, reduces time between turns and turns happen automatically
 var resetTimer = true; 			  //Take turn immediately on movement key press if true
 var loopCount = 0; //Temporary until camera movement is done
-do
-{
-	randX = Math.floor(Math.random()*(tilemap.mapWidth - 1));//tilemap.mapWidth);
-	randY = Math.floor(Math.random()*(tilemap.mapWidth - 1));//tilemap.mapHeight);
-	loopCount++;
-}while(tilemap.isWall(randX, randY) && loopCount < 1000);
 
-var player = new Player({x: randX, y: randY}, tilemap);
+randPos = tilemap.findOpenSpace();
+var player = new Player({x: randPos.x, y: randPos.y}, tilemap);
 
 window.player = player;
 
 entityManager.addEntity(player);
-tilemap.moveTo({x: randX - 3, y: randY - 4});
+
+tilemap.moveTo({x: randPos.x - 3 , y: randPos.y - 4});
 
 canvas.onclick = function(event){
   var node = {
@@ -1091,6 +1086,7 @@ Tilemap.prototype.isWall = function(x, y){
   //Tiles that are not solid are hard coded here for now
   //Potentially add "solid" property to tiles
   var type = this.data[x + this.mapWidth * y];
+
   return(!(type >= 49 && type <= 56 ))
 }
 
@@ -1105,6 +1101,28 @@ function rand(max){
   return Math.floor(Math.random() * max);
 }
 
+//Finds an open tile space randomly across the entire map
+Tilemap.prototype.findOpenSpace = function()
+{
+	var randX = 0;
+	var randY = 0;
+	var loopCount = 0;
+	var spotFound = false;
+  
+	do
+	{
+		randX = Math.floor(Math.random()*this.mapWidth);
+		randY = Math.floor(Math.random()*this.mapHeight);
+		loopCount++;
+    spotFound = !this.isWall(randX, randY);
+	}while(!spotFound && loopCount < this.mapWidth*this.mapHeight);
+
+  if(!spotFound)
+  {
+    throw new Error("Could not find free space. Check map generation algorithms and definition of empty spaces.")
+  }
+	return {x: randX, y: randY};
+}
 },{"./map_generator":4}],8:[function(require,module,exports){
 "use strict";
 
