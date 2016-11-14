@@ -17,7 +17,7 @@ function MapGenerator(edges, width, height){
   this.randomFillMap();
   this.makeCaverns();
   this.processEdges();
-
+  
 }
 
 MapGenerator.prototype.randomFillMap = function(){
