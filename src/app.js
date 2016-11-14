@@ -8,6 +8,7 @@ const EntityManager = require('./entity_manager');
 const Tilemap = require('./tilemap');
 const tileset = require('../tilemaps/tiledef.json');
 const Player = require('./player');
+const Powerup = require('./powerup');
 const Pathfinder = require('./pathfinder.js');
 const Vector = require('./vector');
 
@@ -35,24 +36,33 @@ var input = {
 
 var randX;
 var randY;
+var randXp;
+var randYp;
 var turnTimer = 0;
 var defaultTurnDelay = 400; 	  //Default turn between turns
 var turnDelay = defaultTurnDelay; //current time between turns
 var autoTurn = false; 			  //If true, reduces time between turns and turns happen automatically
 var resetTimer = true; 			  //Take turn immediately on movement key press if true
 var loopCount = 0; //Temporary until camera movement is done
+var loopCountP = 0;
 do
 {
 	randX = Math.floor(Math.random()*(tilemap.mapWidth - 1));//tilemap.mapWidth);
 	randY = Math.floor(Math.random()*(tilemap.mapWidth - 1));//tilemap.mapHeight);
 	loopCount++;
 }while(tilemap.isWall(randX, randY) && loopCount < 1000);
+do
+{
+	randXp = Math.floor(Math.random()*(tilemap.mapWidth - 1));//tilemap.mapWidth);
+	randYp = Math.floor(Math.random()*(tilemap.mapWidth - 1));//tilemap.mapHeight);
+}while(tilemap.isWall(randXp, randYp) && loopCountP < 1000);
 
 var player = new Player({x: randX, y: randY}, tilemap);
-
+var powerup = new Powerup({x: randXp, y: randYp}, tilemap);
 window.player = player;
 
 entityManager.addEntity(player);
+entityManager.addEntity(powerup);
 tilemap.moveTo({x: randX - 3, y: randY - 4});
 
 canvas.onclick = function(event){

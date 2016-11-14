@@ -9,6 +9,7 @@ const EntityManager = require('./entity_manager');
 const Tilemap = require('./tilemap');
 const tileset = require('../tilemaps/tiledef.json');
 const Player = require('./player');
+const Powerup = require('./powerup');
 const Pathfinder = require('./pathfinder.js');
 const Vector = require('./vector');
 
@@ -36,24 +37,33 @@ var input = {
 
 var randX;
 var randY;
+var randXp;
+var randYp;
 var turnTimer = 0;
 var defaultTurnDelay = 400; 	  //Default turn between turns
 var turnDelay = defaultTurnDelay; //current time between turns
 var autoTurn = false; 			  //If true, reduces time between turns and turns happen automatically
 var resetTimer = true; 			  //Take turn immediately on movement key press if true
 var loopCount = 0; //Temporary until camera movement is done
+var loopCountP = 0;
 do
 {
 	randX = Math.floor(Math.random()*(tilemap.mapWidth - 1));//tilemap.mapWidth);
 	randY = Math.floor(Math.random()*(tilemap.mapWidth - 1));//tilemap.mapHeight);
 	loopCount++;
 }while(tilemap.isWall(randX, randY) && loopCount < 1000);
+do
+{
+	randXp = Math.floor(Math.random()*(tilemap.mapWidth - 1));//tilemap.mapWidth);
+	randYp = Math.floor(Math.random()*(tilemap.mapWidth - 1));//tilemap.mapHeight);
+}while(tilemap.isWall(randXp, randYp) && loopCountP < 1000);
 
 var player = new Player({x: randX, y: randY}, tilemap);
-
+var powerup = new Powerup({x: randXp, y: randYp}, tilemap);
 window.player = player;
 
 entityManager.addEntity(player);
+entityManager.addEntity(powerup);
 tilemap.moveTo({x: randX - 3, y: randY - 4});
 
 canvas.onclick = function(event){
@@ -214,7 +224,7 @@ function processTurn(){
 	entityManager.processTurn(input);
 }
 
-},{"../tilemaps/tiledef.json":9,"./entity_manager":2,"./game":3,"./pathfinder.js":5,"./player":6,"./tilemap":7,"./vector":8}],2:[function(require,module,exports){
+},{"../tilemaps/tiledef.json":10,"./entity_manager":2,"./game":3,"./pathfinder.js":5,"./player":6,"./powerup":7,"./tilemap":8,"./vector":9}],2:[function(require,module,exports){
 "use strict";
 
 /**
@@ -254,6 +264,7 @@ EntityManager.prototype.update = function(elapsedTime) {
     else{
       toBeDestroyed.push(entity);
     }
+    if(entity.type == "Player" || entity.type == "Powerup" ) console.log(entity.type+" "+entity.position.x+","+entity.position.y);
   });
 
   toBeDestroyed.forEach(function(entity){
@@ -968,7 +979,87 @@ Player.prototype.render = function(elapsedTime, ctx) {
 
 }
 
-},{"./tilemap":7,"./vector":8}],7:[function(require,module,exports){
+},{"./tilemap":8,"./vector":9}],7:[function(require,module,exports){
+"use strict";
+
+const Tilemap = require('./tilemap');
+const Vector = require('./vector');
+
+/**
+ * @module exports the Powerup class
+ */
+module.exports = exports = Powerup;
+
+/**
+ * @constructor Powerup
+ * Creates a new Powerup object
+ * @param {postition} position object specifying an x and y
+ */
+function Powerup(position, tilemap) {
+	this.position = {x: position.x, y: position.y};
+	this.size = {width: 96, height: 96};
+	this.spritesheet  = new Image();
+	this.tilemap = tilemap;
+	this.spritesheet.src = './spritesheets/powerups.png';
+	this.type = "Powerup";
+	this.animation = true;
+	}
+
+/**
+ * @function updates the Powerup object
+ * {DOMHighResTimeStamp} time the elapsed time since the last frame
+ */
+Powerup.prototype.update = function(time) {
+	//do nothing for now
+}
+
+Powerup.prototype.processTurn = function(input)
+{
+
+}
+Powerup.prototype.collided = function(entity)
+{
+
+}
+Powerup.prototype.retain = function()
+{
+	return true;
+}
+
+
+/**
+ * @function renders the Powerup into the provided context
+ * {CanvasRenderingContext2D} ctx the context to render into
+ */
+Powerup.prototype.render = function(elapsedTime, ctx) {
+	var position = Vector.subtract(this.position, this.tilemap.draw.origin);
+	if(this.animation){
+  ctx.drawImage(
+	this.spritesheet,
+	0, 0,
+	25, 25,
+	position.x*this.size.width, position.y*this.size.height,
+	96,96
+  );
+  this.animation = false;
+  }
+	else{
+	ctx.drawImage(
+	this.spritesheet,
+	25, 0,
+	25, 25,
+	position.x*this.size.width, position.y*this.size.height,
+	96,96
+	);
+	this.animation = true;
+  }
+	//Other potential powerups
+	//ctx.drawImage(this.power,0,25,25,25,position.x*this.size.width, position.y*this.size.height,96,96);
+	//ctx.drawImage(this.power,25,50,25,25,position.x*this.size.width, position.y*this.size.height,96,96);
+
+}
+
+},{"./tilemap":8,"./vector":9}],8:[function(require,module,exports){
 "use strict";
 
 const MapGenerator = require('./map_generator');
@@ -1105,7 +1196,7 @@ function rand(max){
   return Math.floor(Math.random() * max);
 }
 
-},{"./map_generator":4}],8:[function(require,module,exports){
+},{"./map_generator":4}],9:[function(require,module,exports){
 "use strict";
 
 /**
@@ -1202,7 +1293,7 @@ function normalize(a) {
   return {x: a.x / mag, y: a.y / mag};
 }
 
-},{}],9:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 module.exports={
  "tileheight":96,
  "tilewidth":96,

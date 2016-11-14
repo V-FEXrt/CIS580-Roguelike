@@ -37,6 +37,7 @@ EntityManager.prototype.update = function(elapsedTime) {
     else{
       toBeDestroyed.push(entity);
     }
+    if(entity.type == "Player" || entity.type == "Powerup" ) console.log(entity.type+" "+entity.position.x+","+entity.position.y);
   });
 
   toBeDestroyed.forEach(function(entity){
