@@ -33,27 +33,22 @@ var input = {
   right: false
 }
 
-var randX;
-var randY;
+var randPos;                    //{x: , y: }
 var turnTimer = 0;
 var defaultTurnDelay = 400; 	  //Default turn between turns
 var turnDelay = defaultTurnDelay; //current time between turns
 var autoTurn = false; 			  //If true, reduces time between turns and turns happen automatically
 var resetTimer = true; 			  //Take turn immediately on movement key press if true
 var loopCount = 0; //Temporary until camera movement is done
-do
-{
-	randX = Math.floor(Math.random()*(tilemap.mapWidth - 1));//tilemap.mapWidth);
-	randY = Math.floor(Math.random()*(tilemap.mapWidth - 1));//tilemap.mapHeight);
-	loopCount++;
-}while(tilemap.isWall(randX, randY) && loopCount < 1000);
 
-var player = new Player({x: randX, y: randY}, tilemap);
+randPos = tilemap.findOpenSpace();
+var player = new Player({x: randPos.x, y: randPos.y}, tilemap);
 
 window.player = player;
 
 entityManager.addEntity(player);
-tilemap.moveTo({x: randX - 3, y: randY - 4});
+
+tilemap.moveTo({x: randPos.x - 3 , y: randPos.y - 4});
 
 canvas.onclick = function(event){
   var node = {

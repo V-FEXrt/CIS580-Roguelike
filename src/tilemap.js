@@ -120,6 +120,7 @@ Tilemap.prototype.isWall = function(x, y){
   //Tiles that are not solid are hard coded here for now
   //Potentially add "solid" property to tiles
   var type = this.data[x + this.mapWidth * y];
+
   return(!(type >= 49 && type <= 56 ))
 }
 
@@ -132,4 +133,27 @@ Tilemap.prototype.tileAt = function(x, y) {
 
 function rand(max){
   return Math.floor(Math.random() * max);
+}
+
+//Finds an open tile space randomly across the entire map
+Tilemap.prototype.findOpenSpace = function()
+{
+	var randX = 0;
+	var randY = 0;
+	var loopCount = 0;
+	var spotFound = false;
+  
+	do
+	{
+		randX = Math.floor(Math.random()*this.mapWidth);
+		randY = Math.floor(Math.random()*this.mapHeight);
+		loopCount++;
+    spotFound = !this.isWall(randX, randY);
+	}while(!spotFound && loopCount < this.mapWidth*this.mapHeight);
+
+  if(!spotFound)
+  {
+    throw new Error("Could not find free space. Check map generation algorithms and definition of empty spaces.")
+  }
+	return {x: randX, y: randY};
 }
