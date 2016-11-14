@@ -8,6 +8,7 @@ const EntityManager = require('./entity_manager');
 const Tilemap = require('./tilemap');
 const tileset = require('../tilemaps/tiledef.json');
 const Player = require('./player');
+const Enemy = require("./enemy");
 const Pathfinder = require('./pathfinder.js');
 const Vector = require('./vector');
 
@@ -50,9 +51,12 @@ do
 
 var player = new Player({x: randX, y: randY}, tilemap);
 
+var enemy = new Enemy({x:randX+1, y:randY+1}, tilemap);
+
 window.player = player;
 
 entityManager.addEntity(player);
+entityManager.addEntity(enemy);
 tilemap.moveTo({x: randX - 3, y: randY - 4});
 
 canvas.onclick = function(event){

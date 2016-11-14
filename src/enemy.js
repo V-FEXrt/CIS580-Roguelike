@@ -21,13 +21,22 @@ Enemy.prototype.update = function (time) {
 
 }
 
+Enemy.prototype.collided = function(entity)
+{
+
+}
+
+Enemy.prototype.retain = function()
+{
+	return true;
+}
+
 Enemy.prototype.render = function (elapsedTime, ctx) {
-    var position = Vector.subtract(this.position, this.tilemap.draw.origin);
     ctx.drawImage(
         this.spritesheet,
         768, 576, // skeleton guy
         96, 96,
-        position.x * this.size.width, position.y * this.size.height,
+        this.position.x * this.size.width, this.position.y * this.size.height,
         96, 96
     );
 }
