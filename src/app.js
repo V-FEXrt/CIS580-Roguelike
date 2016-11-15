@@ -8,6 +8,7 @@ const EntityManager = require('./entity_manager');
 const Tilemap = require('./tilemap');
 const tileset = require('../tilemaps/tiledef.json');
 const Player = require('./player');
+const Enemy = require("./enemy");
 const Pathfinder = require('./pathfinder.js');
 const Vector = require('./vector');
 
@@ -43,6 +44,8 @@ var loopCount = 0; //Temporary until camera movement is done
 
 randPos = tilemap.findOpenSpace();
 var player = new Player({x: randPos.x, y: randPos.y}, tilemap);
+
+var enemy = new Enemy({x:randX+1, y:randY+1}, tilemap); // temp - just spawn next to player
 
 window.player = player;
 
