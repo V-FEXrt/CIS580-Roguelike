@@ -51,7 +51,7 @@ do
 
 var player = new Player({x: randX, y: randY}, tilemap);
 
-var enemy = new Enemy({x:randX+1, y:randY+1}, tilemap);
+var enemy = new Enemy({x:randX+1, y:randY+1}, tilemap); // temp - just spawn next to player
 
 window.player = player;
 
