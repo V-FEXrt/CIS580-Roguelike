@@ -22,6 +22,9 @@ function Player(position, tilemap) {
 	this.spritesheet.src = './spritesheets/sprites.png';
 	this.type = "Player";
 	this.walk = [];
+	this.health = 10;
+	this.stamina = 100;
+	this.someOtherPowerup = 50;
 }
 
 /**

@@ -58,11 +58,19 @@ do
 }while(tilemap.isWall(randXp, randYp) && loopCountP < 1000);
 
 var player = new Player({x: randX, y: randY}, tilemap);
-var powerup = new Powerup({x: randXp, y: randYp}, tilemap);
+//CORRECT PLACEMENTvar powerup = new Powerup({x: randXp, y: randYp}, tilemap);
+//DEBUG PLACEMENT
+var powerup1 = new Powerup({x: randX+1, y: randY+1}, tilemap);
+var powerup2 = new Powerup({x: randX, y: randY+1}, tilemap);
+var powerup3 = new Powerup({x: randX-1, y: randY+1}, tilemap);
+
 window.player = player;
 
 entityManager.addEntity(player);
-entityManager.addEntity(powerup);
+entityManager.addEntity(powerup1);
+entityManager.addEntity(powerup2);
+entityManager.addEntity(powerup3);
+
 tilemap.moveTo({x: randX - 3, y: randY - 4});
 
 canvas.onclick = function(event){
