@@ -18,15 +18,33 @@ CombatController.prototype.handleAttack = function (aAttackerStruct, aDefenderSt
     var lDefenseBonus = 0;
     var lDefenseTotal = lDefenseBase + lDefenseBonus;
 
-    var lDamageBase = aAttackerStruct.WeaponLevel;
+    var lDamageBase = getWeaponDamage(aAttackerStruct.WeaponLevel);
     var lDamageBonus = getWeaponBonus(aAttackerStruct.WeaponLevel);
-    var lDamageRoll = rollRandom(1, 1 + getWeaponDamage(aAttackerStruct.WeaponLevel));
-    var lDamageTotal = lDamageBase + lDamageBonus + lDamageRoll;
+    var lDamageRoll = rollRandom(1, 1 + lDamageBase);
+    var lDamageTotal = lDamageBonus + lDamageRoll;
 
-    // roll attack
-    // 1, 20, else 
+    switch (lAttackRoll) {
+        case 1:
+            var lSelfDamage = rollRandom(1, lDamageBase / 2 + 1);
+            aAttackerStruct.Health -= lSelfDamage;
+            console.log("Crit Fail, take " + lSelfDamage + " damage.");
+            break;
 
-    // roll damage
+        case 20:
+            lDamageTotal += lDamageBase;
+            aDefenderStruct.Health -= lDamageTotal;
+            console.log("Crit, dealt " + lDamageTotal + " damage");
+            break;
+
+        default:
+            if (lAttackTotal > lDefenseTotal) {
+                aDefenderStruct.Health -= lDamageTotal;
+                console.log("Hit, dealt " + lDamageTotal + " damage");
+            } else {
+                console.log("Miss, " + lAttackTotal + " against " + lDefenseTotal);
+            }
+            break;
+    }
 }
 
 // refactor later, just get it down
