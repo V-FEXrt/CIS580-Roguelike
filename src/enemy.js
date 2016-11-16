@@ -2,6 +2,7 @@
 
 const Tilemap = require('./tilemap');
 const Vector = require('./vector');
+const CombatStruct = require("./combat_struct");
 
 module.exports = exports = Enemy;
 
@@ -12,6 +13,7 @@ function Enemy(position, tilemap) {
     this.spritesheet = new Image();
     this.spritesheet.src = "./spritesheets/sprites.png";
     this.type = "Enemy";
+    this.combat = new CombatStruct(this.type);
 }
 
 Enemy.prototype.processTurn = function () {

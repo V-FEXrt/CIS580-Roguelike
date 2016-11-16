@@ -11,11 +11,13 @@ const Player = require('./player');
 const Enemy = require("./enemy");
 const Pathfinder = require('./pathfinder.js');
 const Vector = require('./vector');
+const CombatController = require("./combat_controller");
 
 /* Global variables */
 var canvas = document.getElementById('screen');
 var game = new Game(canvas, update, render);
 var entityManager = new EntityManager();
+var combatController = new CombatController();
 
 
 var tilemap = new Tilemap({width: canvas.width, height: canvas.height}, 64, 64, tileset, {
@@ -63,10 +65,20 @@ canvas.onclick = function(event){
   turnDelay=defaultTurnDelay/2;
   autoTurn = true;
 
-  player.walkPath(pathfinder.findPath(player.position, Vector.add(tilemap.draw.origin, node)), function(){
-    turnDelay=defaultTurnDelay;
-    autoTurn = false;
-  });
+  var clickedWorldPos = Vector.add(tilemap.draw.origin, node);
+  if(enemy.position.x == clickedWorldPos.x && enemy.position.y == clickedWorldPos.y){
+    console.log("clicked on enemy");
+    var distance = Vector.subtract(player.position, enemy.position);
+    if(Math.abs(distance.x)<= player.combat.AttackRange && Math.abs(distance.y)<= player.combat.AttackRange){
+      console.log("enemy within range");
+      combatController.handleAttack(player.combat, enemy.combat);
+    }
+  } else {
+    player.walkPath(pathfinder.findPath(player.position, clickedWorldPos), function(){
+      turnDelay=defaultTurnDelay;
+      autoTurn = false;
+    });
+  }
 }
 
 /**

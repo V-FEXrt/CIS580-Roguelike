@@ -2,6 +2,7 @@
 
 const Tilemap = require('./tilemap');
 const Vector = require('./vector');
+const CombatStruct = require("./combat_struct");
 
 /**
  * @module exports the Player class
@@ -22,6 +23,7 @@ function Player(position, tilemap) {
 	this.spritesheet.src = './spritesheets/sprites.png';
 	this.type = "Player";
 	this.walk = [];
+	this.combat = new CombatStruct(this.type);
 }
 
 /**

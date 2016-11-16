@@ -9,6 +9,9 @@ function CombatController() {
 }
 
 CombatController.prototype.handleAttack = function (aAttackerStruct, aDefenderStruct) {
+    console.log("attacker health: " + aAttackerStruct.Health);
+    console.log("defender health: " + aDefenderStruct.Health);
+
     var lAttackBase = aAttackerStruct.WeaponLevel;
     var lAttackBonus = 0;
     var lAttackRoll = rollRandom(1, 21);
@@ -45,6 +48,9 @@ CombatController.prototype.handleAttack = function (aAttackerStruct, aDefenderSt
             }
             break;
     }
+
+    console.log("attacker health: " + aAttackerStruct.Health);
+    console.log("defender health: " + aDefenderStruct.Health);
 }
 
 // refactor later, just get it down
