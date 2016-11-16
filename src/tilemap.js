@@ -142,12 +142,12 @@ Tilemap.prototype.findOpenSpace = function()
 	var spotFound = false;
   var tileIndexes = [];
   var tile;
-  
+
   for(var i = 0; i < this.mapWidth * this.mapHeight; i++)
   {
     tileIndexes.push(i);
   }
-  
+
 	do
 	{
 		randIndex = Math.floor(Math.random()*tileIndexes.length);

@@ -9,6 +9,7 @@ const Tilemap = require('./tilemap');
 const tileset = require('../tilemaps/tiledef.json');
 const Player = require('./player');
 const Pathfinder = require('./pathfinder.js');
+const Powerup = require('./powerup.js');
 const Vector = require('./vector');
 
 /* Global variables */
@@ -47,6 +48,9 @@ var player = new Player({x: randPos.x, y: randPos.y}, tilemap);
 window.player = player;
 
 entityManager.addEntity(player);
+entityManager.addEntity(new Powerup({x: randPos.x+1, y: randPos.y+1}, tilemap));
+entityManager.addEntity(new Powerup({x: randPos.x, y: randPos.y+1}, tilemap));
+entityManager.addEntity(new Powerup({x: randPos.x-1, y: randPos.y+1}, tilemap));
 
 tilemap.moveTo({x: randPos.x - 3 , y: randPos.y - 4});
 
