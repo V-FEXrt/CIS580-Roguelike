@@ -45,11 +45,12 @@ var loopCount = 0; //Temporary until camera movement is done
 randPos = tilemap.findOpenSpace();
 var player = new Player({x: randPos.x, y: randPos.y}, tilemap);
 
-var enemy = new Enemy({x:randX+1, y:randY+1}, tilemap); // temp - just spawn next to player
+var enemy = new Enemy({x:randPos.x+1, y:randPos.y+1}, tilemap); // temp - just spawn next to player
 
 window.player = player;
 
 entityManager.addEntity(player);
+entityManager.addEntity(enemy);
 
 tilemap.moveTo({x: randPos.x - 3 , y: randPos.y - 4});
 
