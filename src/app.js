@@ -8,8 +8,8 @@ const EntityManager = require('./entity_manager');
 const Tilemap = require('./tilemap');
 const tileset = require('../tilemaps/tiledef.json');
 const Player = require('./player');
-const Powerup = require('./powerup');
 const Pathfinder = require('./pathfinder.js');
+const Powerup = require('./powerup.js');
 const Vector = require('./vector');
 
 /* Global variables */
@@ -34,35 +34,19 @@ var input = {
   right: false
 }
 
-var randX;
-var randY;
-var randXp;
-var randYp;
+var randPos;                    //{x: , y: }
 var turnTimer = 0;
 var defaultTurnDelay = 400; 	  //Default turn between turns
 var turnDelay = defaultTurnDelay; //current time between turns
 var autoTurn = false; 			  //If true, reduces time between turns and turns happen automatically
 var resetTimer = true; 			  //Take turn immediately on movement key press if true
 var loopCount = 0; //Temporary until camera movement is done
-var loopCountP = 0;
-do
-{
-	randX = Math.floor(Math.random()*(tilemap.mapWidth - 1));//tilemap.mapWidth);
-	randY = Math.floor(Math.random()*(tilemap.mapWidth - 1));//tilemap.mapHeight);
-	loopCount++;
-}while(tilemap.isWall(randX, randY) && loopCount < 1000);
-do
-{
-	randXp = Math.floor(Math.random()*(tilemap.mapWidth - 1));//tilemap.mapWidth);
-	randYp = Math.floor(Math.random()*(tilemap.mapWidth - 1));//tilemap.mapHeight);
-}while(tilemap.isWall(randXp, randYp) && loopCountP < 1000);
 
-var player = new Player({x: randX, y: randY}, tilemap);
-//CORRECT PLACEMENTvar powerup = new Powerup({x: randXp, y: randYp}, tilemap);
-//DEBUG PLACEMENT
-var powerup1 = new Powerup({x: randX+1, y: randY+1}, tilemap);
-var powerup2 = new Powerup({x: randX, y: randY+1}, tilemap);
-var powerup3 = new Powerup({x: randX-1, y: randY+1}, tilemap);
+randPos = tilemap.findOpenSpace();
+var player = new Player({x: randPos.x, y: randPos.y}, tilemap);
+var powerup1 = new Powerup({x: randPos.x+1, y: randPos.y+1}, tilemap);
+var powerup2 = new Powerup({x: randPos.x, y: randPos.y+1}, tilemap);
+var powerup3 = new Powerup({x: randPos.x-1, y: randPos.y+1}, tilemap);
 
 window.player = player;
 
@@ -71,7 +55,7 @@ entityManager.addEntity(powerup1);
 entityManager.addEntity(powerup2);
 entityManager.addEntity(powerup3);
 
-tilemap.moveTo({x: randX - 3, y: randY - 4});
+tilemap.moveTo({x: randPos.x - 3 , y: randPos.y - 4});
 
 canvas.onclick = function(event){
   var node = {

@@ -1,3 +1,4 @@
+
 "use strict";
 
 const Tilemap = require('./tilemap');
@@ -70,6 +71,7 @@ Powerup.prototype.collided = function(entity)
 }
 Powerup.prototype.retain = function()
 {
+	if(this.used) return false;
 	return true;
 }
 
@@ -79,7 +81,6 @@ Powerup.prototype.retain = function()
  * {CanvasRenderingContext2D} ctx the context to render into
  */
 Powerup.prototype.render = function(elapsedTime, ctx) {
-	if(this.used) return;
 	var position = Vector.subtract(this.position, this.tilemap.draw.origin);
 	switch (this.currPower) {
 		case 1:
