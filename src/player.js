@@ -14,7 +14,7 @@ module.exports = exports = Player;
  * Creates a new player object
  * @param {postition} position object specifying an x and y
  */
-function Player(position, tilemap) {
+function Player(position, tilemap, combatClass) {
     this.state = "idle";
     this.position = { x: position.x, y: position.y };
     this.size = { width: 96, height: 96 };
@@ -23,7 +23,8 @@ function Player(position, tilemap) {
     this.spritesheet.src = './spritesheets/sprites.png';
     this.type = "Player";
     this.walk = [];
-    this.combat = new CombatStruct(this.type);
+    this.class = combatClass;
+    this.combat = new CombatStruct(this.class);
 }
 
 /**
@@ -92,7 +93,7 @@ Player.prototype.collided = function (entity) {
 }
 
 Player.prototype.retain = function () {
-    return true;
+    return this.combat.Health >= 0;
 }
 
 /**

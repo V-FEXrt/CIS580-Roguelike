@@ -45,7 +45,7 @@ var resetTimer = true;          //Take turn immediately on movement key press if
 var loopCount = 0; //Temporary until camera movement is done
 
 randPos = tilemap.findOpenSpace();
-var player = new Player({ x: randPos.x, y: randPos.y }, tilemap);
+var player = new Player({ x: randPos.x, y: randPos.y }, tilemap, "Knight");
 
 var enemy = new Enemy({ x: randPos.x + 1, y: randPos.y + 1 }, tilemap); // temp - just spawn next to player
 
