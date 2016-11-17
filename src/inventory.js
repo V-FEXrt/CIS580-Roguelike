@@ -19,7 +19,7 @@ function Inventory(weapon, armor) {
  * @function processes a new weapon item
  * 
  */
-Player.prototype.addWeapon = function(weapon) {
+Inventory.prototype.addWeapon = function(weapon) {
     checkWeapon(weapon);
     if(this.inventory.length >= 17) { /* Tell GUI that inventory is full */ }
     if(weapon.damage > this.inventory[0].damage) {
@@ -35,7 +35,7 @@ Player.prototype.addWeapon = function(weapon) {
  * @function processes a new armor item
  * 
  */
-Player.prototype.addArmor = function(armor) {
+Inventory.prototype.addArmor = function(armor) {
     checkArmor(armor);
     if(this.inventory.length >= 17) { /* Tell GUI that inventory is full */ }
     if(armor.strength > this.inventory[1].strength) {
@@ -51,7 +51,7 @@ Player.prototype.addArmor = function(armor) {
  * @function power up the equipped weapon
  * 
  */
-Player.prototype.powerupWeapon = function(damage) {
+Inventory.prototype.powerupWeapon = function(damage) {
     this.inventory[0].damage += damage;
 }
 
@@ -59,7 +59,7 @@ Player.prototype.powerupWeapon = function(damage) {
  * @function power up the equipped armor
  * 
  */
-Player.prototype.powerupArmor = function(strength) {
+Inventory.prototype.powerupArmor = function(strength) {
     this.inventory[1].strength += strength;
 }
 
@@ -67,7 +67,7 @@ Player.prototype.powerupArmor = function(strength) {
  * @function add item to inventory
  * 
  */
-Player.prototype.addItem = function(item) {
+Inventory.prototype.addItem = function(item) {
     if(this.inventory.length >= 17) { /* Tell GUI inventory is full */ }
     this.inventory.push(item);
 }
@@ -76,7 +76,7 @@ Player.prototype.addItem = function(item) {
  * @function remove item from inventory
  * 
  */
-Player.prototype.removeItem = function(item) {
+Inventory.prototype.removeItem = function(item) {
     this.inventory.remove(this.inventory.indexOf(item));
 }
 
