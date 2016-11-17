@@ -5,11 +5,13 @@ module.exports = exports = CombatStruct;
 function CombatStruct(aType) {
     switch (aType) {
         case "Knight":
-            this.Health = 10;
-            this.WeaponLevel = 1; // Temporary until working
-            this.ArmorLevel = 5; // Temporary until working
-            this.AttackType = "Melee";
-            this.AttackRange = 1;
+            this.health = 10;
+            this.stamina = 100;
+            this.someOtherPowerup = 50;
+            this.weaponLevel = 1; // Temporary until working
+            this.armorLevel = 5; // Temporary until working
+            this.attackType = "Melee";
+            this.attackRange = 1;
             break;
 
         case "Archer":
@@ -22,11 +24,13 @@ function CombatStruct(aType) {
 
 
         case "Enemy":
-            this.Health = 10;
-            this.WeaponLevel = 1;
-            this.ArmorLevel = 3;
-            this.AttackType = "Melee";
-            this.AttackRange = 1;
+            this.health = 10;
+            this.stamina = 100;
+            this.someOtherPowerup = 50;
+            this.weaponLevel = 1;
+            this.armorLevel = 3;
+            this.attackType = "Melee";
+            this.attackRange = 1;
             break;
 
 

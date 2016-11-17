@@ -1,6 +1,7 @@
 "use strict";
 
 const MapGenerator = require('./map_generator');
+const Vector = require('./vector')
 
 module.exports = exports = Tilemap;
 
@@ -73,9 +74,21 @@ Tilemap.prototype.moveTo = function(position){
     y: position.y
   }
   // don't allow the map to move beyond the edge
-  if(origin.x < 0 || origin.y < 0) return;
+  if(origin.x < 0){
+    origin.x = 0
+  }
 
-  if(origin.x + this.draw.size.width > this.mapWidth + 1 || origin.y + this.draw.size.height > this.mapHeight + 1) return;
+  if(origin.y < 0){
+    origin.y = 0;
+  }
+
+  if(origin.x + this.draw.size.width > this.mapWidth){
+    origin.x = this.mapWidth - this.draw.size.width;
+  }
+
+  if(origin.y + this.draw.size.height > this.mapHeight){
+    origin.y = this.mapHeight - this.draw.size.height;
+  }
 
   this.draw.origin = origin;
 }
@@ -114,6 +127,14 @@ Tilemap.prototype.render = function(screenCtx) {
   }
 }
 
+Tilemap.prototype.toScreenCoords = function(position){
+  return Vector.subtract(position, this.draw.origin);
+}
+
+Tilemap.prototype.toWorldCoords = function(position){
+  return Vector.add(position, this.draw.origin);
+}
+
 Tilemap.prototype.isWall = function(x, y){
   //return this.data[x + this.mapWidth * y] != 0;
 
@@ -142,12 +163,12 @@ Tilemap.prototype.findOpenSpace = function()
 	var spotFound = false;
   var tileIndexes = [];
   var tile;
-  
+
   for(var i = 0; i < this.mapWidth * this.mapHeight; i++)
   {
     tileIndexes.push(i);
   }
-  
+
 	do
 	{
 		randIndex = Math.floor(Math.random()*tileIndexes.length);

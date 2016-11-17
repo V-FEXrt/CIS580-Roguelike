@@ -25,6 +25,7 @@ function Player(position, tilemap, combatClass) {
     this.walk = [];
     this.class = combatClass;
     this.combat = new CombatStruct(this.class);
+
 }
 
 /**
@@ -69,7 +70,7 @@ Player.prototype.processTurn = function (input) {
         this.position = position;
     }
 
-    var screenCoor = Vector.subtract(this.position, this.tilemap.draw.origin);
+    var screenCoor = this.tilemap.toScreenCoords(this.position);
 
     if (screenCoor.y < 1) {
         this.tilemap.moveBy({ x: 0, y: -1 });
@@ -93,7 +94,7 @@ Player.prototype.collided = function (entity) {
 }
 
 Player.prototype.retain = function () {
-    return this.combat.Health >= 0;
+    return this.combat.health >= 0;
 }
 
 /**
@@ -101,7 +102,7 @@ Player.prototype.retain = function () {
  * {CanvasRenderingContext2D} ctx the context to render into
  */
 Player.prototype.render = function (elapsedTime, ctx) {
-    var position = Vector.subtract(this.position, this.tilemap.draw.origin);
+    var position = this.tilemap.toScreenCoords(this.position);
 
     ctx.drawImage(
         this.spritesheet,

@@ -10,7 +10,7 @@ const Tilemap = require('./tilemap');
 const tileset = require('../tilemaps/tiledef.json');
 const Player = require('./player');
 const Pathfinder = require('./pathfinder.js');
-const Vector = require('./vector');
+const Powerup = require('./powerup.js');
 
 /* Global variables */
 var canvas = document.getElementById('screen');
@@ -34,22 +34,23 @@ var input = {
   right: false
 }
 
-var randPos;                    //{x: , y: }
+var randPos = tilemap.findOpenSpace();                    //{x: , y: }
 var turnTimer = 0;
 var defaultTurnDelay = 400; 	  //Default turn between turns
 var turnDelay = defaultTurnDelay; //current time between turns
 var autoTurn = false; 			  //If true, reduces time between turns and turns happen automatically
 var resetTimer = true; 			  //Take turn immediately on movement key press if true
-var loopCount = 0; //Temporary until camera movement is done
 
-randPos = tilemap.findOpenSpace();
 var player = new Player({x: randPos.x, y: randPos.y}, tilemap);
 
 window.player = player;
 
 entityManager.addEntity(player);
+entityManager.addEntity(new Powerup({x: randPos.x+1, y: randPos.y+1}, tilemap));
+entityManager.addEntity(new Powerup({x: randPos.x, y: randPos.y+1}, tilemap));
+entityManager.addEntity(new Powerup({x: randPos.x-1, y: randPos.y+1}, tilemap));
 
-tilemap.moveTo({x: randPos.x - 3 , y: randPos.y - 4});
+tilemap.moveTo({x: randPos.x - 5 , y: randPos.y - 3});
 
 canvas.onclick = function(event){
   var node = {
@@ -60,7 +61,7 @@ canvas.onclick = function(event){
   turnDelay=defaultTurnDelay/2;
   autoTurn = true;
 
-  player.walkPath(pathfinder.findPath(player.position, Vector.add(tilemap.draw.origin, node)), function(){
+  player.walkPath(pathfinder.findPath(player.position, tilemap.toWorldCoords(node)), function(){
     turnDelay=defaultTurnDelay;
     autoTurn = false;
   });
@@ -209,7 +210,7 @@ function processTurn(){
 	entityManager.processTurn(input);
 }
 
-},{"../tilemaps/tiledef.json":9,"./entity_manager":2,"./game":3,"./pathfinder.js":5,"./player":6,"./tilemap":7,"./vector":8}],2:[function(require,module,exports){
+},{"../tilemaps/tiledef.json":10,"./entity_manager":2,"./game":3,"./pathfinder.js":5,"./player":6,"./powerup.js":7,"./tilemap":8}],2:[function(require,module,exports){
 "use strict";
 
 /**
@@ -872,6 +873,10 @@ function Player(position, tilemap) {
 	this.spritesheet.src = './spritesheets/sprites.png';
 	this.type = "Player";
 	this.walk = [];
+	this.health = 10;
+	this.stamina = 100;
+	this.someOtherPowerup = 50;
+
 }
 
 /**
@@ -917,7 +922,7 @@ Player.prototype.processTurn = function(input)
 		this.position = position;
 	}
 
-	var screenCoor = Vector.subtract(this.position, this.tilemap.draw.origin);
+	var screenCoor = this.tilemap.toScreenCoords(this.position);
 
 	if(screenCoor.y < 1){
 		this.tilemap.moveBy({x: 0, y: -1});
@@ -951,7 +956,7 @@ Player.prototype.retain = function()
  * {CanvasRenderingContext2D} ctx the context to render into
  */
 Player.prototype.render = function(elapsedTime, ctx) {
-	var position = Vector.subtract(this.position, this.tilemap.draw.origin);
+	var position = this.tilemap.toScreenCoords(this.position);
 
   ctx.drawImage(
 	this.spritesheet,
@@ -963,10 +968,107 @@ Player.prototype.render = function(elapsedTime, ctx) {
 
 }
 
-},{"./tilemap":7,"./vector":8}],7:[function(require,module,exports){
+},{"./tilemap":8,"./vector":9}],7:[function(require,module,exports){
+
+"use strict";
+
+const Tilemap = require('./tilemap');
+
+/**
+ * @module exports the Powerup class
+ */
+module.exports = exports = Powerup;
+
+/**
+ * @constructor Powerup
+ * Creates a new Powerup object
+ * @param {postition} position object specifying an x and y
+ */
+function Powerup(position, tilemap) {
+	this.position = {x: position.x, y: position.y};
+	this.size = {width: 96, height: 96};
+	this.spritesheet  = new Image();
+	this.tilemap = tilemap;
+	this.spritesheet.src = './spritesheets/powerup.png';
+	this.type = "Powerup";
+	this.animation = true;
+	this.currY = 0;
+	this.movingUp =true;
+	this.currPower = Math.floor((Math.random()*3)+1);
+	this.used = false;
+	}
+
+/**
+ * @function updates the Powerup object
+ * {DOMHighResTimeStamp} time the elapsed time since the last frame
+ */
+Powerup.prototype.update = function(time) {
+	if(this.currY >= 5) this.movingUp = false;
+	else if(this.currY <= -5) this.movingUp = true;
+	if (this.movingUp) this.currY+=.2;
+	else this.currY-=.2;
+}
+
+Powerup.prototype.processTurn = function(input)
+{
+
+}
+Powerup.prototype.collided = function(entity)
+{ if(this.used) return;
+	if(entity.type =="Player"){
+		//Update player's health/strength/item
+		if(entity.position.x == this.position.x && entity.position.y == this.position.y )	{
+			switch (this.currPower) {
+				case 1:
+					entity.health+=5;
+					this.used = true;
+					break;
+				case 2:
+					entity.stamina+=20;
+					this.used = true;
+					break;
+				case 3:
+					entity.someOtherPowerup+=10;
+					this.used = true;
+					break;
+			}}
+	}
+
+
+}
+Powerup.prototype.retain = function()
+{
+	return !this.used;
+}
+
+
+/**
+ * @function renders the Powerup into the provided context
+ * {CanvasRenderingContext2D} ctx the context to render into
+ */
+Powerup.prototype.render = function(elapsedTime, ctx) {
+	var position = this.tilemap.toScreenCoords(this.position);
+	switch (this.currPower) {
+		case 1:
+			ctx.drawImage(this.spritesheet,0, 49.7,25, 25,(position.x*this.size.width), (position.y*this.size.height)+this.currY,96,96);
+			break;
+		case 2:
+			ctx.drawImage(this.spritesheet,50,49.7,25,25,(position.x*this.size.width), (position.y*this.size.height)+this.currY,96,96);
+			break;
+		case 3:
+			ctx.drawImage(this.spritesheet,25,49.7,25,25,(position.x*this.size.width), (position.y*this.size.height)+this.currY,96,96);
+			break;
+		}
+  }
+	//Other potential powerups
+	//ctx.drawImage(this.power,0,25,25,25,position.x*this.size.width, position.y*this.size.height,96,96);
+	//ctx.drawImage(this.power,25,50,25,25,position.x*this.size.width, position.y*this.size.height,96,96);
+
+},{"./tilemap":8}],8:[function(require,module,exports){
 "use strict";
 
 const MapGenerator = require('./map_generator');
+const Vector = require('./vector')
 
 module.exports = exports = Tilemap;
 
@@ -1039,9 +1141,21 @@ Tilemap.prototype.moveTo = function(position){
     y: position.y
   }
   // don't allow the map to move beyond the edge
-  if(origin.x < 0 || origin.y < 0) return;
+  if(origin.x < 0){
+    origin.x = 0
+  }
 
-  if(origin.x + this.draw.size.width > this.mapWidth + 1 || origin.y + this.draw.size.height > this.mapHeight + 1) return;
+  if(origin.y < 0){
+    origin.y = 0;
+  }
+
+  if(origin.x + this.draw.size.width > this.mapWidth){
+    origin.x = this.mapWidth - this.draw.size.width;
+  }
+
+  if(origin.y + this.draw.size.height > this.mapHeight){
+    origin.y = this.mapHeight - this.draw.size.height;
+  }
 
   this.draw.origin = origin;
 }
@@ -1080,6 +1194,14 @@ Tilemap.prototype.render = function(screenCtx) {
   }
 }
 
+Tilemap.prototype.toScreenCoords = function(position){
+  return Vector.subtract(position, this.draw.origin);
+}
+
+Tilemap.prototype.toWorldCoords = function(position){
+  return Vector.add(position, this.draw.origin);
+}
+
 Tilemap.prototype.isWall = function(x, y){
   //return this.data[x + this.mapWidth * y] != 0;
 
@@ -1108,12 +1230,12 @@ Tilemap.prototype.findOpenSpace = function()
 	var spotFound = false;
   var tileIndexes = [];
   var tile;
-  
+
   for(var i = 0; i < this.mapWidth * this.mapHeight; i++)
   {
     tileIndexes.push(i);
   }
-  
+
 	do
 	{
 		randIndex = Math.floor(Math.random()*tileIndexes.length);
@@ -1128,7 +1250,8 @@ Tilemap.prototype.findOpenSpace = function()
   }
 	return {x: randIndex % this.mapWidth, y: Math.floor(randIndex/this.mapWidth)};
 }
-},{"./map_generator":4}],8:[function(require,module,exports){
+
+},{"./map_generator":4,"./vector":9}],9:[function(require,module,exports){
 "use strict";
 
 /**
@@ -1225,7 +1348,7 @@ function normalize(a) {
   return {x: a.x / mag, y: a.y / mag};
 }
 
-},{}],9:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 module.exports={
  "tileheight":96,
  "tilewidth":96,

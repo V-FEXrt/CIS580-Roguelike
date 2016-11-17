@@ -10,8 +10,9 @@ const tileset = require('../tilemaps/tiledef.json');
 const Player = require('./player');
 const Enemy = require("./enemy");
 const Pathfinder = require('./pathfinder.js');
-const Vector = require('./vector');
+const Powerup = require('./powerup.js');
 const CombatController = require("./combat_controller");
+const Vector = require('./vector');
 
 /* Global variables */
 var canvas = document.getElementById('screen');
@@ -36,15 +37,13 @@ var input = {
   right: false
 }
 
-var randPos;                    //{x: , y: }
+var randPos = tilemap.findOpenSpace();                    //{x: , y: }
 var turnTimer = 0;
 var defaultTurnDelay = 400;     //Default turn between turns
 var turnDelay = defaultTurnDelay; //current time between turns
 var autoTurn = false;           //If true, reduces time between turns and turns happen automatically
 var resetTimer = true;          //Take turn immediately on movement key press if true
-var loopCount = 0; //Temporary until camera movement is done
 
-randPos = tilemap.findOpenSpace();
 var player = new Player({ x: randPos.x, y: randPos.y }, tilemap, "Knight");
 
 var enemy = new Enemy({ x: randPos.x + 1, y: randPos.y + 1 }, tilemap); // temp - just spawn next to player
@@ -53,8 +52,11 @@ window.player = player;
 
 entityManager.addEntity(player);
 entityManager.addEntity(enemy);
+entityManager.addEntity(new Powerup({ x: randPos.x + 1, y: randPos.y + 1 }, tilemap));
+entityManager.addEntity(new Powerup({ x: randPos.x, y: randPos.y + 1 }, tilemap));
+entityManager.addEntity(new Powerup({ x: randPos.x - 1, y: randPos.y + 1 }, tilemap));
 
-tilemap.moveTo({ x: randPos.x - 3, y: randPos.y - 4 });
+tilemap.moveTo({ x: randPos.x - 5, y: randPos.y - 3 });
 
 canvas.onclick = function (event) {
   var node = {
@@ -65,11 +67,11 @@ canvas.onclick = function (event) {
   turnDelay = defaultTurnDelay / 2;
   autoTurn = true;
 
-  var clickedWorldPos = Vector.add(tilemap.draw.origin, node);
+  var clickedWorldPos = tilemap.toWorldCoords(node);
   if (enemy.position.x == clickedWorldPos.x && enemy.position.y == clickedWorldPos.y) {
     console.log("clicked on enemy");
     var distance = Vector.subtract(player.position, enemy.position);
-    if (Math.abs(distance.x) <= player.combat.AttackRange && Math.abs(distance.y) <= player.combat.AttackRange) {
+    if (Math.abs(distance.x) <= player.combat.attackRange && Math.abs(distance.y) <= player.combat.attackRange) {
       console.log("enemy within range");
       combatController.handleAttack(player.combat, enemy.combat);
     }
