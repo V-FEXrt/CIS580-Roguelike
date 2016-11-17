@@ -1,6 +1,7 @@
 "use strict";
 
 const MapGenerator = require('./map_generator');
+const Vector = require('./vector')
 
 module.exports = exports = Tilemap;
 
@@ -112,6 +113,14 @@ Tilemap.prototype.render = function(screenCtx) {
       }
     }
   }
+}
+
+Tilemap.prototype.toScreenCoords = function(position){
+  return Vector.subtract(position, this.draw.origin);
+}
+
+Tilemap.prototype.toWorldCoords = function(position){
+  return Vector.add(position, this.draw.origin);
 }
 
 Tilemap.prototype.isWall = function(x, y){

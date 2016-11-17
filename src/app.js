@@ -10,7 +10,6 @@ const tileset = require('../tilemaps/tiledef.json');
 const Player = require('./player');
 const Pathfinder = require('./pathfinder.js');
 const Powerup = require('./powerup.js');
-const Vector = require('./vector');
 
 /* Global variables */
 var canvas = document.getElementById('screen');
@@ -40,7 +39,6 @@ var defaultTurnDelay = 400; 	  //Default turn between turns
 var turnDelay = defaultTurnDelay; //current time between turns
 var autoTurn = false; 			  //If true, reduces time between turns and turns happen automatically
 var resetTimer = true; 			  //Take turn immediately on movement key press if true
-var loopCount = 0; //Temporary until camera movement is done
 
 randPos = tilemap.findOpenSpace();
 var player = new Player({x: randPos.x, y: randPos.y}, tilemap);
@@ -63,7 +61,7 @@ canvas.onclick = function(event){
   turnDelay=defaultTurnDelay/2;
   autoTurn = true;
 
-  player.walkPath(pathfinder.findPath(player.position, Vector.add(tilemap.draw.origin, node)), function(){
+  player.walkPath(pathfinder.findPath(player.position, tilemap.toWorldCoords(node)), function(){
     turnDelay=defaultTurnDelay;
     autoTurn = false;
   });

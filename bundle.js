@@ -11,7 +11,6 @@ const tileset = require('../tilemaps/tiledef.json');
 const Player = require('./player');
 const Pathfinder = require('./pathfinder.js');
 const Powerup = require('./powerup.js');
-const Vector = require('./vector');
 
 /* Global variables */
 var canvas = document.getElementById('screen');
@@ -41,7 +40,6 @@ var defaultTurnDelay = 400; 	  //Default turn between turns
 var turnDelay = defaultTurnDelay; //current time between turns
 var autoTurn = false; 			  //If true, reduces time between turns and turns happen automatically
 var resetTimer = true; 			  //Take turn immediately on movement key press if true
-var loopCount = 0; //Temporary until camera movement is done
 
 randPos = tilemap.findOpenSpace();
 var player = new Player({x: randPos.x, y: randPos.y}, tilemap);
@@ -64,7 +62,7 @@ canvas.onclick = function(event){
   turnDelay=defaultTurnDelay/2;
   autoTurn = true;
 
-  player.walkPath(pathfinder.findPath(player.position, Vector.add(tilemap.draw.origin, node)), function(){
+  player.walkPath(pathfinder.findPath(player.position, tilemap.toWorldCoords(node)), function(){
     turnDelay=defaultTurnDelay;
     autoTurn = false;
   });
@@ -213,7 +211,7 @@ function processTurn(){
 	entityManager.processTurn(input);
 }
 
-},{"../tilemaps/tiledef.json":10,"./entity_manager":2,"./game":3,"./pathfinder.js":5,"./player":6,"./powerup.js":7,"./tilemap":8,"./vector":9}],2:[function(require,module,exports){
+},{"../tilemaps/tiledef.json":10,"./entity_manager":2,"./game":3,"./pathfinder.js":5,"./player":6,"./powerup.js":7,"./tilemap":8}],2:[function(require,module,exports){
 "use strict";
 
 /**
@@ -924,7 +922,7 @@ Player.prototype.processTurn = function(input)
 		this.position = position;
 	}
 
-	var screenCoor = Vector.subtract(this.position, this.tilemap.draw.origin);
+	var screenCoor = this.tilemap.toScreenCoords(this.position);
 
 	if(screenCoor.y < 1){
 		this.tilemap.moveBy({x: 0, y: -1});
@@ -958,7 +956,7 @@ Player.prototype.retain = function()
  * {CanvasRenderingContext2D} ctx the context to render into
  */
 Player.prototype.render = function(elapsedTime, ctx) {
-	var position = Vector.subtract(this.position, this.tilemap.draw.origin);
+	var position = this.tilemap.toScreenCoords(this.position);
 
   ctx.drawImage(
 	this.spritesheet,
@@ -975,7 +973,6 @@ Player.prototype.render = function(elapsedTime, ctx) {
 "use strict";
 
 const Tilemap = require('./tilemap');
-const Vector = require('./vector');
 
 /**
  * @module exports the Powerup class
@@ -1044,8 +1041,7 @@ Powerup.prototype.collided = function(entity)
 }
 Powerup.prototype.retain = function()
 {
-	if(this.used) return false;
-	return true;
+	return !this.used;
 }
 
 
@@ -1054,7 +1050,7 @@ Powerup.prototype.retain = function()
  * {CanvasRenderingContext2D} ctx the context to render into
  */
 Powerup.prototype.render = function(elapsedTime, ctx) {
-	var position = Vector.subtract(this.position, this.tilemap.draw.origin);
+	var position = this.tilemap.toScreenCoords(this.position);
 	switch (this.currPower) {
 		case 1:
 			ctx.drawImage(this.spritesheet,0, 49.7,25, 25,(position.x*this.size.width), (position.y*this.size.height)+this.currY,96,96);
@@ -1071,10 +1067,11 @@ Powerup.prototype.render = function(elapsedTime, ctx) {
 	//ctx.drawImage(this.power,0,25,25,25,position.x*this.size.width, position.y*this.size.height,96,96);
 	//ctx.drawImage(this.power,25,50,25,25,position.x*this.size.width, position.y*this.size.height,96,96);
 
-},{"./tilemap":8,"./vector":9}],8:[function(require,module,exports){
+},{"./tilemap":8}],8:[function(require,module,exports){
 "use strict";
 
 const MapGenerator = require('./map_generator');
+const Vector = require('./vector')
 
 module.exports = exports = Tilemap;
 
@@ -1188,6 +1185,14 @@ Tilemap.prototype.render = function(screenCtx) {
   }
 }
 
+Tilemap.prototype.toScreenCoords = function(position){
+  return Vector.subtract(position, this.draw.origin);
+}
+
+Tilemap.prototype.toWorldCoords = function(position){
+  return Vector.add(position, this.draw.origin);
+}
+
 Tilemap.prototype.isWall = function(x, y){
   //return this.data[x + this.mapWidth * y] != 0;
 
@@ -1237,7 +1242,7 @@ Tilemap.prototype.findOpenSpace = function()
 	return {x: randIndex % this.mapWidth, y: Math.floor(randIndex/this.mapWidth)};
 }
 
-},{"./map_generator":4}],9:[function(require,module,exports){
+},{"./map_generator":4,"./vector":9}],9:[function(require,module,exports){
 "use strict";
 
 /**
