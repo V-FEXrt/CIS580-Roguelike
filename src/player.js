@@ -25,6 +25,7 @@ function Player(position, tilemap) {
 	this.health = 10;
 	this.stamina = 100;
 	this.someOtherPowerup = 50;
+
 }
 
 /**

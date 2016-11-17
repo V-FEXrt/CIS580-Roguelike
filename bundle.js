@@ -34,14 +34,13 @@ var input = {
   right: false
 }
 
-var randPos;                    //{x: , y: }
+var randPos = tilemap.findOpenSpace();                    //{x: , y: }
 var turnTimer = 0;
 var defaultTurnDelay = 400; 	  //Default turn between turns
 var turnDelay = defaultTurnDelay; //current time between turns
 var autoTurn = false; 			  //If true, reduces time between turns and turns happen automatically
 var resetTimer = true; 			  //Take turn immediately on movement key press if true
 
-randPos = tilemap.findOpenSpace();
 var player = new Player({x: randPos.x, y: randPos.y}, tilemap);
 
 window.player = player;
@@ -51,7 +50,7 @@ entityManager.addEntity(new Powerup({x: randPos.x+1, y: randPos.y+1}, tilemap));
 entityManager.addEntity(new Powerup({x: randPos.x, y: randPos.y+1}, tilemap));
 entityManager.addEntity(new Powerup({x: randPos.x-1, y: randPos.y+1}, tilemap));
 
-tilemap.moveTo({x: randPos.x - 3 , y: randPos.y - 4});
+tilemap.moveTo({x: randPos.x - 5 , y: randPos.y - 3});
 
 canvas.onclick = function(event){
   var node = {
@@ -877,6 +876,7 @@ function Player(position, tilemap) {
 	this.health = 10;
 	this.stamina = 100;
 	this.someOtherPowerup = 50;
+
 }
 
 /**
@@ -1022,17 +1022,14 @@ Powerup.prototype.collided = function(entity)
 				case 1:
 					entity.health+=5;
 					this.used = true;
-					console.log(entity.health);
 					break;
 				case 2:
 					entity.stamina+=20;
 					this.used = true;
-					console.log(entity.stamina);
 					break;
 				case 3:
 					entity.someOtherPowerup+=10;
 					this.used = true;
-					console.log(entity.someOtherPowerup);
 					break;
 			}}
 	}
@@ -1144,9 +1141,21 @@ Tilemap.prototype.moveTo = function(position){
     y: position.y
   }
   // don't allow the map to move beyond the edge
-  if(origin.x < 0 || origin.y < 0) return;
+  if(origin.x < 0){
+    origin.x = 0
+  }
 
-  if(origin.x + this.draw.size.width > this.mapWidth + 1 || origin.y + this.draw.size.height > this.mapHeight + 1) return;
+  if(origin.y < 0){
+    origin.y = 0;
+  }
+
+  if(origin.x + this.draw.size.width > this.mapWidth){
+    origin.x = this.mapWidth - this.draw.size.width;
+  }
+
+  if(origin.y + this.draw.size.height > this.mapHeight){
+    origin.y = this.mapHeight - this.draw.size.height;
+  }
 
   this.draw.origin = origin;
 }
