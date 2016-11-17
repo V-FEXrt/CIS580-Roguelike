@@ -70,7 +70,7 @@ Player.prototype.processTurn = function(input)
 		this.position = position;
 	}
 
-	var screenCoor = Vector.subtract(this.position, this.tilemap.draw.origin);
+	var screenCoor = this.tilemap.toScreenCoords(this.position);
 
 	if(screenCoor.y < 1){
 		this.tilemap.moveBy({x: 0, y: -1});
@@ -104,7 +104,7 @@ Player.prototype.retain = function()
  * {CanvasRenderingContext2D} ctx the context to render into
  */
 Player.prototype.render = function(elapsedTime, ctx) {
-	var position = Vector.subtract(this.position, this.tilemap.draw.origin);
+	var position = this.tilemap.toScreenCoords(this.position);
 
   ctx.drawImage(
 	this.spritesheet,

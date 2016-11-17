@@ -2,7 +2,6 @@
 "use strict";
 
 const Tilemap = require('./tilemap');
-const Vector = require('./vector');
 
 /**
  * @module exports the Powerup class
@@ -71,8 +70,7 @@ Powerup.prototype.collided = function(entity)
 }
 Powerup.prototype.retain = function()
 {
-	if(this.used) return false;
-	return true;
+	return !this.used;
 }
 
 
@@ -81,7 +79,7 @@ Powerup.prototype.retain = function()
  * {CanvasRenderingContext2D} ctx the context to render into
  */
 Powerup.prototype.render = function(elapsedTime, ctx) {
-	var position = Vector.subtract(this.position, this.tilemap.draw.origin);
+	var position = this.tilemap.toScreenCoords(this.position);
 	switch (this.currPower) {
 		case 1:
 			ctx.drawImage(this.spritesheet,0, 49.7,25, 25,(position.x*this.size.width), (position.y*this.size.height)+this.currY,96,96);
