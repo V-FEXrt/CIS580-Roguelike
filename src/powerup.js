@@ -51,17 +51,14 @@ Powerup.prototype.collided = function(entity)
 				case 1:
 					entity.health+=5;
 					this.used = true;
-					console.log(entity.health);
 					break;
 				case 2:
 					entity.stamina+=20;
 					this.used = true;
-					console.log(entity.stamina);
 					break;
 				case 3:
 					entity.someOtherPowerup+=10;
 					this.used = true;
-					console.log(entity.someOtherPowerup);
 					break;
 			}}
 	}

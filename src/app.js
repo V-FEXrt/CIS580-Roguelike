@@ -33,14 +33,13 @@ var input = {
   right: false
 }
 
-var randPos;                    //{x: , y: }
+var randPos = tilemap.findOpenSpace();                    //{x: , y: }
 var turnTimer = 0;
 var defaultTurnDelay = 400; 	  //Default turn between turns
 var turnDelay = defaultTurnDelay; //current time between turns
 var autoTurn = false; 			  //If true, reduces time between turns and turns happen automatically
 var resetTimer = true; 			  //Take turn immediately on movement key press if true
 
-randPos = tilemap.findOpenSpace();
 var player = new Player({x: randPos.x, y: randPos.y}, tilemap);
 
 window.player = player;
@@ -50,7 +49,7 @@ entityManager.addEntity(new Powerup({x: randPos.x+1, y: randPos.y+1}, tilemap));
 entityManager.addEntity(new Powerup({x: randPos.x, y: randPos.y+1}, tilemap));
 entityManager.addEntity(new Powerup({x: randPos.x-1, y: randPos.y+1}, tilemap));
 
-tilemap.moveTo({x: randPos.x - 3 , y: randPos.y - 4});
+tilemap.moveTo({x: randPos.x - 5 , y: randPos.y - 3});
 
 canvas.onclick = function(event){
   var node = {
