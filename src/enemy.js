@@ -29,7 +29,7 @@ Enemy.prototype.collided = function (entity) {
 }
 
 Enemy.prototype.retain = function () {
-    return this.combat.health >= 0;
+    return this.combat.health > 0;
 }
 
 Enemy.prototype.render = function (elapsedTime, ctx) {

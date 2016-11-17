@@ -94,7 +94,7 @@ Player.prototype.collided = function (entity) {
 }
 
 Player.prototype.retain = function () {
-    return this.combat.health >= 0;
+    return this.combat.health > 0;
 }
 
 /**
