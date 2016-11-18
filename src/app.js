@@ -198,7 +198,7 @@ function render(elapsedTime, ctx) {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   tilemap.render(ctx);
-  //entityManager.render(elapsedTime, ctx);
+  entityManager.render(elapsedTime, ctx);
 }
 
 /**
