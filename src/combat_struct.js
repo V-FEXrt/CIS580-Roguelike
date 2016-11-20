@@ -20,7 +20,7 @@ function CombatStruct(aType) {
             this.someOtherPowerup = 50;
             this.weaponLevel = 1; // Temporary until working
             this.armorLevel = 3; // Temporary until working
-            this.attackType = "Melee";
+            this.attackType = "Ranged";
             this.attackRange = 5;
             break;
 
@@ -30,7 +30,7 @@ function CombatStruct(aType) {
             this.someOtherPowerup = 50;
             this.weaponLevel = 1; // Temporary until working
             this.armorLevel = 3; // Temporary until working
-            this.attackType = "Melee";
+            this.attackType = "Magic";
             this.attackRange = 255;
             break;
 
@@ -46,6 +46,13 @@ function CombatStruct(aType) {
             this.senseRange = 15;
             break;
 
+        case "EnemyRanged":
+            break;
 
+        case "Captain":
+            break;
+
+        case "Shaman":
+            break;
     }
 }
