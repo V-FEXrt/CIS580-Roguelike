@@ -29,7 +29,7 @@ CombatController.prototype.handleAttack = function (aAttackerStruct, aDefenderSt
 
     switch (lAttackRoll) {
         case 1:
-            var lSelfDamage = rollRandom(1, lDamageMax / 2 + 1);
+            var lSelfDamage = rollRandom(1, lDamageMax  + 1);
             aAttackerStruct.health -= lSelfDamage;
             console.log("Crit Fail, take " + lSelfDamage + " damage.");
             break;

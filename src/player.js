@@ -33,7 +33,7 @@ function Player(position, tilemap, combatClass) {
  * {DOMHighResTimeStamp} time the elapsed time since the last frame
  */
 Player.prototype.update = function (time) {
-
+    // if we're dead, we should probably do something
 }
 
 Player.prototype.walkPath = function (path, completion) {
