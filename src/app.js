@@ -44,7 +44,7 @@ var turnDelay = defaultTurnDelay; //current time between turns
 var autoTurn = false;           //If true, reduces time between turns and turns happen automatically
 var resetTimer = true;          //Take turn immediately on movement key press if true
 
-var player = new Player({ x: randPos.x, y: randPos.y }, tilemap, "Knight");
+var player = new Player({ x: randPos.x, y: randPos.y }, tilemap, "Archer");
 
 var enemy = new Enemy({ x: randPos.x + 1, y: randPos.y + 1 }, tilemap); // temp - just spawn next to player
 

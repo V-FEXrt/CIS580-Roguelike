@@ -13,7 +13,7 @@ function Enemy(position, tilemap) {
     this.spritesheet = new Image();
     this.spritesheet.src = "./spritesheets/sprites.png";
     this.type = "Enemy";
-    this.combat = new CombatStruct(this.type);
+    this.combat = new CombatStruct("Zombie");
 }
 
 Enemy.prototype.processTurn = function () {
@@ -33,7 +33,7 @@ Enemy.prototype.retain = function () {
 }
 
 Enemy.prototype.render = function (elapsedTime, ctx) {
-    var position = Vector.subtract(this.position, this.tilemap.draw.origin);
+    var position = this.tilemap.toScreenCoords(this.position);
     ctx.drawImage(
         this.spritesheet,
         768, 576, // skeleton guy
