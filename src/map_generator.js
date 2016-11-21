@@ -7,7 +7,7 @@ function MapGenerator(edges, width, height){
   this.map = [];
   this.width = width;
   this.height = height;
-  this.percent = 40;
+  this.percent = 50;
 
   this.edges = edges;
 
