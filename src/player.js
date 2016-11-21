@@ -55,12 +55,16 @@ Player.prototype.processTurn = function (input) {
     if (this.state == "dead") return; // shouldnt be necessary
 
 
+    if(hasUserInput(input)){
+      // Cancel walk
+      this.walk = [];
+    }
+
     if (this.walk.length > 0) {
         // walk
         this.position = { x: this.walk[0].x, y: this.walk[0].y };
         this.walk.shift();
-        var self = this;
-        if (this.walk.length == 0) self.walkCompletion();
+        if (this.walk.length == 0) this.walkCompletion();
     } else {
         var change = { x: 0, y: 0 };
         if (input.up) change.y--;
@@ -119,4 +123,8 @@ Player.prototype.render = function (elapsedTime, ctx) {
         96, 96
     );
 
+}
+
+function hasUserInput(input){
+  return input.up || input.down || input.right || input.left;
 }
