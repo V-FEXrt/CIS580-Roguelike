@@ -9,17 +9,21 @@ const EntityManager = require('./entity_manager');
 const Tilemap = require('./tilemap');
 const tileset = require('../tilemaps/tiledef.json');
 const Player = require('./player');
+const Enemy = require("./enemy");
 const Pathfinder = require('./pathfinder.js');
 const Powerup = require('./powerup.js');
+const CombatController = require("./combat_controller");
+const Vector = require('./vector');
 
 /* Global variables */
 var canvas = document.getElementById('screen');
 var game = new Game(canvas, update, render);
 var entityManager = new EntityManager();
+var combatController = new CombatController();
 
 
-var tilemap = new Tilemap({width: canvas.width, height: canvas.height}, 64, 64, tileset, {
-  onload: function() {
+var tilemap = new Tilemap({ width: canvas.width, height: canvas.height }, 64, 64, tileset, {
+  onload: function () {
     masterLoop(performance.now());
   }
 });
@@ -36,131 +40,148 @@ var input = {
 
 var randPos = tilemap.findOpenSpace();                    //{x: , y: }
 var turnTimer = 0;
-var defaultTurnDelay = 400; 	  //Default turn between turns
+var defaultTurnDelay = 400;     //Default turn between turns
 var turnDelay = defaultTurnDelay; //current time between turns
-var autoTurn = false; 			  //If true, reduces time between turns and turns happen automatically
-var resetTimer = true; 			  //Take turn immediately on movement key press if true
+var autoTurn = false;           //If true, reduces time between turns and turns happen automatically
+var resetTimer = true;          //Take turn immediately on movement key press if true
 
-var player = new Player({x: randPos.x, y: randPos.y}, tilemap);
+var player = new Player({ x: randPos.x, y: randPos.y }, tilemap, "Knight");
+
+var enemy = new Enemy({ x: randPos.x + 1, y: randPos.y + 1 }, tilemap); // temp - just spawn next to player
 
 window.player = player;
 
 entityManager.addEntity(player);
-entityManager.addEntity(new Powerup({x: randPos.x+1, y: randPos.y+1}, tilemap));
-entityManager.addEntity(new Powerup({x: randPos.x, y: randPos.y+1}, tilemap));
-entityManager.addEntity(new Powerup({x: randPos.x-1, y: randPos.y+1}, tilemap));
+entityManager.addEntity(enemy);
+entityManager.addEntity(new Powerup({ x: randPos.x + 1, y: randPos.y + 1 }, tilemap));
+entityManager.addEntity(new Powerup({ x: randPos.x, y: randPos.y + 1 }, tilemap));
+entityManager.addEntity(new Powerup({ x: randPos.x - 1, y: randPos.y + 1 }, tilemap));
 
-tilemap.moveTo({x: randPos.x - 5 , y: randPos.y - 3});
+tilemap.moveTo({ x: randPos.x - 5, y: randPos.y - 3 });
 
-canvas.onclick = function(event){
+canvas.onclick = function (event) {
   var node = {
     x: parseInt(event.offsetX / 96),
     y: parseInt(event.offsetY / 96)
   }
 
-  turnDelay=defaultTurnDelay/2;
+  turnDelay = defaultTurnDelay / 2;
   autoTurn = true;
 
-  player.walkPath(pathfinder.findPath(player.position, tilemap.toWorldCoords(node)), function(){
-    turnDelay=defaultTurnDelay;
-    autoTurn = false;
-  });
+  var clickedWorldPos = tilemap.toWorldCoords(node);
+  if (enemy.position.x == clickedWorldPos.x && enemy.position.y == clickedWorldPos.y) {
+    console.log("clicked on enemy");
+    var distance = Vector.subtract(player.position, enemy.position);
+    if (Math.abs(distance.x) <= player.combat.attackRange && Math.abs(distance.y) <= player.combat.attackRange) {
+      console.log("enemy within range");
+      combatController.handleAttack(player.combat, enemy.combat);
+    } else {
+      var path = pathfinder.findPath(player.position, enemy.position);
+      path = path.splice(0, path.length - player.combat.attackRange);
+      player.walkPath(path, function () {
+        turnDelay = defaultTurnDelay;
+        autoTurn = false;
+        combatController.handleAttack(player.combat, enemy.combat);
+      });
+    }
+  } else {
+    player.walkPath(pathfinder.findPath(player.position, clickedWorldPos), function () {
+      turnDelay = defaultTurnDelay;
+      autoTurn = false;
+    });
+  }
 }
 
 /**
  * @function onkeydown
  * Handles keydown events
  */
-var position = {x: 0, y: 0};
-window.onkeydown = function(event) {
-   switch(event.key) {
-     case "ArrowUp":
-     case "w":
-       //position.y--;
-       input.up = true;
-	   if(resetTimer)
-	   {
-		   turnTimer = turnDelay;
-		   resetTimer = false;
-	   }
-	   event.preventDefault();
-       break;
-     case "ArrowDown":
-     case "s":
-       //position.y++;
-       input.down = true;
-	   if(resetTimer)
-	   {
-		   turnTimer = turnDelay;
-		   resetTimer = false;
-	   }
-	   event.preventDefault();
-       break;
-     case "ArrowLeft":
-     case "a":
-       //position.x--;
-       input.left = true;
-	   if(resetTimer)
-	   {
-		   turnTimer = turnDelay;
-		   resetTimer = false;
-	   }
-	   event.preventDefault();
-       break;
-     case "ArrowRight":
-     case "d":
-       //position.x++;
-       input.right = true;
-	   if(resetTimer)
-	   {
-		   turnTimer = turnDelay;
-		   resetTimer = false;
-	   }
-	   event.preventDefault();
-       break;
-	 case "Shift":
-		event.preventDefault();
-		turnDelay=defaultTurnDelay/2;
-		autoTurn = true;
-		break;
-   }
- }
-
- /**
-  * @function onkeyup
-  * Handles keyup events
-  */
-window.onkeyup = function(event) {
-    switch(event.key) {
-      case "ArrowUp":
-      case "w":
-        input.up = false;
-        break;
-      case "ArrowDown":
-      case "s":
-        input.down = false;
-        break;
-      case "ArrowLeft":
-      case "a":
-        input.left = false;
-        break;
-      case "ArrowRight":
-      case "d":
-        input.right = false;
-        break;
-	  case "Shift":
-        turnDelay=defaultTurnDelay;
-        autoTurn = false;
-		break;
-    }
-	if(!(input.left || input.right || input.up || input.down)) resetTimer = true;
+var position = { x: 0, y: 0 };
+window.onkeydown = function (event) {
+  switch (event.key) {
+    case "ArrowUp":
+    case "w":
+      //position.y--;
+      input.up = true;
+      if (resetTimer) {
+        turnTimer = turnDelay;
+        resetTimer = false;
+      }
+      event.preventDefault();
+      break;
+    case "ArrowDown":
+    case "s":
+      //position.y++;
+      input.down = true;
+      if (resetTimer) {
+        turnTimer = turnDelay;
+        resetTimer = false;
+      }
+      event.preventDefault();
+      break;
+    case "ArrowLeft":
+    case "a":
+      //position.x--;
+      input.left = true;
+      if (resetTimer) {
+        turnTimer = turnDelay;
+        resetTimer = false;
+      }
+      event.preventDefault();
+      break;
+    case "ArrowRight":
+    case "d":
+      //position.x++;
+      input.right = true;
+      if (resetTimer) {
+        turnTimer = turnDelay;
+        resetTimer = false;
+      }
+      event.preventDefault();
+      break;
+    case "Shift":
+      event.preventDefault();
+      turnDelay = defaultTurnDelay / 2;
+      autoTurn = true;
+      break;
   }
+}
+
+/**
+ * @function onkeyup
+ * Handles keyup events
+ */
+window.onkeyup = function (event) {
+  switch (event.key) {
+    case "ArrowUp":
+    case "w":
+      input.up = false;
+      break;
+    case "ArrowDown":
+    case "s":
+      input.down = false;
+      break;
+    case "ArrowLeft":
+    case "a":
+      input.left = false;
+      break;
+    case "ArrowRight":
+    case "d":
+      input.right = false;
+      break;
+    case "Shift":
+      turnDelay = defaultTurnDelay;
+      autoTurn = false;
+      break;
+  }
+  if (!(input.left || input.right || input.up || input.down)) resetTimer = true;
+}
 /**
  * @function masterLoop
  * Advances the game in sync with the refresh rate of the screen
  * @param {DOMHighResTimeStamp} timestamp the current time
  */
-var masterLoop = function(timestamp) {
+var masterLoop = function (timestamp) {
   game.loop(timestamp);
   window.requestAnimationFrame(masterLoop);
 }
@@ -175,14 +196,12 @@ var masterLoop = function(timestamp) {
  */
 function update(elapsedTime) {
 
-  if(input.left || input.right || input.up || input.down || autoTurn)
-  {
-	  turnTimer += elapsedTime;
-	  if(turnTimer >= turnDelay)
-	  {
-		turnTimer = 0;
-		processTurn();
-	  }
+  if (input.left || input.right || input.up || input.down || autoTurn) {
+    turnTimer += elapsedTime;
+    if (turnTimer >= turnDelay) {
+      turnTimer = 0;
+      processTurn();
+    }
   }
   entityManager.update(elapsedTime);
 }
@@ -206,11 +225,174 @@ function render(elapsedTime, ctx) {
   * @function processTurn
   * Proccesses one turn, updating the states of all entities.
   */
-function processTurn(){
-	entityManager.processTurn(input);
+function processTurn() {
+  entityManager.processTurn(input);
 }
 
-},{"../tilemaps/tiledef.json":10,"./entity_manager":2,"./game":3,"./pathfinder.js":5,"./player":6,"./powerup.js":7,"./tilemap":8}],2:[function(require,module,exports){
+},{"../tilemaps/tiledef.json":13,"./combat_controller":2,"./enemy":4,"./entity_manager":5,"./game":6,"./pathfinder.js":8,"./player":9,"./powerup.js":10,"./tilemap":11,"./vector":12}],2:[function(require,module,exports){
+"use strict";
+
+module.exports = exports = CombatController;
+
+const CombatStruct = require("./combat_struct");
+
+function CombatController() {
+
+}
+
+CombatController.prototype.handleAttack = function (aAttackerStruct, aDefenderStruct) {
+    console.log("attacker health: " + aAttackerStruct.health);
+    console.log("defender health: " + aDefenderStruct.health);
+
+    var lAttackBase = aAttackerStruct.weaponLevel;
+    var lAttackBonus = 0;
+    var lAttackRoll = rollRandom(1, 21);
+    var lAttackTotal = lAttackBase + lAttackBonus + lAttackRoll;
+
+    var lDefenseBase = aDefenderStruct.armorLevel;
+    var lDefenseBonus = 0;
+    var lDefenseTotal = lDefenseBase + lDefenseBonus;
+
+    var lDamageBase = aAttackerStruct.weaponLevel;
+    var lDamageMax = getWeaponDamage(aAttackerStruct.weaponLevel);
+    var lDamageBonus = getWeaponBonus(aAttackerStruct.weaponLevel);
+    var lDamageRoll = rollRandom(1, 1 + lDamageMax);
+    var lDamageTotal = lDamageBase + lDamageBonus + lDamageRoll;
+
+    switch (lAttackRoll) {
+        case 1:
+            var lSelfDamage = rollRandom(1, lDamageMax / 2 + 1);
+            aAttackerStruct.health -= lSelfDamage;
+            console.log("Crit Fail, take " + lSelfDamage + " damage.");
+            break;
+
+        case 20:
+            lDamageTotal += lDamageMax;
+            aDefenderStruct.health -= lDamageTotal;
+            console.log("Crit, dealt " + lDamageTotal + " damage");
+            break;
+
+        default:
+            if (lAttackTotal > lDefenseTotal) {
+                aDefenderStruct.health -= lDamageTotal;
+                console.log("Hit, dealt " + lDamageTotal + " damage");
+            } else {
+                console.log("Miss, " + lAttackTotal + " against " + lDefenseTotal);
+            }
+            break;
+    }
+
+    console.log("attacker health: " + aAttackerStruct.health);
+    console.log("defender health: " + aDefenderStruct.health);
+    console.log("\n\n");
+}
+
+// refactor later, just get it down
+function getWeaponBonus(aLevel) {
+    switch (aLevel % 3) {
+        case 0:
+            return 2;
+
+        case 1:
+            return 0;
+
+        case 2:
+            return 1;
+    }
+}
+
+function getWeaponDamage(aLevel) {
+    return 4 + 2 * Math.floor((aLevel - 1) / 3);
+}
+
+function rollRandom(aMinimum, aMaximum) {
+    return Math.floor(Math.random() * (aMaximum - aMinimum) + aMinimum);
+}
+},{"./combat_struct":3}],3:[function(require,module,exports){
+"use strict";
+
+module.exports = exports = CombatStruct;
+
+function CombatStruct(aType) {
+    switch (aType) {
+        case "Knight":
+            this.health = 10;
+            this.stamina = 100;
+            this.someOtherPowerup = 50;
+            this.weaponLevel = 1; // Temporary until working
+            this.armorLevel = 5; // Temporary until working
+            this.attackType = "Melee";
+            this.attackRange = 1;
+            break;
+
+        case "Archer":
+
+            break;
+
+        case "Mage":
+
+            break;
+
+
+        case "Enemy":
+            this.health = 10;
+            this.stamina = 100;
+            this.someOtherPowerup = 50;
+            this.weaponLevel = 1;
+            this.armorLevel = 3;
+            this.attackType = "Melee";
+            this.attackRange = 1;
+            break;
+
+
+    }
+}
+},{}],4:[function(require,module,exports){
+"use strict";
+
+const Tilemap = require('./tilemap');
+const Vector = require('./vector');
+const CombatStruct = require("./combat_struct");
+
+module.exports = exports = Enemy;
+
+function Enemy(position, tilemap) {
+    this.position = { x: position.x, y: position.y };
+    this.size = { width: 96, height: 96 };
+    this.tilemap = tilemap;
+    this.spritesheet = new Image();
+    this.spritesheet.src = "./spritesheets/sprites.png";
+    this.type = "Enemy";
+    this.combat = new CombatStruct(this.type);
+}
+
+Enemy.prototype.processTurn = function () {
+
+}
+
+Enemy.prototype.update = function (time) {
+
+}
+
+Enemy.prototype.collided = function (entity) {
+
+}
+
+Enemy.prototype.retain = function () {
+    return this.combat.health > 0;
+}
+
+Enemy.prototype.render = function (elapsedTime, ctx) {
+    var position = Vector.subtract(this.position, this.tilemap.draw.origin);
+    ctx.drawImage(
+        this.spritesheet,
+        768, 576, // skeleton guy
+        96, 96,
+        position.x * this.size.width, position.y * this.size.height,
+        96, 96
+    );
+}
+},{"./combat_struct":3,"./tilemap":11,"./vector":12}],5:[function(require,module,exports){
 "use strict";
 
 /**
@@ -377,7 +559,7 @@ function collision(entity1, entity2){
     (entity1.position.x + entity1.size.width < entity2.position.x))
 }
 
-},{}],3:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 "use strict";
 
 /**
@@ -435,7 +617,7 @@ Game.prototype.loop = function(newTime) {
   this.frontCtx.drawImage(this.backBuffer, 0, 0);
 }
 
-},{}],4:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 "use strict";
 
 module.exports = exports = MapGenerator;
@@ -445,7 +627,7 @@ function MapGenerator(edges, width, height){
   this.map = [];
   this.width = width;
   this.height = height;
-  this.percent = 40;
+  this.percent = 50;
 
   this.edges = edges;
 
@@ -607,7 +789,7 @@ function rand(upper){
   return Math.floor(Math.random() * upper);
 }
 
-},{}],5:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 /**
  * @module A pathfinding module providing
  * a visualizaiton of common tree-search
@@ -848,11 +1030,12 @@ Pathfinder.prototype.step = function() {
   return undefined;
 }
 
-},{}],6:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 "use strict";
 
 const Tilemap = require('./tilemap');
 const Vector = require('./vector');
+const CombatStruct = require("./combat_struct");
 
 /**
  * @module exports the Player class
@@ -864,18 +1047,17 @@ module.exports = exports = Player;
  * Creates a new player object
  * @param {postition} position object specifying an x and y
  */
-function Player(position, tilemap) {
-	this.state = "idle";
-	this.position = {x: position.x, y: position.y};
-	this.size = {width: 96, height: 96};
-	this.spritesheet  = new Image();
-	this.tilemap = tilemap;
-	this.spritesheet.src = './spritesheets/sprites.png';
-	this.type = "Player";
-	this.walk = [];
-	this.health = 10;
-	this.stamina = 100;
-	this.someOtherPowerup = 50;
+function Player(position, tilemap, combatClass) {
+    this.state = "idle";
+    this.position = { x: position.x, y: position.y };
+    this.size = { width: 96, height: 96 };
+    this.spritesheet = new Image();
+    this.tilemap = tilemap;
+    this.spritesheet.src = './spritesheets/sprites.png';
+    this.type = "Player";
+    this.walk = [];
+    this.class = combatClass;
+    this.combat = new CombatStruct(this.class);
 
 }
 
@@ -883,92 +1065,89 @@ function Player(position, tilemap) {
  * @function updates the player object
  * {DOMHighResTimeStamp} time the elapsed time since the last frame
  */
-Player.prototype.update = function(time) {
+Player.prototype.update = function (time) {
 
 }
 
 Player.prototype.walkPath = function (path, completion) {
-	path.shift();
-	this.walk = path;
-	this.walkCompletion = completion;
+    path.shift();
+    this.walk = path;
+    this.walkCompletion = completion;
 
-	if(this.walk.length == 0) completion();
+    if (this.walk.length == 0) completion();
 };
 
 /**
  *@function handles the players turn
  *{input} keyboard input given for this turn
  */
-Player.prototype.processTurn = function(input)
-{
+Player.prototype.processTurn = function (input) {
 
-	if(this.walk.length > 0){
-		// walk
-		this.position = {x:this.walk[0].x, y: this.walk[0].y};
-		this.walk.shift();
-		var self = this;
-		if(this.walk.length == 0) self.walkCompletion();
-	}else{
-		var change = {x: 0, y: 0};
-		if(input.up) change.y--;
-		else if(input.down) change.y++;
+    if (this.walk.length > 0) {
+        // walk
+        this.position = { x: this.walk[0].x, y: this.walk[0].y };
+        this.walk.shift();
+        var self = this;
+        if (this.walk.length == 0) self.walkCompletion();
+    } else {
+        var change = { x: 0, y: 0 };
+        if (input.up) change.y--;
+        else if (input.down) change.y++;
 
-		if (input.right) change.x++;
-		else if(input.left) change.x--;
+        if (input.right) change.x++;
+        else if (input.left) change.x--;
 
-		var position = Vector.add(this.position, change);
-		if(this.tilemap.isWall(position.x, position.y)) return;
+        var position = Vector.add(this.position, change);
+        if (this.tilemap.isWall(position.x, position.y)) return;
 
-		this.position = position;
-	}
+        this.position = position;
+    }
 
-	var screenCoor = this.tilemap.toScreenCoords(this.position);
+    var screenCoor = this.tilemap.toScreenCoords(this.position);
 
-	if(screenCoor.y < 1){
-		this.tilemap.moveBy({x: 0, y: -1});
-	}
+    if (screenCoor.y < 1) {
+        this.tilemap.moveBy({ x: 0, y: -1 });
+    }
 
-	if(screenCoor.y + 1 == this.tilemap.draw.size.height){
-		this.tilemap.moveBy({x: 0, y: 1});
-	}
+    if (screenCoor.y + 1 == this.tilemap.draw.size.height) {
+        this.tilemap.moveBy({ x: 0, y: 1 });
+    }
 
-	if(screenCoor.x < 1){
-		this.tilemap.moveBy({x: -1, y: 0});
-	}
+    if (screenCoor.x < 1) {
+        this.tilemap.moveBy({ x: -1, y: 0 });
+    }
 
-	if(screenCoor.x + 1 == this.tilemap.draw.size.width){
-		this.tilemap.moveBy({x: 1, y: 0});
-	}
+    if (screenCoor.x + 1 == this.tilemap.draw.size.width) {
+        this.tilemap.moveBy({ x: 1, y: 0 });
+    }
 
 }
 
-Player.prototype.collided = function(entity)
-{
+Player.prototype.collided = function (entity) {
 }
 
-Player.prototype.retain = function()
-{
-	return true;
+Player.prototype.retain = function () {
+    return this.combat.health > 0;
 }
 
 /**
  * @function renders the player into the provided context
  * {CanvasRenderingContext2D} ctx the context to render into
  */
-Player.prototype.render = function(elapsedTime, ctx) {
-	var position = this.tilemap.toScreenCoords(this.position);
+Player.prototype.render = function (elapsedTime, ctx) {
+    var position = this.tilemap.toScreenCoords(this.position);
 
-  ctx.drawImage(
-	this.spritesheet,
-	96, 480,
-	96, 96,
-	position.x*this.size.width, position.y*this.size.height,
-	96,96
-	);
+    ctx.drawImage(
+        this.spritesheet,
+        96, 480,
+        96, 96,
+        position.x * this.size.width, position.y * this.size.height,
+        96, 96
+    );
 
 }
 
-},{"./tilemap":8,"./vector":9}],7:[function(require,module,exports){
+},{"./combat_struct":3,"./tilemap":11,"./vector":12}],10:[function(require,module,exports){
 
 "use strict";
 
@@ -985,86 +1164,85 @@ module.exports = exports = Powerup;
  * @param {postition} position object specifying an x and y
  */
 function Powerup(position, tilemap) {
-	this.position = {x: position.x, y: position.y};
-	this.size = {width: 96, height: 96};
-	this.spritesheet  = new Image();
-	this.tilemap = tilemap;
-	this.spritesheet.src = './spritesheets/powerup.png';
-	this.type = "Powerup";
-	this.animation = true;
-	this.currY = 0;
-	this.movingUp =true;
-	this.currPower = Math.floor((Math.random()*3)+1);
-	this.used = false;
-	}
+    this.position = { x: position.x, y: position.y };
+    this.size = { width: 96, height: 96 };
+    this.spritesheet = new Image();
+    this.tilemap = tilemap;
+    this.spritesheet.src = './spritesheets/powerup.png';
+    this.type = "Powerup";
+    this.animation = true;
+    this.currY = 0;
+    this.movingUp = true;
+    this.currPower = Math.floor((Math.random() * 3) + 1);
+    this.used = false;
+}
 
 /**
  * @function updates the Powerup object
  * {DOMHighResTimeStamp} time the elapsed time since the last frame
  */
-Powerup.prototype.update = function(time) {
-	if(this.currY >= 5) this.movingUp = false;
-	else if(this.currY <= -5) this.movingUp = true;
-	if (this.movingUp) this.currY+=.2;
-	else this.currY-=.2;
+Powerup.prototype.update = function (time) {
+    if (this.currY >= 5) this.movingUp = false;
+    else if (this.currY <= -5) this.movingUp = true;
+    if (this.movingUp) this.currY += .2;
+    else this.currY -= .2;
 }
 
-Powerup.prototype.processTurn = function(input)
-{
+Powerup.prototype.processTurn = function (input) {
 
 }
-Powerup.prototype.collided = function(entity)
-{ if(this.used) return;
-	if(entity.type =="Player"){
-		//Update player's health/strength/item
-		if(entity.position.x == this.position.x && entity.position.y == this.position.y )	{
-			switch (this.currPower) {
-				case 1:
-					entity.health+=5;
-					this.used = true;
-					break;
-				case 2:
-					entity.stamina+=20;
-					this.used = true;
-					break;
-				case 3:
-					entity.someOtherPowerup+=10;
-					this.used = true;
-					break;
-			}}
-	}
 
-
-}
-Powerup.prototype.retain = function()
-{
-	return !this.used;
+Powerup.prototype.collided = function (entity) {
+    if (this.used) return;
+    if (entity.type == "Player") {
+        //Update player's health/strength/item
+        if (entity.position.x == this.position.x && entity.position.y == this.position.y) {
+            switch (this.currPower) {
+                case 1:
+                    entity.combat.health += 5;
+                    this.used = true;
+                    break;
+                case 2:
+                    entity.combat.stamina += 20;
+                    this.used = true;
+                    break;
+                case 3:
+                    entity.combat.someOtherPowerup += 10;
+                    this.used = true;
+                    break;
+            }
+        }
+    }
 }
 
+Powerup.prototype.retain = function () {
+    return !this.used;
+}
 
 /**
  * @function renders the Powerup into the provided context
  * {CanvasRenderingContext2D} ctx the context to render into
  */
-Powerup.prototype.render = function(elapsedTime, ctx) {
-	var position = this.tilemap.toScreenCoords(this.position);
-	switch (this.currPower) {
-		case 1:
-			ctx.drawImage(this.spritesheet,0, 49.7,25, 25,(position.x*this.size.width), (position.y*this.size.height)+this.currY,96,96);
-			break;
-		case 2:
-			ctx.drawImage(this.spritesheet,50,49.7,25,25,(position.x*this.size.width), (position.y*this.size.height)+this.currY,96,96);
-			break;
-		case 3:
-			ctx.drawImage(this.spritesheet,25,49.7,25,25,(position.x*this.size.width), (position.y*this.size.height)+this.currY,96,96);
-			break;
-		}
-  }
-	//Other potential powerups
-	//ctx.drawImage(this.power,0,25,25,25,position.x*this.size.width, position.y*this.size.height,96,96);
-	//ctx.drawImage(this.power,25,50,25,25,position.x*this.size.width, position.y*this.size.height,96,96);
+Powerup.prototype.render = function (elapsedTime, ctx) {
+    var position = this.tilemap.toScreenCoords(this.position);
+    switch (this.currPower) {
+        case 1:
+            ctx.drawImage(this.spritesheet, 0, 49.7, 25, 25, (position.x * this.size.width), (position.y * this.size.height) + this.currY, 96, 96);
+            break;
+        case 2:
+            ctx.drawImage(this.spritesheet, 50, 49.7, 25, 25, (position.x * this.size.width), (position.y * this.size.height) + this.currY, 96, 96);
+            break;
+        case 3:
+            ctx.drawImage(this.spritesheet, 25, 49.7, 25, 25, (position.x * this.size.width), (position.y * this.size.height) + this.currY, 96, 96);
+            break;
+    }
+}
 
-},{"./tilemap":8}],8:[function(require,module,exports){
+    //Other potential powerups
+    //ctx.drawImage(this.power,0,25,25,25,position.x*this.size.width, position.y*this.size.height,96,96);
+    //ctx.drawImage(this.power,25,50,25,25,position.x*this.size.width, position.y*this.size.height,96,96);
+
+},{"./tilemap":11}],11:[function(require,module,exports){
 "use strict";
 
 const MapGenerator = require('./map_generator');
@@ -1251,7 +1429,7 @@ Tilemap.prototype.findOpenSpace = function()
 	return {x: randIndex % this.mapWidth, y: Math.floor(randIndex/this.mapWidth)};
 }
 
-},{"./map_generator":4,"./vector":9}],9:[function(require,module,exports){
+},{"./map_generator":7,"./vector":12}],12:[function(require,module,exports){
 "use strict";
 
 /**
@@ -1348,7 +1526,7 @@ function normalize(a) {
   return {x: a.x / mag, y: a.y / mag};
 }
 
-},{}],10:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 module.exports={
  "tileheight":96,
  "tilewidth":96,
