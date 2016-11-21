@@ -74,6 +74,14 @@ canvas.onclick = function (event) {
     if (Math.abs(distance.x) <= player.combat.attackRange && Math.abs(distance.y) <= player.combat.attackRange) {
       console.log("enemy within range");
       combatController.handleAttack(player.combat, enemy.combat);
+    } else {
+      var path = pathfinder.findPath(player.position, enemy.position);
+      path = path.splice(0, path.length - player.combat.attackRange);
+      player.walkPath(path, function () {
+        turnDelay = defaultTurnDelay;
+        autoTurn = false;
+        combatController.handleAttack(player.combat, enemy.combat);
+      });
     }
   } else {
     player.walkPath(pathfinder.findPath(player.position, clickedWorldPos), function () {
