@@ -21,6 +21,7 @@ function Enemy(position, tilemap, target) {
 }
 
 Enemy.prototype.processTurn = function () {
+    if (this.combat.health <= 0) this.state = "dead";
     if (this.state == "dead") return; // shouldnt be necessary
 
     var distance = Vector.distance(this.position, this.target.position);
@@ -58,3 +59,4 @@ Enemy.prototype.render = function (elapsedTime, ctx) {
         96, 96
     );
 }
+

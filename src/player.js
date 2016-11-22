@@ -52,12 +52,13 @@ Player.prototype.walkPath = function (path, completion) {
  *{input} keyboard input given for this turn
  */
 Player.prototype.processTurn = function (input) {
+    if (this.combat.health <= 0) this.state = "dead";
     if (this.state == "dead") return; // shouldnt be necessary
 
 
-    if(hasUserInput(input)){
-      // Cancel walk
-      this.walk = [];
+    if (hasUserInput(input)) {
+        // Cancel walk
+        this.walk = [];
     }
 
     if (this.walk.length > 0) {
@@ -125,6 +126,7 @@ Player.prototype.render = function (elapsedTime, ctx) {
 
 }
 
-function hasUserInput(input){
-  return input.up || input.down || input.right || input.left;
+function hasUserInput(input) {
+    return input.up || input.down || input.right || input.left;
 }
+

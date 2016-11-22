@@ -76,6 +76,7 @@ canvas.onclick = function (event) {
       autoTurn = false;
       console.log("enemy within range");
       combatController.handleAttack(player.combat, enemy.combat);
+      processTurn();
     } else {
       var path = pathfinder.findPath(player.position, enemy.position);
       path = path.splice(0, path.length - player.combat.attackRange);
@@ -83,6 +84,7 @@ canvas.onclick = function (event) {
         turnDelay = defaultTurnDelay;
         autoTurn = false;
         combatController.handleAttack(player.combat, enemy.combat);
+        processTurn();
       });
     }
   } else {
@@ -229,3 +231,4 @@ function render(elapsedTime, ctx) {
 function processTurn() {
   entityManager.processTurn(input);
 }
+
