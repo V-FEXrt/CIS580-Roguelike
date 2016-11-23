@@ -49,14 +49,22 @@ function CombatStruct(aType) {
             this.senseRange = 15; // This might be too high, what if we keep the camera centered..?
 
             this.turnAI = function (aEnemy) {
+                // console.log("\nenemy turn");
+                // console.log(aEnemy.position.x + " " + aEnemy.position.y);
                 var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
                 if (distance.x <= aEnemy.combat.attackRange && distance.y <= aEnemy.combat.attackRange) {
-                    console.log("player within range");
+                    console.log("player within attack range");
                     combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
                 } else if (distance.x <= aEnemy.combat.senseRange && distance.y <= aEnemy.combat.senseRange) {
+                    console.log("player within sense range");
                     var path = pathfinder.findPath(aEnemy.position, aEnemy.target.position);
-                    aEnemy.position = path[1];
+                    aEnemy.position = { x: path[1].x, y: path[1].y };
+                } else {
+                    console.log("moving randomly");
+                    var nextTile = aEnemy.tilemap.getRandomAdjacent(aEnemy.position);
+                    aEnemy.position = { x: nextTile.x, y: nextTile.y };
                 }
+                // console.log(aEnemy.position.x + " " + aEnemy.position.y);
             }
             break;
 
@@ -69,6 +77,22 @@ function CombatStruct(aType) {
             this.attackType = "Ranged";
             this.attackRange = 5;
             this.senseRange = 15;
+
+            this.turnAI = function (aEnemy) {
+                var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
+                if (distance.x <= aEnemy.combat.attackRange && distance.y <= aEnemy.combat.attackRange) {
+                    console.log("player within attack range");
+                    combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
+                } else if (distance.x <= aEnemy.combat.senseRange && distance.y <= aEnemy.combat.senseRange) {
+                    console.log("player within sense range");
+                    var path = pathfinder.findPath(aEnemy.position, aEnemy.target.position);
+                    aEnemy.position = { x: path[1].x, y: path[1].y };
+                } else {
+                    console.log("moving randomly");
+                    var nextTile = aEnemy.tilemap.getRandomAdjacent(aEnemy.position);
+                    aEnemy.position = { x: nextTile.x, y: nextTile.y };
+                }
+            }
             break;
 
         case "Captain":
@@ -80,6 +104,22 @@ function CombatStruct(aType) {
             this.attackType = "Melee";
             this.attackRange = 1;
             this.senseRange = 20;
+
+            this.turnAI = function (aEnemy) {
+                var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
+                if (distance.x <= aEnemy.combat.attackRange && distance.y <= aEnemy.combat.attackRange) {
+                    console.log("player within attack range");
+                    combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
+                } else if (distance.x <= aEnemy.combat.senseRange && distance.y <= aEnemy.combat.senseRange) {
+                    console.log("player within sense range");
+                    var path = pathfinder.findPath(aEnemy.position, aEnemy.target.position);
+                    aEnemy.position = { x: path[1].x, y: path[1].y };
+                } else {
+                    console.log("moving randomly");
+                    var nextTile = aEnemy.tilemap.getRandomAdjacent(aEnemy.position);
+                    aEnemy.position = { x: nextTile.x, y: nextTile.y };
+                }
+            }
             break;
 
         case "Shaman":
@@ -91,6 +131,22 @@ function CombatStruct(aType) {
             this.attackType = "Magic";
             this.attackRange = 10;
             this.senseRange = 15;
+
+            this.turnAI = function (aEnemy) {
+                var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
+                if (distance.x <= aEnemy.combat.attackRange && distance.y <= aEnemy.combat.attackRange) {
+                    console.log("player within attack range");
+                    combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
+                } else if (distance.x <= aEnemy.combat.senseRange && distance.y <= aEnemy.combat.senseRange) {
+                    console.log("player within sense range");
+                    var path = pathfinder.findPath(aEnemy.position, aEnemy.target.position);
+                    aEnemy.position = { x: path[1].x, y: path[1].y };
+                } else {
+                    console.log("moving randomly");
+                    var nextTile = aEnemy.tilemap.getRandomAdjacent(aEnemy.position);
+                    aEnemy.position = { x: nextTile.x, y: nextTile.y };
+                }
+            }
             break;
     }
 }
