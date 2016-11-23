@@ -47,7 +47,7 @@ var resetTimer = true;          //Take turn immediately on movement key press if
 var player = new Player({ x: randPos.x, y: randPos.y }, tilemap, "Archer");
 
 // should we make the player a 'global'? Rather than pass it to each enemy?
-var enemy = new Enemy(tilemap.findOpenSpace(), tilemap, player);
+var enemy = new Enemy(tilemap.findOpenSpace(), tilemap, "Zombie", player);
 
 window.player = player;
 

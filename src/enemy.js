@@ -1,12 +1,11 @@
 "use strict";
 
 const Tilemap = require('./tilemap');
-const Vector = require('./vector');
 const CombatStruct = require("./combat_struct");
 
 module.exports = exports = Enemy;
 
-function Enemy(position, tilemap, target) {
+function Enemy(position, tilemap, combatClass, target) {
     this.state = "idle";
     this.position = { x: position.x, y: position.y };
     this.size = { width: 96, height: 96 };
@@ -14,7 +13,8 @@ function Enemy(position, tilemap, target) {
     this.spritesheet = new Image();
     this.spritesheet.src = "./spritesheets/sprites.png";
     this.type = "Enemy";
-    this.combat = new CombatStruct("Zombie");
+    this.class = combatClass;
+    this.combat = new CombatStruct(this.class);
     this.target = target;
 
     // console.log(this.position.x + " " + this.position.y);
@@ -24,14 +24,7 @@ Enemy.prototype.processTurn = function () {
     if (this.combat.health <= 0) this.state = "dead";
     if (this.state == "dead") return; // shouldnt be necessary
 
-    var distance = Vector.distance(this.position, this.target.position);
-    if (distance.x <= this.combat.attackRange && distance.y <= this.combat.attackRange) {
-        console.log("player within range");
-        combatController.handleAttack(this.combat, this.target.combat);
-    } else if (distance.x <= this.combat.senseRange && distance.y <= this.combat.senseRange) {
-        var path = pathfinder.findPath(this.position, this.target.position);
-        this.position = path[1];
-    }
+    this.combat.turnAI(this);
 }
 
 Enemy.prototype.update = function (time) {

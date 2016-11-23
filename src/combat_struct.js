@@ -1,5 +1,8 @@
 "use strict";
 
+const Tilemap = require('./tilemap');
+const Vector = require('./vector');
+
 module.exports = exports = CombatStruct;
 
 function CombatStruct(aType) {
@@ -44,6 +47,17 @@ function CombatStruct(aType) {
             this.attackType = "Melee";
             this.attackRange = 1;
             this.senseRange = 15; // This might be too high, what if we keep the camera centered..?
+
+            this.turnAI = function (aEnemy) {
+                var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
+                if (distance.x <= aEnemy.combat.attackRange && distance.y <= aEnemy.combat.attackRange) {
+                    console.log("player within range");
+                    combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
+                } else if (distance.x <= aEnemy.combat.senseRange && distance.y <= aEnemy.combat.senseRange) {
+                    var path = pathfinder.findPath(aEnemy.position, aEnemy.target.position);
+                    aEnemy.position = path[1];
+                }
+            }
             break;
 
         case "EnemyRanged":
