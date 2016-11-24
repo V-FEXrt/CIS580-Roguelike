@@ -44,7 +44,7 @@ var turnDelay = defaultTurnDelay; //current time between turns
 var autoTurn = false;           //If true, reduces time between turns and turns happen automatically
 var resetTimer = true;          //Take turn immediately on movement key press if true
 
-var player = new Player({ x: randPos.x, y: randPos.y }, tilemap, "Archer");
+var player = new Player({ x: randPos.x, y: randPos.y }, tilemap, "Knight");
 
 // should we make the player a 'global'? Rather than pass it to each enemy?
 var enemy = new Enemy(tilemap.findOpenSpace(), tilemap, "Zombie", player);
@@ -72,14 +72,14 @@ canvas.onclick = function (event) {
   if (enemy.position.x == clickedWorldPos.x && enemy.position.y == clickedWorldPos.y) {
     console.log("clicked on enemy");
     var distance = Vector.distance(player.position, enemy.position);
-    if (distance.x <= player.combat.attackRange && distance.y <= player.combat.attackRange) {
+    if (distance.x <= player.combat.weapon.range && distance.y <= player.combat.weapon.range) {
       autoTurn = false;
       console.log("enemy within range");
       combatController.handleAttack(player.combat, enemy.combat);
       processTurn();
     } else {
       var path = pathfinder.findPath(player.position, enemy.position);
-      path = path.splice(0, path.length - player.combat.attackRange);
+      path = path.splice(0, path.length - player.combat.weapon.range);
       player.walkPath(path, function () {
         turnDelay = defaultTurnDelay;
         autoTurn = false;

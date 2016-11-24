@@ -3,6 +3,13 @@
 const Tilemap = require('./tilemap');
 const Vector = require('./vector');
 
+// weapon/armor shouldnt be done here...
+// they can still be stored here if necessary, but 
+// I think it might make more sense to have them 
+// directly on the player/enemy?
+const Weapon = require("./weapon");
+const Armor = require("./armor");
+
 module.exports = exports = CombatStruct;
 
 function CombatStruct(aType) {
@@ -11,30 +18,27 @@ function CombatStruct(aType) {
             this.health = 20;
             this.stamina = 100;
             this.someOtherPowerup = 50;
-            this.weaponLevel = 1; // Temporary until working
-            this.armorLevel = 5; // Temporary until working
+            this.weapon = new Weapon("Longsword", 1);
+            this.armor = new Armor("Hide");
             this.attackType = "Melee";
-            this.attackRange = 1;
             break;
 
         case "Archer":
             this.health = 10;
             this.stamina = 100;
             this.someOtherPowerup = 50;
-            this.weaponLevel = 1; // Temporary until working
-            this.armorLevel = 3; // Temporary until working
+            this.weapon = new Weapon("Broadhead", 1);
+            this.armor = new Armor("Hide");
             this.attackType = "Ranged";
-            this.attackRange = 5;
             break;
 
         case "Mage":
             this.health = 10;
             this.stamina = 100;
             this.someOtherPowerup = 50;
-            this.weaponLevel = 1; // Temporary until working
-            this.armorLevel = 3; // Temporary until working
+            this.weapon = new Weapon("Eldritch Blast", 1);
+            this.armor = new Armor("Hide");
             this.attackType = "Magic";
-            this.attackRange = 255;
             break;
 
 
@@ -42,17 +46,16 @@ function CombatStruct(aType) {
             this.health = 10;
             this.stamina = 100;
             this.someOtherPowerup = 50;
-            this.weaponLevel = 1;
-            this.armorLevel = 1;
+            this.weapon = new Weapon("Longsword", 1);
+            this.armor = new Armor("Flesh");
             this.attackType = "Melee";
-            this.attackRange = 1;
-            this.senseRange = 15; // This might be too high, what if we keep the camera centered..?
+            this.senseRange = 150; // This might be too high, what if we keep the camera centered..?
 
             this.turnAI = function (aEnemy) {
                 // console.log("\nenemy turn");
                 // console.log(aEnemy.position.x + " " + aEnemy.position.y);
                 var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
-                if (distance.x <= aEnemy.combat.attackRange && distance.y <= aEnemy.combat.attackRange) {
+                if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
                     console.log("player within attack range");
                     combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
                 } else if (distance.x <= aEnemy.combat.senseRange && distance.y <= aEnemy.combat.senseRange) {
@@ -73,15 +76,14 @@ function CombatStruct(aType) {
             this.health = 10;
             this.stamina = 100;
             this.someOtherPowerup = 50;
-            this.weaponLevel = 1;
-            this.armorLevel = 3;
+            this.weapon;
+            this.armor;
             this.attackType = "Ranged";
-            this.attackRange = 5;
             this.senseRange = 15;
 
             this.turnAI = function (aEnemy) {
                 var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
-                if (distance.x <= aEnemy.combat.attackRange && distance.y <= aEnemy.combat.attackRange) {
+                if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
                     console.log("player within attack range");
                     combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
                 } else if (distance.x <= aEnemy.combat.senseRange && distance.y <= aEnemy.combat.senseRange) {
@@ -101,15 +103,14 @@ function CombatStruct(aType) {
             this.health = 25;
             this.stamina = 100;
             this.someOtherPowerup = 50;
-            this.weaponLevel = 1;
-            this.armorLevel = 5;
+            this.weapon;
+            this.armor;
             this.attackType = "Melee";
-            this.attackRange = 1;
             this.senseRange = 20;
 
             this.turnAI = function (aEnemy) {
                 var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
-                if (distance.x <= aEnemy.combat.attackRange && distance.y <= aEnemy.combat.attackRange) {
+                if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
                     console.log("player within attack range");
                     combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
                 } else if (distance.x <= aEnemy.combat.senseRange && distance.y <= aEnemy.combat.senseRange) {
@@ -129,15 +130,14 @@ function CombatStruct(aType) {
             this.health = 10;
             this.stamina = 100;
             this.someOtherPowerup = 50;
-            this.weaponLevel = 1;
-            this.armorLevel = 1;
+            this.weapon;
+            this.armor;
             this.attackType = "Magic";
-            this.attackRange = 10;
             this.senseRange = 15;
 
             this.turnAI = function (aEnemy) {
                 var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
-                if (distance.x <= aEnemy.combat.attackRange && distance.y <= aEnemy.combat.attackRange) {
+                if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
                     console.log("player within attack range");
                     combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
                 } else if (distance.x <= aEnemy.combat.senseRange && distance.y <= aEnemy.combat.senseRange) {
