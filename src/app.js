@@ -18,7 +18,7 @@ const Vector = require('./vector');
 var canvas = document.getElementById('screen');
 var game = new Game(canvas, update, render);
 var entityManager = new EntityManager();
-var combatController = new CombatController();
+window.combatController = new CombatController();
 
 
 var tilemap = new Tilemap({ width: canvas.width, height: canvas.height }, 64, 64, tileset, {
@@ -44,9 +44,10 @@ var turnDelay = defaultTurnDelay; //current time between turns
 var autoTurn = false;           //If true, reduces time between turns and turns happen automatically
 var resetTimer = true;          //Take turn immediately on movement key press if true
 
-var player = new Player({ x: randPos.x, y: randPos.y }, tilemap, "Knight");
+var player = new Player({ x: randPos.x, y: randPos.y }, tilemap, "Archer");
 
-var enemy = new Enemy({ x: randPos.x + 1, y: randPos.y + 1 }, tilemap); // temp - just spawn next to player
+// should we make the player a 'global'? Rather than pass it to each enemy?
+var enemy = new Enemy(tilemap.findOpenSpace(), tilemap, "Zombie", player);
 
 window.player = player;
 
@@ -70,10 +71,12 @@ canvas.onclick = function (event) {
   var clickedWorldPos = tilemap.toWorldCoords(node);
   if (enemy.position.x == clickedWorldPos.x && enemy.position.y == clickedWorldPos.y) {
     console.log("clicked on enemy");
-    var distance = Vector.subtract(player.position, enemy.position);
-    if (Math.abs(distance.x) <= player.combat.attackRange && Math.abs(distance.y) <= player.combat.attackRange) {
+    var distance = Vector.distance(player.position, enemy.position);
+    if (distance.x <= player.combat.attackRange && distance.y <= player.combat.attackRange) {
+      autoTurn = false;
       console.log("enemy within range");
       combatController.handleAttack(player.combat, enemy.combat);
+      processTurn();
     } else {
       var path = pathfinder.findPath(player.position, enemy.position);
       path = path.splice(0, path.length - player.combat.attackRange);
@@ -81,6 +84,7 @@ canvas.onclick = function (event) {
         turnDelay = defaultTurnDelay;
         autoTurn = false;
         combatController.handleAttack(player.combat, enemy.combat);
+        processTurn();
       });
     }
   } else {
@@ -227,3 +231,4 @@ function render(elapsedTime, ctx) {
 function processTurn() {
   entityManager.processTurn(input);
 }
+

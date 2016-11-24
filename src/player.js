@@ -33,10 +33,13 @@ function Player(position, tilemap, combatClass) {
  * {DOMHighResTimeStamp} time the elapsed time since the last frame
  */
 Player.prototype.update = function (time) {
-
+    // if we're dead, we should probably do something
+    if (this.combat.health <= 0) this.state = "dead";
 }
 
 Player.prototype.walkPath = function (path, completion) {
+    if (this.state == "dead") return; // shouldnt be necessary
+
     path.shift();
     this.walk = path;
     this.walkCompletion = completion;
@@ -49,10 +52,13 @@ Player.prototype.walkPath = function (path, completion) {
  *{input} keyboard input given for this turn
  */
 Player.prototype.processTurn = function (input) {
+    if (this.combat.health <= 0) this.state = "dead";
+    if (this.state == "dead") return; // shouldnt be necessary
 
-    if(hasUserInput(input)){
-      // Cancel walk
-      this.walk = [];
+
+    if (hasUserInput(input)) {
+        // Cancel walk
+        this.walk = [];
     }
 
     if (this.walk.length > 0) {
@@ -106,6 +112,8 @@ Player.prototype.retain = function () {
  * {CanvasRenderingContext2D} ctx the context to render into
  */
 Player.prototype.render = function (elapsedTime, ctx) {
+    if (this.state == "dead") return; // shouldnt be necessary
+
     var position = this.tilemap.toScreenCoords(this.position);
 
     ctx.drawImage(
@@ -118,6 +126,7 @@ Player.prototype.render = function (elapsedTime, ctx) {
 
 }
 
-function hasUserInput(input){
-  return input.up || input.down || input.right || input.left;
+function hasUserInput(input) {
+    return input.up || input.down || input.right || input.left;
 }
+
