@@ -58,7 +58,8 @@ function CombatStruct(aType) {
                 } else if (distance.x <= aEnemy.combat.senseRange && distance.y <= aEnemy.combat.senseRange) {
                     console.log("player within sense range");
                     var path = pathfinder.findPath(aEnemy.position, aEnemy.target.position);
-                    aEnemy.position = { x: path[1].x, y: path[1].y };
+                    if (path.length > 1) aEnemy.position = { x: path[1].x, y: path[1].y };
+                    else console.log("path less than 1 - no path to target");
                 } else {
                     console.log("moving randomly");
                     var nextTile = aEnemy.tilemap.getRandomAdjacent(aEnemy.position);
@@ -86,7 +87,8 @@ function CombatStruct(aType) {
                 } else if (distance.x <= aEnemy.combat.senseRange && distance.y <= aEnemy.combat.senseRange) {
                     console.log("player within sense range");
                     var path = pathfinder.findPath(aEnemy.position, aEnemy.target.position);
-                    aEnemy.position = { x: path[1].x, y: path[1].y };
+                    if (path.length > 1) aEnemy.position = { x: path[1].x, y: path[1].y };
+                    else console.log("path less than 1 - no path to target");
                 } else {
                     console.log("moving randomly");
                     var nextTile = aEnemy.tilemap.getRandomAdjacent(aEnemy.position);
@@ -113,7 +115,8 @@ function CombatStruct(aType) {
                 } else if (distance.x <= aEnemy.combat.senseRange && distance.y <= aEnemy.combat.senseRange) {
                     console.log("player within sense range");
                     var path = pathfinder.findPath(aEnemy.position, aEnemy.target.position);
-                    aEnemy.position = { x: path[1].x, y: path[1].y };
+                    if (path.length > 1) aEnemy.position = { x: path[1].x, y: path[1].y };
+                    else console.log("path less than 1 - no path to target");
                 } else {
                     console.log("moving randomly");
                     var nextTile = aEnemy.tilemap.getRandomAdjacent(aEnemy.position);
@@ -140,7 +143,8 @@ function CombatStruct(aType) {
                 } else if (distance.x <= aEnemy.combat.senseRange && distance.y <= aEnemy.combat.senseRange) {
                     console.log("player within sense range");
                     var path = pathfinder.findPath(aEnemy.position, aEnemy.target.position);
-                    aEnemy.position = { x: path[1].x, y: path[1].y };
+                    if (path.length > 1) aEnemy.position = { x: path[1].x, y: path[1].y };
+                    else console.log("path less than 1 - no path to target");
                 } else {
                     console.log("moving randomly");
                     var nextTile = aEnemy.tilemap.getRandomAdjacent(aEnemy.position);
