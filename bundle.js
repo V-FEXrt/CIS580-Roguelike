@@ -13,6 +13,7 @@ const Player = require('./player');
 const Pathfinder = require('./pathfinder.js');
 const CombatController = require("./combat_controller");
 const Vector = require('./vector');
+const Click = require('./click');
 
 /* Global variables */
 var canvas = document.getElementById('screen');
@@ -60,46 +61,46 @@ canvas.onclick = function (event) {
     y: parseInt(event.offsetY / 96)
   }
 
-  turnDelay = defaultTurnDelay / 2;
-  autoTurn = true;
-/*
   var clickedWorldPos = tilemap.toWorldCoords(node);
-  if (enemy.position.x == clickedWorldPos.x && enemy.position.y == clickedWorldPos.y) {
+  entityManager.addEntity(new Click(clickedWorldPos, tilemap, player, function(enemy){
+    turnDelay = defaultTurnDelay / 2;
+    autoTurn = true;
+
     console.log("clicked on enemy");
     var distance = Vector.distance(player.position, enemy.position);
     if (distance.x <= player.combat.weapon.range && distance.y <= player.combat.weapon.range) {
+      turnDelay = defaultTurnDelay;
       autoTurn = false;
       console.log("enemy within range");
       combatController.handleAttack(player.combat, enemy.combat);
       processTurn();
     } else {
-      var path = pathfinder.findPath(player.position, enemy.position);
-      path = path.splice(0, path.length - player.combat.weapon.range);
-      player.walkPath(path, function () {
-        turnDelay = defaultTurnDelay;
-        autoTurn = false;
-        combatController.handleAttack(player.combat, enemy.combat);
-        processTurn();
-      });
+        var path = pathfinder.findPath(player.position, enemy.position);
+        path = path.splice(0, path.length - player.combat.weapon.range);
+        player.walkPath(path, function () {
+          turnDelay = defaultTurnDelay;
+          autoTurn = false;
+          combatController.handleAttack(player.combat, enemy.combat);
+          processTurn();
+        });
     }
-  } else {
+  }));
+}
+/* else {
     player.walkPath(pathfinder.findPath(player.position, clickedWorldPos), function () {
       turnDelay = defaultTurnDelay;
       autoTurn = false;
     });
-  }*/
-}
+*/
 
 /**
  * @function onkeydown
  * Handles keydown events
  */
-var position = { x: 0, y: 0 };
 window.onkeydown = function (event) {
   switch (event.key) {
     case "ArrowUp":
     case "w":
-      //position.y--;
       input.up = true;
       if (resetTimer) {
         turnTimer = turnDelay;
@@ -109,7 +110,6 @@ window.onkeydown = function (event) {
       break;
     case "ArrowDown":
     case "s":
-      //position.y++;
       input.down = true;
       if (resetTimer) {
         turnTimer = turnDelay;
@@ -119,7 +119,6 @@ window.onkeydown = function (event) {
       break;
     case "ArrowLeft":
     case "a":
-      //position.x--;
       input.left = true;
       if (resetTimer) {
         turnTimer = turnDelay;
@@ -129,7 +128,6 @@ window.onkeydown = function (event) {
       break;
     case "ArrowRight":
     case "d":
-      //position.x++;
       input.right = true;
       if (resetTimer) {
         turnTimer = turnDelay;
@@ -227,7 +225,7 @@ function processTurn() {
   entityManager.processTurn(input);
 }
 
-},{"../tilemaps/tiledef.json":16,"./combat_controller":3,"./entity_manager":6,"./entity_spawner":7,"./game":8,"./pathfinder.js":10,"./player":11,"./tilemap":13,"./vector":14}],2:[function(require,module,exports){
+},{"../tilemaps/tiledef.json":17,"./click":3,"./combat_controller":4,"./entity_manager":7,"./entity_spawner":8,"./game":9,"./pathfinder.js":11,"./player":12,"./tilemap":14,"./vector":15}],2:[function(require,module,exports){
 "use strict";
 
 module.exports = exports = Armor;
@@ -274,6 +272,55 @@ function Armor(aType) {
     }
 }
 },{}],3:[function(require,module,exports){
+"use strict";
+
+module.exports = exports = Click;
+
+function Click(position, tilemap, player, collisionCallback) {
+  this.type = "Click";
+  this.position = { x: position.x, y: position.y };
+  // To change AOE change size of the click.
+  this.size = {
+    width: 95,
+    height: 95
+  }
+
+  this.shouldRetain = true;
+  this.tilemap = tilemap;
+  this.player = player;
+  this.collisionCallback = collisionCallback;
+  this.color = "green"
+}
+
+Click.prototype.update = function (time) {
+}
+
+Click.prototype.processTurn = function (input) {
+  this.shouldRetain = false;
+}
+
+Click.prototype.collided = function (entity) {
+  if(entity.type == "Enemy"){
+    this.collisionCallback(entity);
+    // only call once, will need to change for AOE and only call once per enemy instance
+    this.collisionCallback = function(){}
+  }
+}
+
+Click.prototype.retain = function () {
+    return this.shouldRetain;
+}
+
+Click.prototype.render = function (elapsedTime, ctx) {
+  if(window.debug){
+    var position = this.tilemap.toScreenCoords(this.position);
+    ctx.fillStyle = this.color;
+    ctx.fillRect(position.x * this.size.width, position.y * this.size.height, this.size.width, this.size.height);
+    this.color = "green"
+  }
+}
+
+},{}],4:[function(require,module,exports){
 "use strict";
 
 module.exports = exports = CombatController;
@@ -329,7 +376,7 @@ CombatController.prototype.handleAttack = function (aAttackerStruct, aDefenderSt
 function rollRandom(aMinimum, aMaximum) {
     return Math.floor(Math.random() * (aMaximum - aMinimum) + aMinimum);
 }
-},{"./combat_struct":4}],4:[function(require,module,exports){
+},{"./combat_struct":5}],5:[function(require,module,exports){
 "use strict";
 
 const Tilemap = require('./tilemap');
@@ -488,7 +535,7 @@ function CombatStruct(aType) {
 }
 
 
-},{"./armor":2,"./tilemap":13,"./vector":14,"./weapon":15}],5:[function(require,module,exports){
+},{"./armor":2,"./tilemap":14,"./vector":15,"./weapon":16}],6:[function(require,module,exports){
 "use strict";
 
 const Tilemap = require('./tilemap');
@@ -545,7 +592,7 @@ Enemy.prototype.render = function (elapsedTime, ctx) {
 }
 
 
-},{"./combat_struct":4,"./tilemap":13}],6:[function(require,module,exports){
+},{"./combat_struct":5,"./tilemap":14}],7:[function(require,module,exports){
 "use strict";
 
 /**
@@ -644,7 +691,7 @@ EntityManager.prototype.update = function(elapsedTime) {
       collisions.push(pair);
     }
   });
-
+  
   collisions.forEach(function(pair){
     pair.a.collided(pair.b);
     pair.b.collided(pair.a);
@@ -705,14 +752,10 @@ function failType(){
 }
 
 function collision(entity1, entity2){
-  return !(
-    (entity1.position.y + entity1.size.height < entity2.position.y) ||
-    (entity1.position.y > entity2.position.y + entity2.size.height) ||
-    (entity1.position.x > entity2.position.x + entity2.size.width) ||
-    (entity1.position.x + entity1.size.width < entity2.position.x))
+  return entity1.position.x == entity2.position.x && entity1.position.y == entity2.position.y
 }
 
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 "use strict";
 
 const Enemy = require('./enemy');
@@ -752,7 +795,7 @@ function spawnEnemy(em, tilemap, player){
   em.addEntity(new Enemy(tilemap.findOpenSpace(), tilemap, "Zombie", player))
 }
 
-},{"./enemy":5,"./powerup":12}],8:[function(require,module,exports){
+},{"./enemy":6,"./powerup":13}],9:[function(require,module,exports){
 "use strict";
 
 /**
@@ -810,7 +853,7 @@ Game.prototype.loop = function(newTime) {
   this.frontCtx.drawImage(this.backBuffer, 0, 0);
 }
 
-},{}],9:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 "use strict";
 
 module.exports = exports = MapGenerator;
@@ -982,7 +1025,7 @@ function rand(upper){
   return Math.floor(Math.random() * upper);
 }
 
-},{}],10:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 /**
  * @module A pathfinding module providing
  * a visualizaiton of common tree-search
@@ -1223,7 +1266,7 @@ Pathfinder.prototype.step = function() {
   return undefined;
 }
 
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 "use strict";
 
 const Tilemap = require('./tilemap');
@@ -1357,7 +1400,7 @@ function hasUserInput(input) {
 }
 
 
-},{"./combat_struct":4,"./tilemap":13,"./vector":14}],12:[function(require,module,exports){
+},{"./combat_struct":5,"./tilemap":14,"./vector":15}],13:[function(require,module,exports){
 "use strict";
 
 const Tilemap = require('./tilemap');
@@ -1405,21 +1448,19 @@ Powerup.prototype.collided = function (entity) {
     if (this.used) return;
     if (entity.type == "Player") {
         //Update player's health/strength/item
-        if (entity.position.x == this.position.x && entity.position.y == this.position.y) {
-            switch (this.currPower) {
-                case 1:
-                    entity.combat.health += 5;
-                    this.used = true;
-                    break;
-                case 2:
-                    entity.combat.stamina += 20;
-                    this.used = true;
-                    break;
-                case 3:
-                    entity.combat.someOtherPowerup += 10;
-                    this.used = true;
-                    break;
-            }
+        switch (this.currPower) {
+            case 1:
+                entity.combat.health += 5;
+                this.used = true;
+                break;
+            case 2:
+                entity.combat.stamina += 20;
+                this.used = true;
+                break;
+            case 3:
+                entity.combat.someOtherPowerup += 10;
+                this.used = true;
+                break;
         }
     }
 }
@@ -1451,7 +1492,7 @@ Powerup.prototype.render = function (elapsedTime, ctx) {
     //ctx.drawImage(this.power,0,25,25,25,position.x*this.size.width, position.y*this.size.height,96,96);
     //ctx.drawImage(this.power,25,50,25,25,position.x*this.size.width, position.y*this.size.height,96,96);
 
-},{"./tilemap":13}],13:[function(require,module,exports){
+},{"./tilemap":14}],14:[function(require,module,exports){
 "use strict";
 
 const MapGenerator = require('./map_generator');
@@ -1659,7 +1700,7 @@ Tilemap.prototype.getRandomAdjacent = function (aTile) {
 }
 
 
-},{"./map_generator":9,"./vector":14}],14:[function(require,module,exports){
+},{"./map_generator":10,"./vector":15}],15:[function(require,module,exports){
 "use strict";
 
 /**
@@ -1761,7 +1802,7 @@ function distance(a, b){
   var distance=this.subtract(a,b);
   return {x: Math.abs(distance.x), y: Math.abs(distance.y)};
 }
-},{}],15:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 "use strict";
 
 module.exports = exports = Weapon;
@@ -1885,7 +1926,7 @@ function Weapon(aType, aLevel) {
             break;
     }
 }
-},{}],16:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 module.exports={
  "tileheight":96,
  "tilewidth":96,

@@ -96,7 +96,7 @@ EntityManager.prototype.update = function(elapsedTime) {
       collisions.push(pair);
     }
   });
-
+  
   collisions.forEach(function(pair){
     pair.a.collided(pair.b);
     pair.b.collided(pair.a);
@@ -157,9 +157,5 @@ function failType(){
 }
 
 function collision(entity1, entity2){
-  return !(
-    (entity1.position.y + entity1.size.height < entity2.position.y) ||
-    (entity1.position.y > entity2.position.y + entity2.size.height) ||
-    (entity1.position.x > entity2.position.x + entity2.size.width) ||
-    (entity1.position.x + entity1.size.width < entity2.position.x))
+  return entity1.position.x == entity2.position.x && entity1.position.y == entity2.position.y
 }

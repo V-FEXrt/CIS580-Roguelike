@@ -45,21 +45,19 @@ Powerup.prototype.collided = function (entity) {
     if (this.used) return;
     if (entity.type == "Player") {
         //Update player's health/strength/item
-        if (entity.position.x == this.position.x && entity.position.y == this.position.y) {
-            switch (this.currPower) {
-                case 1:
-                    entity.combat.health += 5;
-                    this.used = true;
-                    break;
-                case 2:
-                    entity.combat.stamina += 20;
-                    this.used = true;
-                    break;
-                case 3:
-                    entity.combat.someOtherPowerup += 10;
-                    this.used = true;
-                    break;
-            }
+        switch (this.currPower) {
+            case 1:
+                entity.combat.health += 5;
+                this.used = true;
+                break;
+            case 2:
+                entity.combat.stamina += 20;
+                this.used = true;
+                break;
+            case 3:
+                entity.combat.someOtherPowerup += 10;
+                this.used = true;
+                break;
         }
     }
 }
