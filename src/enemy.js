@@ -8,7 +8,7 @@ module.exports = exports = Enemy;
 function Enemy(position, tilemap, combatClass, target) {
     this.state = "idle";
     this.position = { x: position.x, y: position.y };
-    this.size = { width: 96, height: 96 };
+    this.size = { width: 95, height: 95 };
     this.tilemap = tilemap;
     this.spritesheet = new Image();
     this.spritesheet.src = "./spritesheets/sprites.png";
@@ -52,4 +52,3 @@ Enemy.prototype.render = function (elapsedTime, ctx) {
         96, 96
     );
 }
-

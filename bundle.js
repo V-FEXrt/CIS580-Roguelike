@@ -546,7 +546,7 @@ module.exports = exports = Enemy;
 function Enemy(position, tilemap, combatClass, target) {
     this.state = "idle";
     this.position = { x: position.x, y: position.y };
-    this.size = { width: 96, height: 96 };
+    this.size = { width: 95, height: 95 };
     this.tilemap = tilemap;
     this.spritesheet = new Image();
     this.spritesheet.src = "./spritesheets/sprites.png";
@@ -590,7 +590,6 @@ Enemy.prototype.render = function (elapsedTime, ctx) {
         96, 96
     );
 }
-
 
 },{"./combat_struct":5,"./tilemap":14}],7:[function(require,module,exports){
 "use strict";
@@ -662,7 +661,7 @@ EntityManager.prototype.update = function(elapsedTime) {
     active = active.filter(function(oentity){
       var e1r = entity.size.width / 2;
       var e2r = oentity.size.width / 2;
-      return (entity.position.x + e1r) - (oentity.position.x + e2r)  <= e1r + e2r;
+      return ((entity.position.x * 96) + e1r) - ((oentity.position.x * 96) + e2r)  <= e1r + e2r;
     });
     // Since only balls within colliding distance of
     // our current ball are left in the active list,
@@ -691,7 +690,7 @@ EntityManager.prototype.update = function(elapsedTime) {
       collisions.push(pair);
     }
   });
-  
+
   collisions.forEach(function(pair){
     pair.a.collided(pair.b);
     pair.b.collided(pair.a);
@@ -752,7 +751,12 @@ function failType(){
 }
 
 function collision(entity1, entity2){
-  return entity1.position.x == entity2.position.x && entity1.position.y == entity2.position.y
+  return !(
+    ((entity1.position.y * 96) + entity1.size.height < (entity2.position.y * 96)) ||
+    ((entity1.position.y  * 96) > (entity2.position.y * 96) + entity2.size.height) ||
+    ((entity1.position.x  * 96) > (entity2.position.x * 96) + entity2.size.width) ||
+    ((entity1.position.x  * 96) + entity1.size.width < (entity2.position.x * 96)))
+
 }
 
 },{}],8:[function(require,module,exports){
@@ -1286,7 +1290,7 @@ module.exports = exports = Player;
 function Player(position, tilemap, combatClass) {
     this.state = "idle";
     this.position = { x: position.x, y: position.y };
-    this.size = { width: 96, height: 96 };
+    this.size = { width: 95, height: 95 };
     this.spritesheet = new Image();
     this.tilemap = tilemap;
     this.spritesheet.src = './spritesheets/sprites.png';
@@ -1399,7 +1403,6 @@ function hasUserInput(input) {
     return input.up || input.down || input.right || input.left;
 }
 
-
 },{"./combat_struct":5,"./tilemap":14,"./vector":15}],13:[function(require,module,exports){
 "use strict";
 
@@ -1417,7 +1420,7 @@ module.exports = exports = Powerup;
  */
 function Powerup(position, tilemap) {
     this.position = { x: position.x, y: position.y };
-    this.size = { width: 96, height: 96 };
+    this.size = { width: 95, height: 95 };
     this.spritesheet = new Image();
     this.tilemap = tilemap;
     this.spritesheet.src = './spritesheets/powerup.png';
