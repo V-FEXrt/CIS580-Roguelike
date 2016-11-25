@@ -37,7 +37,7 @@ function CombatStruct(aType) {
             this.stamina = 100;
             this.someOtherPowerup = 50;
             this.weapon = new Weapon("Eldritch Blast", 1);
-            this.armor = new Armor("Hide");
+            this.armor = new Armor("Robes");
             this.attackType = "Magic";
             break;
 
@@ -76,8 +76,8 @@ function CombatStruct(aType) {
             this.health = 10;
             this.stamina = 100;
             this.someOtherPowerup = 50;
-            this.weapon;
-            this.armor;
+            this.weapon = new Weapon("Broadhead", 1);
+            this.armor = new Armor("Hide");
             this.attackType = "Ranged";
             this.senseRange = 15;
 
@@ -103,8 +103,8 @@ function CombatStruct(aType) {
             this.health = 25;
             this.stamina = 100;
             this.someOtherPowerup = 50;
-            this.weapon;
-            this.armor;
+            this.weapon = new Weapon("Longsword", 1);
+            this.armor = new Armor("Chain");
             this.attackType = "Melee";
             this.senseRange = 20;
 
@@ -130,10 +130,10 @@ function CombatStruct(aType) {
             this.health = 10;
             this.stamina = 100;
             this.someOtherPowerup = 50;
-            this.weapon;
-            this.armor;
+            this.weapon = new Weapon("Eldritch Blast", 1);
+            this.armor = new Armor("Robes");
             this.attackType = "Magic";
-            this.senseRange = 15;
+            this.senseRange = 10;
 
             this.turnAI = function (aEnemy) {
                 var distance = Vector.distance(aEnemy.position, aEnemy.target.position);

@@ -32,7 +32,7 @@ CombatController.prototype.handleAttack = function (aAttackerStruct, aDefenderSt
         var lSelfDamage = rollRandom(1, lDamageMax + 1);
         aAttackerStruct.health -= lSelfDamage;
         console.log("Crit Fail, take " + lSelfDamage + " damage.");
-    } else if (lAttackRoll == 20 || (lAttackRoll == 19 && aAttackerStruct.attackType == "Ranged")) {
+    } else if (lAttackRoll == 20 || (lAttackRoll == 19 && (aAttackerStruct.attackType == "Ranged" || aAttackerStruct.weapon.type == "Battleaxe"))) {
         lDamageTotal += lDamageMax;
         aDefenderStruct.health -= lDamageTotal;
     } else {

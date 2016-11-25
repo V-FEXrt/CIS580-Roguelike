@@ -12,6 +12,12 @@ function Armor(aType) {
             this.weakType = "spb";
             break;
 
+        case "Robes":
+            this.defense = 5;
+            this.strongType = "spb"; // Purely for balance.
+            this.weakType = "";
+            break;
+
         case "Hide":
             this.defense = 6;
             this.strongType = "b";
