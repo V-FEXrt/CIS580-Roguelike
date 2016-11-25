@@ -1,4 +1,3 @@
-
 "use strict";
 
 const Tilemap = require('./tilemap');
@@ -15,7 +14,7 @@ module.exports = exports = Powerup;
  */
 function Powerup(position, tilemap) {
     this.position = { x: position.x, y: position.y };
-    this.size = { width: 96, height: 96 };
+    this.size = { width: 95, height: 95 };
     this.spritesheet = new Image();
     this.tilemap = tilemap;
     this.spritesheet.src = './spritesheets/powerup.png';
@@ -46,21 +45,19 @@ Powerup.prototype.collided = function (entity) {
     if (this.used) return;
     if (entity.type == "Player") {
         //Update player's health/strength/item
-        if (entity.position.x == this.position.x && entity.position.y == this.position.y) {
-            switch (this.currPower) {
-                case 1:
-                    entity.combat.health += 5;
-                    this.used = true;
-                    break;
-                case 2:
-                    entity.combat.stamina += 20;
-                    this.used = true;
-                    break;
-                case 3:
-                    entity.combat.someOtherPowerup += 10;
-                    this.used = true;
-                    break;
-            }
+        switch (this.currPower) {
+            case 1:
+                entity.combat.health += 5;
+                this.used = true;
+                break;
+            case 2:
+                entity.combat.stamina += 20;
+                this.used = true;
+                break;
+            case 3:
+                entity.combat.someOtherPowerup += 10;
+                this.used = true;
+                break;
         }
     }
 }

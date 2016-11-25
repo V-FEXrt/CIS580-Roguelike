@@ -5,14 +5,14 @@ window.debug = false;
 /* Classes and Libraries */
 const Game = require('./game');
 const EntityManager = require('./entity_manager');
+const EntitySpawner = require('./entity_spawner');
 const Tilemap = require('./tilemap');
 const tileset = require('../tilemaps/tiledef.json');
 const Player = require('./player');
-const Enemy = require("./enemy");
 const Pathfinder = require('./pathfinder.js');
-const Powerup = require('./powerup.js');
 const CombatController = require("./combat_controller");
 const Vector = require('./vector');
+const Click = require('./click');
 
 /* Global variables */
 var canvas = document.getElementById('screen');
@@ -46,16 +46,11 @@ var resetTimer = true;          //Take turn immediately on movement key press if
 
 var player = new Player({ x: randPos.x, y: randPos.y }, tilemap, "Knight");
 
-// should we make the player a 'global'? Rather than pass it to each enemy?
-var enemy = new Enemy(tilemap.findOpenSpace(), tilemap, "Zombie", player);
+EntitySpawner.spawn(entityManager, player, tilemap, 30, 20);
 
 window.player = player;
 
 entityManager.addEntity(player);
-entityManager.addEntity(enemy);
-entityManager.addEntity(new Powerup({ x: randPos.x + 1, y: randPos.y + 1 }, tilemap));
-entityManager.addEntity(new Powerup({ x: randPos.x, y: randPos.y + 1 }, tilemap));
-entityManager.addEntity(new Powerup({ x: randPos.x - 1, y: randPos.y + 1 }, tilemap));
 
 tilemap.moveTo({ x: randPos.x - 5, y: randPos.y - 3 });
 
@@ -65,46 +60,46 @@ canvas.onclick = function (event) {
     y: parseInt(event.offsetY / 96)
   }
 
-  turnDelay = defaultTurnDelay / 2;
-  autoTurn = true;
-
   var clickedWorldPos = tilemap.toWorldCoords(node);
-  if (enemy.position.x == clickedWorldPos.x && enemy.position.y == clickedWorldPos.y) {
+  entityManager.addEntity(new Click(clickedWorldPos, tilemap, player, function(enemy){
+    turnDelay = defaultTurnDelay / 2;
+    autoTurn = true;
+
     console.log("clicked on enemy");
     var distance = Vector.distance(player.position, enemy.position);
     if (distance.x <= player.combat.weapon.range && distance.y <= player.combat.weapon.range) {
+      turnDelay = defaultTurnDelay;
       autoTurn = false;
       console.log("enemy within range");
       combatController.handleAttack(player.combat, enemy.combat);
       processTurn();
     } else {
-      var path = pathfinder.findPath(player.position, enemy.position);
-      path = path.splice(0, path.length - player.combat.weapon.range);
-      player.walkPath(path, function () {
-        turnDelay = defaultTurnDelay;
-        autoTurn = false;
-        combatController.handleAttack(player.combat, enemy.combat);
-        processTurn();
-      });
+        var path = pathfinder.findPath(player.position, enemy.position);
+        path = path.splice(0, path.length - player.combat.weapon.range);
+        player.walkPath(path, function () {
+          turnDelay = defaultTurnDelay;
+          autoTurn = false;
+          combatController.handleAttack(player.combat, enemy.combat);
+          processTurn();
+        });
     }
-  } else {
+  }));
+}
+/* else {
     player.walkPath(pathfinder.findPath(player.position, clickedWorldPos), function () {
       turnDelay = defaultTurnDelay;
       autoTurn = false;
     });
-  }
-}
+*/
 
 /**
  * @function onkeydown
  * Handles keydown events
  */
-var position = { x: 0, y: 0 };
 window.onkeydown = function (event) {
   switch (event.key) {
     case "ArrowUp":
     case "w":
-      //position.y--;
       input.up = true;
       if (resetTimer) {
         turnTimer = turnDelay;
@@ -114,7 +109,6 @@ window.onkeydown = function (event) {
       break;
     case "ArrowDown":
     case "s":
-      //position.y++;
       input.down = true;
       if (resetTimer) {
         turnTimer = turnDelay;
@@ -124,7 +118,6 @@ window.onkeydown = function (event) {
       break;
     case "ArrowLeft":
     case "a":
-      //position.x--;
       input.left = true;
       if (resetTimer) {
         turnTimer = turnDelay;
@@ -134,7 +127,6 @@ window.onkeydown = function (event) {
       break;
     case "ArrowRight":
     case "d":
-      //position.x++;
       input.right = true;
       if (resetTimer) {
         turnTimer = turnDelay;
@@ -231,4 +223,3 @@ function render(elapsedTime, ctx) {
 function processTurn() {
   entityManager.processTurn(input);
 }
-

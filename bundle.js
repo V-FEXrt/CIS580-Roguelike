@@ -6,20 +6,20 @@ window.debug = false;
 /* Classes and Libraries */
 const Game = require('./game');
 const EntityManager = require('./entity_manager');
+const EntitySpawner = require('./entity_spawner');
 const Tilemap = require('./tilemap');
 const tileset = require('../tilemaps/tiledef.json');
 const Player = require('./player');
-const Enemy = require("./enemy");
 const Pathfinder = require('./pathfinder.js');
-const Powerup = require('./powerup.js');
 const CombatController = require("./combat_controller");
 const Vector = require('./vector');
+const Click = require('./click');
 
 /* Global variables */
 var canvas = document.getElementById('screen');
 var game = new Game(canvas, update, render);
 var entityManager = new EntityManager();
-var combatController = new CombatController();
+window.combatController = new CombatController();
 
 
 var tilemap = new Tilemap({ width: canvas.width, height: canvas.height }, 64, 64, tileset, {
@@ -47,15 +47,11 @@ var resetTimer = true;          //Take turn immediately on movement key press if
 
 var player = new Player({ x: randPos.x, y: randPos.y }, tilemap, "Knight");
 
-var enemy = new Enemy({ x: randPos.x + 1, y: randPos.y + 1 }, tilemap); // temp - just spawn next to player
+EntitySpawner.spawn(entityManager, player, tilemap, 30, 20);
 
 window.player = player;
 
 entityManager.addEntity(player);
-entityManager.addEntity(enemy);
-entityManager.addEntity(new Powerup({ x: randPos.x + 1, y: randPos.y + 1 }, tilemap));
-entityManager.addEntity(new Powerup({ x: randPos.x, y: randPos.y + 1 }, tilemap));
-entityManager.addEntity(new Powerup({ x: randPos.x - 1, y: randPos.y + 1 }, tilemap));
 
 tilemap.moveTo({ x: randPos.x - 5, y: randPos.y - 3 });
 
@@ -65,43 +61,46 @@ canvas.onclick = function (event) {
     y: parseInt(event.offsetY / 96)
   }
 
-  turnDelay = defaultTurnDelay / 2;
-  autoTurn = true;
-
   var clickedWorldPos = tilemap.toWorldCoords(node);
-  if (enemy.position.x == clickedWorldPos.x && enemy.position.y == clickedWorldPos.y) {
+  entityManager.addEntity(new Click(clickedWorldPos, tilemap, player, function(enemy){
+    turnDelay = defaultTurnDelay / 2;
+    autoTurn = true;
+
     console.log("clicked on enemy");
-    var distance = Vector.subtract(player.position, enemy.position);
-    if (Math.abs(distance.x) <= player.combat.attackRange && Math.abs(distance.y) <= player.combat.attackRange) {
+    var distance = Vector.distance(player.position, enemy.position);
+    if (distance.x <= player.combat.weapon.range && distance.y <= player.combat.weapon.range) {
+      turnDelay = defaultTurnDelay;
+      autoTurn = false;
       console.log("enemy within range");
       combatController.handleAttack(player.combat, enemy.combat);
+      processTurn();
     } else {
-      var path = pathfinder.findPath(player.position, enemy.position);
-      path = path.splice(0, path.length - player.combat.attackRange);
-      player.walkPath(path, function () {
-        turnDelay = defaultTurnDelay;
-        autoTurn = false;
-        combatController.handleAttack(player.combat, enemy.combat);
-      });
+        var path = pathfinder.findPath(player.position, enemy.position);
+        path = path.splice(0, path.length - player.combat.weapon.range);
+        player.walkPath(path, function () {
+          turnDelay = defaultTurnDelay;
+          autoTurn = false;
+          combatController.handleAttack(player.combat, enemy.combat);
+          processTurn();
+        });
     }
-  } else {
+  }));
+}
+/* else {
     player.walkPath(pathfinder.findPath(player.position, clickedWorldPos), function () {
       turnDelay = defaultTurnDelay;
       autoTurn = false;
     });
-  }
-}
+*/
 
 /**
  * @function onkeydown
  * Handles keydown events
  */
-var position = { x: 0, y: 0 };
 window.onkeydown = function (event) {
   switch (event.key) {
     case "ArrowUp":
     case "w":
-      //position.y--;
       input.up = true;
       if (resetTimer) {
         turnTimer = turnDelay;
@@ -111,7 +110,6 @@ window.onkeydown = function (event) {
       break;
     case "ArrowDown":
     case "s":
-      //position.y++;
       input.down = true;
       if (resetTimer) {
         turnTimer = turnDelay;
@@ -121,7 +119,6 @@ window.onkeydown = function (event) {
       break;
     case "ArrowLeft":
     case "a":
-      //position.x--;
       input.left = true;
       if (resetTimer) {
         turnTimer = turnDelay;
@@ -131,7 +128,6 @@ window.onkeydown = function (event) {
       break;
     case "ArrowRight":
     case "d":
-      //position.x++;
       input.right = true;
       if (resetTimer) {
         turnTimer = turnDelay;
@@ -229,7 +225,102 @@ function processTurn() {
   entityManager.processTurn(input);
 }
 
-},{"../tilemaps/tiledef.json":13,"./combat_controller":2,"./enemy":4,"./entity_manager":5,"./game":6,"./pathfinder.js":8,"./player":9,"./powerup.js":10,"./tilemap":11,"./vector":12}],2:[function(require,module,exports){
+},{"../tilemaps/tiledef.json":17,"./click":3,"./combat_controller":4,"./entity_manager":7,"./entity_spawner":8,"./game":9,"./pathfinder.js":11,"./player":12,"./tilemap":14,"./vector":15}],2:[function(require,module,exports){
+"use strict";
+
+module.exports = exports = Armor;
+
+function Armor(aType) {
+    this.type = aType;
+
+    switch (aType) {
+        case "Flesh":
+            this.defense = 3;
+            this.strongType = "";
+            this.weakType = "spb";
+            break;
+
+        case "Robes":
+            this.defense = 5;
+            this.strongType = "spb"; // Purely for balance.
+            this.weakType = "";
+            break;
+
+        case "Hide":
+            this.defense = 6;
+            this.strongType = "b";
+            this.weakType = "s";
+            break;
+
+        case "Leather":
+            this.defense = 10;
+            this.strongType = "s";
+            this.weakType = "b";
+            break;
+
+        case "Chain":
+            this.defense = 14;
+            this.strongType = "s";
+            this.weakType = "p";
+            break;
+
+        case "Plate":
+            this.defense = 18;
+            this.strongType = "p";
+            this.weakType = "b";
+            break;
+    }
+}
+},{}],3:[function(require,module,exports){
+"use strict";
+
+module.exports = exports = Click;
+
+function Click(position, tilemap, player, collisionCallback) {
+  this.type = "Click";
+  this.position = { x: position.x, y: position.y };
+  // To change AOE change size of the click.
+  this.size = {
+    width: 95,
+    height: 95
+  }
+
+  this.shouldRetain = true;
+  this.tilemap = tilemap;
+  this.player = player;
+  this.collisionCallback = collisionCallback;
+  this.color = "green"
+}
+
+Click.prototype.update = function (time) {
+}
+
+Click.prototype.processTurn = function (input) {
+  this.shouldRetain = false;
+}
+
+Click.prototype.collided = function (entity) {
+  if(entity.type == "Enemy"){
+    this.collisionCallback(entity);
+    // only call once, will need to change for AOE and only call once per enemy instance
+    this.collisionCallback = function(){}
+  }
+}
+
+Click.prototype.retain = function () {
+    return this.shouldRetain;
+}
+
+Click.prototype.render = function (elapsedTime, ctx) {
+  if(window.debug){
+    var position = this.tilemap.toScreenCoords(this.position);
+    ctx.fillStyle = this.color;
+    ctx.fillRect(position.x * this.size.width, position.y * this.size.height, this.size.width, this.size.height);
+    this.color = "green"
+  }
+}
+
+},{}],4:[function(require,module,exports){
 "use strict";
 
 module.exports = exports = CombatController;
@@ -241,137 +332,242 @@ function CombatController() {
 }
 
 CombatController.prototype.handleAttack = function (aAttackerStruct, aDefenderStruct) {
-    console.log("attacker health: " + aAttackerStruct.health);
-    console.log("defender health: " + aDefenderStruct.health);
+    // console.log("attacker health: " + aAttackerStruct.health);
+    // console.log("defender health: " + aDefenderStruct.health);
 
-    var lAttackBase = aAttackerStruct.weaponLevel;
-    var lAttackBonus = 0;
+    var lAttackBase = 0;
+    var lAttackBonus = aAttackerStruct.weapon.hitBonus;
     var lAttackRoll = rollRandom(1, 21);
     var lAttackTotal = lAttackBase + lAttackBonus + lAttackRoll;
 
-    var lDefenseBase = aDefenderStruct.armorLevel;
+    var lDefenseBase = aDefenderStruct.armor.defense;
     var lDefenseBonus = 0;
     var lDefenseTotal = lDefenseBase + lDefenseBonus;
 
-    var lDamageBase = aAttackerStruct.weaponLevel;
-    var lDamageMax = getWeaponDamage(aAttackerStruct.weaponLevel);
-    var lDamageBonus = getWeaponBonus(aAttackerStruct.weaponLevel);
-    var lDamageRoll = rollRandom(1, 1 + lDamageMax);
+    var lDamageBase = aAttackerStruct.weapon.level - 1;
+    var lDamageMax = aAttackerStruct.weapon.damageMax;
+    var lDamageMin = aAttackerStruct.weapon.damageMin;
+    var lDamageRoll = rollRandom(lDamageMin, 1 + lDamageMax);
+    var lDamageBonus = 0;
     var lDamageTotal = lDamageBase + lDamageBonus + lDamageRoll;
 
-    switch (lAttackRoll) {
-        case 1:
-            var lSelfDamage = rollRandom(1, lDamageMax / 2 + 1);
-            aAttackerStruct.health -= lSelfDamage;
-            console.log("Crit Fail, take " + lSelfDamage + " damage.");
-            break;
-
-        case 20:
-            lDamageTotal += lDamageMax;
+    if (lAttackRoll == 1) {
+        var lSelfDamage = rollRandom(1, lDamageMax + 1);
+        aAttackerStruct.health -= lSelfDamage;
+        console.log("Crit Fail, take " + lSelfDamage + " damage.");
+    } else if (lAttackRoll == 20 || (lAttackRoll == 19 && (aAttackerStruct.attackType == "Ranged" || aAttackerStruct.weapon.type == "Battleaxe"))) {
+        lDamageTotal += lDamageMax;
+        aDefenderStruct.health -= lDamageTotal;
+    } else {
+        if (lAttackTotal > lDefenseTotal) {
             aDefenderStruct.health -= lDamageTotal;
-            console.log("Crit, dealt " + lDamageTotal + " damage");
-            break;
-
-        default:
-            if (lAttackTotal > lDefenseTotal) {
-                aDefenderStruct.health -= lDamageTotal;
-                console.log("Hit, dealt " + lDamageTotal + " damage");
-            } else {
-                console.log("Miss, " + lAttackTotal + " against " + lDefenseTotal);
-            }
-            break;
+            console.log("Hit, deal " + lDamageTotal + " damage");
+        } else {
+            console.log("Miss, " + lAttackTotal + " against " + lDefenseTotal);
+        }
     }
 
-    console.log("attacker health: " + aAttackerStruct.health);
-    console.log("defender health: " + aDefenderStruct.health);
+
+    // console.log("attacker health: " + aAttackerStruct.health);
+    // console.log("defender health: " + aDefenderStruct.health);
     console.log("\n\n");
-}
-
-// refactor later, just get it down
-function getWeaponBonus(aLevel) {
-    switch (aLevel % 3) {
-        case 0:
-            return 2;
-
-        case 1:
-            return 0;
-
-        case 2:
-            return 1;
-    }
-}
-
-function getWeaponDamage(aLevel) {
-    return 4 + 2 * Math.floor((aLevel - 1) / 3);
 }
 
 function rollRandom(aMinimum, aMaximum) {
     return Math.floor(Math.random() * (aMaximum - aMinimum) + aMinimum);
 }
-},{"./combat_struct":3}],3:[function(require,module,exports){
+},{"./combat_struct":5}],5:[function(require,module,exports){
 "use strict";
+
+const Tilemap = require('./tilemap');
+const Vector = require('./vector');
+
+// weapon/armor shouldnt be done here...
+// they can still be stored here if necessary, but 
+// I think it might make more sense to have them 
+// directly on the player/enemy?
+const Weapon = require("./weapon");
+const Armor = require("./armor");
 
 module.exports = exports = CombatStruct;
 
 function CombatStruct(aType) {
     switch (aType) {
         case "Knight":
-            this.health = 10;
+            this.health = 20;
             this.stamina = 100;
             this.someOtherPowerup = 50;
-            this.weaponLevel = 1; // Temporary until working
-            this.armorLevel = 5; // Temporary until working
+            this.weapon = new Weapon("Longsword", 1);
+            this.armor = new Armor("Hide"); // No restrictions on Armor types
             this.attackType = "Melee";
-            this.attackRange = 1;
             break;
 
         case "Archer":
-
-            break;
-
-        case "Mage":
-
-            break;
-
-
-        case "Enemy":
             this.health = 10;
             this.stamina = 100;
             this.someOtherPowerup = 50;
-            this.weaponLevel = 1;
-            this.armorLevel = 3;
-            this.attackType = "Melee";
-            this.attackRange = 1;
+            this.weapon = new Weapon("Broadhead", 1);
+            this.armor = new Armor("Hide"); // Can't wear Chain or Plate
+            this.attackType = "Ranged";
+            break;
+
+        case "Mage":
+            this.health = 10;
+            this.stamina = 100;
+            this.someOtherPowerup = 50;
+            this.weapon = new Weapon("Eldritch Blast", 1);
+            this.armor = new Armor("Robes"); // Can only wear Robes, nothing else
+            this.attackType = "Magic";
             break;
 
 
+        case "Zombie":
+            this.health = 10;
+            this.stamina = 100;
+            this.someOtherPowerup = 50;
+            this.weapon = new Weapon("Longsword", 1);
+            this.armor = new Armor("Flesh");
+            this.attackType = "Melee";
+            this.senseRange = 10; // This might be too high, what if we keep the camera centered..?
+
+            this.turnAI = function (aEnemy) {
+                // console.log("\nenemy turn");
+                // console.log(aEnemy.position.x + " " + aEnemy.position.y);
+                var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
+                if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
+                    console.log("player within attack range");
+                    combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
+                } else if (distance.x <= aEnemy.combat.senseRange && distance.y <= aEnemy.combat.senseRange) {
+                    console.log("player within sense range");
+                    var path = pathfinder.findPath(aEnemy.position, aEnemy.target.position);
+                    if (path.length > 1) aEnemy.position = { x: path[1].x, y: path[1].y };
+                    else console.log("path less than 1 - no path to target");
+                } else {
+                    console.log("moving randomly");
+                    var nextTile = aEnemy.tilemap.getRandomAdjacent(aEnemy.position);
+                    aEnemy.position = { x: nextTile.x, y: nextTile.y };
+                }
+                // console.log(aEnemy.position.x + " " + aEnemy.position.y);
+            }
+            break;
+
+        case "EnemyRanged":
+            this.health = 10;
+            this.stamina = 100;
+            this.someOtherPowerup = 50;
+            this.weapon = new Weapon("Broadhead", 1);
+            this.armor = new Armor("Hide");
+            this.attackType = "Ranged";
+            this.senseRange = 15;
+
+            this.turnAI = function (aEnemy) {
+                var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
+                if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
+                    console.log("player within attack range");
+                    combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
+                } else if (distance.x <= aEnemy.combat.senseRange && distance.y <= aEnemy.combat.senseRange) {
+                    console.log("player within sense range");
+                    var path = pathfinder.findPath(aEnemy.position, aEnemy.target.position);
+                    if (path.length > 1) aEnemy.position = { x: path[1].x, y: path[1].y };
+                    else console.log("path less than 1 - no path to target");
+                } else {
+                    console.log("moving randomly");
+                    var nextTile = aEnemy.tilemap.getRandomAdjacent(aEnemy.position);
+                    aEnemy.position = { x: nextTile.x, y: nextTile.y };
+                }
+            }
+            break;
+
+        case "Captain":
+            this.health = 25;
+            this.stamina = 100;
+            this.someOtherPowerup = 50;
+            this.weapon = new Weapon("Longsword", 1);
+            this.armor = new Armor("Chain");
+            this.attackType = "Melee";
+            this.senseRange = 20;
+
+            this.turnAI = function (aEnemy) {
+                var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
+                if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
+                    console.log("player within attack range");
+                    combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
+                } else if (distance.x <= aEnemy.combat.senseRange && distance.y <= aEnemy.combat.senseRange) {
+                    console.log("player within sense range");
+                    var path = pathfinder.findPath(aEnemy.position, aEnemy.target.position);
+                    if (path.length > 1) aEnemy.position = { x: path[1].x, y: path[1].y };
+                    else console.log("path less than 1 - no path to target");
+                } else {
+                    console.log("moving randomly");
+                    var nextTile = aEnemy.tilemap.getRandomAdjacent(aEnemy.position);
+                    aEnemy.position = { x: nextTile.x, y: nextTile.y };
+                }
+            }
+            break;
+
+        case "Shaman":
+            this.health = 10;
+            this.stamina = 100;
+            this.someOtherPowerup = 50;
+            this.weapon = new Weapon("Eldritch Blast", 1);
+            this.armor = new Armor("Robes");
+            this.attackType = "Magic";
+            this.senseRange = 10;
+
+            this.turnAI = function (aEnemy) {
+                var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
+                if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
+                    console.log("player within attack range");
+                    combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
+                } else if (distance.x <= aEnemy.combat.senseRange && distance.y <= aEnemy.combat.senseRange) {
+                    console.log("player within sense range");
+                    var path = pathfinder.findPath(aEnemy.position, aEnemy.target.position);
+                    if (path.length > 1) aEnemy.position = { x: path[1].x, y: path[1].y };
+                    else console.log("path less than 1 - no path to target");
+                } else {
+                    console.log("moving randomly");
+                    var nextTile = aEnemy.tilemap.getRandomAdjacent(aEnemy.position);
+                    aEnemy.position = { x: nextTile.x, y: nextTile.y };
+                }
+            }
+            break;
     }
 }
-},{}],4:[function(require,module,exports){
+
+
+},{"./armor":2,"./tilemap":14,"./vector":15,"./weapon":16}],6:[function(require,module,exports){
 "use strict";
 
 const Tilemap = require('./tilemap');
-const Vector = require('./vector');
 const CombatStruct = require("./combat_struct");
 
 module.exports = exports = Enemy;
 
-function Enemy(position, tilemap) {
+function Enemy(position, tilemap, combatClass, target) {
+    this.state = "idle";
     this.position = { x: position.x, y: position.y };
-    this.size = { width: 96, height: 96 };
+    this.size = { width: 95, height: 95 };
     this.tilemap = tilemap;
     this.spritesheet = new Image();
     this.spritesheet.src = "./spritesheets/sprites.png";
     this.type = "Enemy";
-    this.combat = new CombatStruct(this.type);
+    this.class = combatClass;
+    this.combat = new CombatStruct(this.class);
+    this.target = target;
+
+    // console.log(this.position.x + " " + this.position.y);
 }
 
 Enemy.prototype.processTurn = function () {
+    if (this.combat.health <= 0) this.state = "dead";
+    if (this.state == "dead") return; // shouldnt be necessary
 
+    this.combat.turnAI(this);
 }
 
 Enemy.prototype.update = function (time) {
-
+    // if we're dead, we should probably do something
+    if (this.combat.health <= 0) this.state = "dead";
 }
 
 Enemy.prototype.collided = function (entity) {
@@ -383,7 +579,9 @@ Enemy.prototype.retain = function () {
 }
 
 Enemy.prototype.render = function (elapsedTime, ctx) {
-    var position = Vector.subtract(this.position, this.tilemap.draw.origin);
+    if (this.state == "dead") return; // shouldnt be necessary
+
+    var position = this.tilemap.toScreenCoords(this.position);
     ctx.drawImage(
         this.spritesheet,
         768, 576, // skeleton guy
@@ -392,7 +590,8 @@ Enemy.prototype.render = function (elapsedTime, ctx) {
         96, 96
     );
 }
-},{"./combat_struct":3,"./tilemap":11,"./vector":12}],5:[function(require,module,exports){
+
+},{"./combat_struct":5,"./tilemap":14}],7:[function(require,module,exports){
 "use strict";
 
 /**
@@ -462,7 +661,7 @@ EntityManager.prototype.update = function(elapsedTime) {
     active = active.filter(function(oentity){
       var e1r = entity.size.width / 2;
       var e2r = oentity.size.width / 2;
-      return (entity.position.x + e1r) - (oentity.position.x + e2r)  <= e1r + e2r;
+      return ((entity.position.x * 96) + e1r) - ((oentity.position.x * 96) + e2r)  <= e1r + e2r;
     });
     // Since only balls within colliding distance of
     // our current ball are left in the active list,
@@ -553,13 +752,54 @@ function failType(){
 
 function collision(entity1, entity2){
   return !(
-    (entity1.position.y + entity1.size.height < entity2.position.y) ||
-    (entity1.position.y > entity2.position.y + entity2.size.height) ||
-    (entity1.position.x > entity2.position.x + entity2.size.width) ||
-    (entity1.position.x + entity1.size.width < entity2.position.x))
+    ((entity1.position.y * 96) + entity1.size.height < (entity2.position.y * 96)) ||
+    ((entity1.position.y  * 96) > (entity2.position.y * 96) + entity2.size.height) ||
+    ((entity1.position.x  * 96) > (entity2.position.x * 96) + entity2.size.width) ||
+    ((entity1.position.x  * 96) + entity1.size.width < (entity2.position.x * 96)))
+
 }
 
-},{}],6:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
+"use strict";
+
+const Enemy = require('./enemy');
+const Powerup = require('./powerup');
+
+/**
+ * @module EntitySpawner
+ * A class representing a EntitySpawner
+ */
+ module.exports = exports = {
+   spawn: spawn
+ }
+
+ var pu = 0;
+ var en = 0;
+/**
+ * @constructor EntitySpawner
+ * Creates a EntitySpawner
+ */
+function spawn(em, player, tilemap, count, percentEnemy) {
+  for(var i = 0; i < count; i++){
+    (Math.random() < (percentEnemy/100)) ? spawnEnemy(em, tilemap, player) : spawnPowerup(em, tilemap);
+  }
+  if(window.debug){
+    console.log(pu + " powerups spawned");
+    console.log(en + " enemies spawned");
+  }
+}
+
+function spawnPowerup(em, tilemap){
+  pu++;
+  em.addEntity(new Powerup(tilemap.findOpenSpace(), tilemap));
+}
+
+function spawnEnemy(em, tilemap, player){
+  en++;
+  em.addEntity(new Enemy(tilemap.findOpenSpace(), tilemap, "Zombie", player))
+}
+
+},{"./enemy":6,"./powerup":13}],9:[function(require,module,exports){
 "use strict";
 
 /**
@@ -617,7 +857,7 @@ Game.prototype.loop = function(newTime) {
   this.frontCtx.drawImage(this.backBuffer, 0, 0);
 }
 
-},{}],7:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 "use strict";
 
 module.exports = exports = MapGenerator;
@@ -789,7 +1029,7 @@ function rand(upper){
   return Math.floor(Math.random() * upper);
 }
 
-},{}],8:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 /**
  * @module A pathfinding module providing
  * a visualizaiton of common tree-search
@@ -1030,7 +1270,7 @@ Pathfinder.prototype.step = function() {
   return undefined;
 }
 
-},{}],9:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 "use strict";
 
 const Tilemap = require('./tilemap');
@@ -1050,7 +1290,7 @@ module.exports = exports = Player;
 function Player(position, tilemap, combatClass) {
     this.state = "idle";
     this.position = { x: position.x, y: position.y };
-    this.size = { width: 96, height: 96 };
+    this.size = { width: 95, height: 95 };
     this.spritesheet = new Image();
     this.tilemap = tilemap;
     this.spritesheet.src = './spritesheets/sprites.png';
@@ -1066,10 +1306,13 @@ function Player(position, tilemap, combatClass) {
  * {DOMHighResTimeStamp} time the elapsed time since the last frame
  */
 Player.prototype.update = function (time) {
-
+    // if we're dead, we should probably do something
+    if (this.combat.health <= 0) this.state = "dead";
 }
 
 Player.prototype.walkPath = function (path, completion) {
+    if (this.state == "dead") return; // shouldnt be necessary
+
     path.shift();
     this.walk = path;
     this.walkCompletion = completion;
@@ -1082,10 +1325,13 @@ Player.prototype.walkPath = function (path, completion) {
  *{input} keyboard input given for this turn
  */
 Player.prototype.processTurn = function (input) {
+    if (this.combat.health <= 0) this.state = "dead";
+    if (this.state == "dead") return; // shouldnt be necessary
 
-    if(hasUserInput(input)){
-      // Cancel walk
-      this.walk = [];
+
+    if (hasUserInput(input)) {
+        // Cancel walk
+        this.walk = [];
     }
 
     if (this.walk.length > 0) {
@@ -1139,6 +1385,8 @@ Player.prototype.retain = function () {
  * {CanvasRenderingContext2D} ctx the context to render into
  */
 Player.prototype.render = function (elapsedTime, ctx) {
+    if (this.state == "dead") return; // shouldnt be necessary
+
     var position = this.tilemap.toScreenCoords(this.position);
 
     ctx.drawImage(
@@ -1151,12 +1399,11 @@ Player.prototype.render = function (elapsedTime, ctx) {
 
 }
 
-function hasUserInput(input){
-  return input.up || input.down || input.right || input.left;
+function hasUserInput(input) {
+    return input.up || input.down || input.right || input.left;
 }
 
-},{"./combat_struct":3,"./tilemap":11,"./vector":12}],10:[function(require,module,exports){
-
+},{"./combat_struct":5,"./tilemap":14,"./vector":15}],13:[function(require,module,exports){
 "use strict";
 
 const Tilemap = require('./tilemap');
@@ -1173,7 +1420,7 @@ module.exports = exports = Powerup;
  */
 function Powerup(position, tilemap) {
     this.position = { x: position.x, y: position.y };
-    this.size = { width: 96, height: 96 };
+    this.size = { width: 95, height: 95 };
     this.spritesheet = new Image();
     this.tilemap = tilemap;
     this.spritesheet.src = './spritesheets/powerup.png';
@@ -1204,21 +1451,19 @@ Powerup.prototype.collided = function (entity) {
     if (this.used) return;
     if (entity.type == "Player") {
         //Update player's health/strength/item
-        if (entity.position.x == this.position.x && entity.position.y == this.position.y) {
-            switch (this.currPower) {
-                case 1:
-                    entity.combat.health += 5;
-                    this.used = true;
-                    break;
-                case 2:
-                    entity.combat.stamina += 20;
-                    this.used = true;
-                    break;
-                case 3:
-                    entity.combat.someOtherPowerup += 10;
-                    this.used = true;
-                    break;
-            }
+        switch (this.currPower) {
+            case 1:
+                entity.combat.health += 5;
+                this.used = true;
+                break;
+            case 2:
+                entity.combat.stamina += 20;
+                this.used = true;
+                break;
+            case 3:
+                entity.combat.someOtherPowerup += 10;
+                this.used = true;
+                break;
         }
     }
 }
@@ -1250,7 +1495,7 @@ Powerup.prototype.render = function (elapsedTime, ctx) {
     //ctx.drawImage(this.power,0,25,25,25,position.x*this.size.width, position.y*this.size.height,96,96);
     //ctx.drawImage(this.power,25,50,25,25,position.x*this.size.width, position.y*this.size.height,96,96);
 
-},{"./tilemap":11}],11:[function(require,module,exports){
+},{"./tilemap":14}],14:[function(require,module,exports){
 "use strict";
 
 const MapGenerator = require('./map_generator');
@@ -1437,7 +1682,28 @@ Tilemap.prototype.findOpenSpace = function()
 	return {x: randIndex % this.mapWidth, y: Math.floor(randIndex/this.mapWidth)};
 }
 
-},{"./map_generator":7,"./vector":12}],12:[function(require,module,exports){
+// Finds an random open tile adjacent to a given tile.
+Tilemap.prototype.getRandomAdjacent = function (aTile) {
+  var adjacents = [
+    { x: aTile.x - 1, y: aTile.y - 1, wall: this.isWall(aTile.x - 1, aTile.y - 1) },
+    { x: aTile.x, y: aTile.y - 1, wall: this.isWall(aTile.x, aTile.y - 1) },
+    { x: aTile.x + 1, y: aTile.y - 1, wall: this.isWall(aTile.x + 1, aTile.y - 1) },
+    { x: aTile.x - 1, y: aTile.y, wall: this.isWall(aTile.x - 1, aTile.y) },
+    { x: aTile.x + 1, y: aTile.y, wall: this.isWall(aTile.x + 1, aTile.y) },
+    { x: aTile.x - 1, y: aTile.y + 1, wall: this.isWall(aTile.x - 1, aTile.y + 1) },
+    { x: aTile.x, y: aTile.y + 1, wall: this.isWall(aTile.x, aTile.y + 1) },
+    { x: aTile.x + 1, y: aTile.y + 1, wall: this.isWall(aTile.x + 1, aTile.y + 1) }
+  ];
+  adjacents = adjacents.filter(function (tile) { return tile.wall });
+  if (adjacents.length == 0) {
+    return aTile;
+  } else {
+    return adjacents[rand(adjacents.length)];
+  }
+}
+
+
+},{"./map_generator":10,"./vector":15}],15:[function(require,module,exports){
 "use strict";
 
 /**
@@ -1451,7 +1717,8 @@ module.exports = exports = {
   rotate: rotate,
   dotProduct: dotProduct,
   magnitude: magnitude,
-  normalize: normalize
+  normalize: normalize,
+  distance: distance
 }
 
 
@@ -1534,7 +1801,135 @@ function normalize(a) {
   return {x: a.x / mag, y: a.y / mag};
 }
 
-},{}],13:[function(require,module,exports){
+function distance(a, b){
+  var distance=this.subtract(a,b);
+  return {x: Math.abs(distance.x), y: Math.abs(distance.y)};
+}
+},{}],16:[function(require,module,exports){
+"use strict";
+
+module.exports = exports = Weapon;
+
+// I'm sure there's a better way to do this,
+// especially wince we have to restrict weapon types to different classes. 
+function Weapon(aType, aLevel) {
+    this.type = aType;
+    this.level = aLevel;
+
+    switch (aType) {
+        // Melee
+        case "Longsword":
+            this.damageMax = 10
+            this.damageMin = 2;
+            this.damageType = "s";
+            this.range = 1;
+            this.hitBonus = 0;
+            this.properties = "+1 Min Damage";
+            break;
+
+        case "Morning Star":
+            this.damageMax = 8
+            this.damageMin = 1;
+            this.damageType = "b";
+            this.range = 1;
+            this.hitBonus = 2;
+            this.properties = "+2 to Hit";
+            break;
+
+        case "Halberd":
+            this.damageMax = 8
+            this.damageMin = 1;
+            this.damageType = "s";
+            this.range = 2;
+            this.hitBonus = 0;
+            this.properties = "+1 Range";
+            break;
+
+        case "Battleaxe":
+            this.damageMax = 12
+            this.damageMin = 4;
+            this.damageType = "sb";
+            this.range = 1;
+            this.hitBonus = 1;
+            this.properties = "+3 Min Damage, +1 Crit Chance";
+            break;
+
+        // Ranged
+        case "Bodkin":
+            this.damageMax = 4
+            this.damageMin = 1;
+            this.damageType = "p";
+            this.range = 6;
+            this.hitBonus = 3;
+            this.properties = "+1 Range, +3 to Hit";
+            break;
+
+        case "Broadhead":
+            this.damageMax = 6
+            this.damageMin = 2;
+            this.damageType = "p";
+            this.range = 5;
+            this.hitBonus = 0;
+            this.properties = "+1 Min Damage";
+            break;
+
+        case "Poison-Tipped":
+            this.damageMax = 4
+            this.damageMin = 1;
+            this.damageType = "p";
+            this.range = 5;
+            this.hitBonus = 0;
+            this.properties = "50% Poison Chance";
+            break;
+
+        case "Heavy Bolts":
+            this.damageMax = 10
+            this.damageMin = 4;
+            this.damageType = "b";
+            this.range = 3;
+            this.hitBonus = 0;
+            this.properties = "+3 Min Damage, -2 Range";
+            break;
+
+        // Spells
+        case "Magic Missile":
+            this.damageMax = 4
+            this.damageMin = 1;
+            this.damageType = "m";
+            this.range = 255;
+            this.hitBonus = 255;
+            this.properties = "Never Misses";
+            break;
+
+        case "Fireball":
+            this.damageMax = 4
+            this.damageMin = 1;
+            this.damageType = "m";
+            this.range = 255;
+            this.hitBonus = 0;
+            this.properties = "Explodes on Contact, 50% Burn Chance";
+            break;
+
+        case "Frostbolt":
+            this.damageMax = 4
+            this.damageMin = 1;
+            this.damageType = "m";
+            this.range = 255;
+            this.hitBonus = 0;
+            this.properties = "50% Freeze Chance";
+            break;
+
+        case "Eldritch Blast":
+            this.damageMax = 10
+            this.damageMin = 1;
+            this.damageType = "m";
+            this.range = 255;
+            this.hitBonus = -1;
+            this.properties = "-1 to Hit";
+            break;
+    }
+}
+},{}],17:[function(require,module,exports){
 module.exports={
  "tileheight":96,
  "tilewidth":96,

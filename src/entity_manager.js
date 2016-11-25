@@ -67,7 +67,7 @@ EntityManager.prototype.update = function(elapsedTime) {
     active = active.filter(function(oentity){
       var e1r = entity.size.width / 2;
       var e2r = oentity.size.width / 2;
-      return (entity.position.x + e1r) - (oentity.position.x + e2r)  <= e1r + e2r;
+      return ((entity.position.x * 96) + e1r) - ((oentity.position.x * 96) + e2r)  <= e1r + e2r;
     });
     // Since only balls within colliding distance of
     // our current ball are left in the active list,
@@ -158,8 +158,9 @@ function failType(){
 
 function collision(entity1, entity2){
   return !(
-    (entity1.position.y + entity1.size.height < entity2.position.y) ||
-    (entity1.position.y > entity2.position.y + entity2.size.height) ||
-    (entity1.position.x > entity2.position.x + entity2.size.width) ||
-    (entity1.position.x + entity1.size.width < entity2.position.x))
+    ((entity1.position.y * 96) + entity1.size.height < (entity2.position.y * 96)) ||
+    ((entity1.position.y  * 96) > (entity2.position.y * 96) + entity2.size.height) ||
+    ((entity1.position.x  * 96) > (entity2.position.x * 96) + entity2.size.width) ||
+    ((entity1.position.x  * 96) + entity1.size.width < (entity2.position.x * 96)))
+
 }

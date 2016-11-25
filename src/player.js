@@ -17,7 +17,7 @@ module.exports = exports = Player;
 function Player(position, tilemap, combatClass) {
     this.state = "idle";
     this.position = { x: position.x, y: position.y };
-    this.size = { width: 96, height: 96 };
+    this.size = { width: 95, height: 95 };
     this.spritesheet = new Image();
     this.tilemap = tilemap;
     this.spritesheet.src = './spritesheets/sprites.png';
@@ -129,4 +129,3 @@ Player.prototype.render = function (elapsedTime, ctx) {
 function hasUserInput(input) {
     return input.up || input.down || input.right || input.left;
 }
-
