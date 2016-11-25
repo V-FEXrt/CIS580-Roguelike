@@ -5,12 +5,11 @@ window.debug = false;
 /* Classes and Libraries */
 const Game = require('./game');
 const EntityManager = require('./entity_manager');
+const EntitySpawner = require('./entity_spawner');
 const Tilemap = require('./tilemap');
 const tileset = require('../tilemaps/tiledef.json');
 const Player = require('./player');
-const Enemy = require("./enemy");
 const Pathfinder = require('./pathfinder.js');
-const Powerup = require('./powerup.js');
 const CombatController = require("./combat_controller");
 const Vector = require('./vector');
 
@@ -46,16 +45,11 @@ var resetTimer = true;          //Take turn immediately on movement key press if
 
 var player = new Player({ x: randPos.x, y: randPos.y }, tilemap, "Knight");
 
-// should we make the player a 'global'? Rather than pass it to each enemy?
-var enemy = new Enemy(tilemap.findOpenSpace(), tilemap, "Zombie", player);
+EntitySpawner.spawn(entityManager, player, tilemap, 30, 20);
 
 window.player = player;
 
 entityManager.addEntity(player);
-entityManager.addEntity(enemy);
-entityManager.addEntity(new Powerup({ x: randPos.x + 1, y: randPos.y + 1 }, tilemap));
-entityManager.addEntity(new Powerup({ x: randPos.x, y: randPos.y + 1 }, tilemap));
-entityManager.addEntity(new Powerup({ x: randPos.x - 1, y: randPos.y + 1 }, tilemap));
 
 tilemap.moveTo({ x: randPos.x - 5, y: randPos.y - 3 });
 
@@ -67,7 +61,7 @@ canvas.onclick = function (event) {
 
   turnDelay = defaultTurnDelay / 2;
   autoTurn = true;
-
+/*
   var clickedWorldPos = tilemap.toWorldCoords(node);
   if (enemy.position.x == clickedWorldPos.x && enemy.position.y == clickedWorldPos.y) {
     console.log("clicked on enemy");
@@ -92,7 +86,7 @@ canvas.onclick = function (event) {
       turnDelay = defaultTurnDelay;
       autoTurn = false;
     });
-  }
+  }*/
 }
 
 /**
@@ -231,4 +225,3 @@ function render(elapsedTime, ctx) {
 function processTurn() {
   entityManager.processTurn(input);
 }
-

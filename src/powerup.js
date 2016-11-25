@@ -1,4 +1,3 @@
-
 "use strict";
 
 const Tilemap = require('./tilemap');
