@@ -19,7 +19,7 @@ function CombatStruct(aType) {
             this.stamina = 100;
             this.someOtherPowerup = 50;
             this.weapon = new Weapon("Longsword", 1);
-            this.armor = new Armor("Hide");
+            this.armor = new Armor("Hide"); // No restrictions on Armor types
             this.attackType = "Melee";
             break;
 
@@ -28,7 +28,7 @@ function CombatStruct(aType) {
             this.stamina = 100;
             this.someOtherPowerup = 50;
             this.weapon = new Weapon("Broadhead", 1);
-            this.armor = new Armor("Hide");
+            this.armor = new Armor("Hide"); // Can't wear Chain or Plate
             this.attackType = "Ranged";
             break;
 
@@ -37,7 +37,7 @@ function CombatStruct(aType) {
             this.stamina = 100;
             this.someOtherPowerup = 50;
             this.weapon = new Weapon("Eldritch Blast", 1);
-            this.armor = new Armor("Robes");
+            this.armor = new Armor("Robes"); // Can only wear Robes, nothing else
             this.attackType = "Magic";
             break;
 
@@ -49,7 +49,7 @@ function CombatStruct(aType) {
             this.weapon = new Weapon("Longsword", 1);
             this.armor = new Armor("Flesh");
             this.attackType = "Melee";
-            this.senseRange = 150; // This might be too high, what if we keep the camera centered..?
+            this.senseRange = 10; // This might be too high, what if we keep the camera centered..?
 
             this.turnAI = function (aEnemy) {
                 // console.log("\nenemy turn");
