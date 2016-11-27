@@ -8,7 +8,8 @@ const Powerup = require('./powerup');
  * A class representing a EntitySpawner
  */
  module.exports = exports = {
-   spawn: spawn
+   spawn: spawn,
+   drop: spawnDrop
  }
 
  var pu = 0;
@@ -34,5 +35,11 @@ function spawnPowerup(em, tilemap){
 
 function spawnEnemy(em, tilemap, player){
   en++;
-  em.addEntity(new Enemy(tilemap.findOpenSpace(), tilemap, "Zombie", player))
+  em.addEntity(new Enemy(tilemap.findOpenSpace(), tilemap, "Zombie", player, spawnDrop))
 }
+
+function spawnDrop(position, tilemap){
+  pu++;
+  em.addEntity(position, tilemap, window.combatController.randomDrop());
+}
+

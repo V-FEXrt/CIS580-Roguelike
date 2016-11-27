@@ -5,7 +5,7 @@ const CombatStruct = require("./combat_struct");
 
 module.exports = exports = Enemy;
 
-function Enemy(position, tilemap, combatClass, target) {
+function Enemy(position, tilemap, combatClass, target, onDeathCB) {
     this.state = "idle";
     this.position = { x: position.x, y: position.y };
     this.size = { width: 95, height: 95 };
@@ -16,6 +16,7 @@ function Enemy(position, tilemap, combatClass, target) {
     this.class = combatClass;
     this.combat = new CombatStruct(this.class);
     this.target = target;
+    this.onDeathCB = onDeathCB;
 
     // console.log(this.position.x + " " + this.position.y);
 }
@@ -29,7 +30,10 @@ Enemy.prototype.processTurn = function () {
 
 Enemy.prototype.update = function (time) {
     // if we're dead, we should probably do something
-    if (this.combat.health <= 0) this.state = "dead";
+    if (this.combat.health <= 0) {
+        this.state = "dead";
+        onDeathCB(this.position, this.tilemap)
+    }
 }
 
 Enemy.prototype.collided = function (entity) {

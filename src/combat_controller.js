@@ -3,12 +3,14 @@
 module.exports = exports = CombatController;
 
 const CombatStruct = require("./combat_struct");
+const Weapon = require("./weapon");
+const Armor = require("./armor");
 
 function CombatController() {
 
 }
 
-CombatController.prototype.handleAttack = function (aAttackerStruct, aDefenderStruct) {
+CombatController.prototype.handleAttack = function(aAttackerStruct, aDefenderStruct) {
     // console.log("attacker health: " + aAttackerStruct.health);
     // console.log("defender health: " + aDefenderStruct.health);
 
@@ -53,3 +55,35 @@ CombatController.prototype.handleAttack = function (aAttackerStruct, aDefenderSt
 function rollRandom(aMinimum, aMaximum) {
     return Math.floor(Math.random() * (aMaximum - aMinimum) + aMinimum);
 }
+
+function randomDrop() {
+    var lReturn;
+    var lRand = rollRandom(1, 21); // need to set up weighted rands
+    if (lRand > 17) {
+        // spawn armor?
+        console.log("drop armor?");
+    } else {
+        var playerClass = window.player.class;
+        var level = rollRandom(window.player.level, window.player.level + 3); // need to set up weighted rands
+        switch (lRand % 4) {
+            // this is awful, why is this still here?
+            case 0:
+                lReturn = (playerClass == "Knight") ? new weapon("Longsword", level) : (playerClass == "Archer") ? new weapon("Bodkin", level) : new weapon("Magic Missile", level);
+                break;
+
+            case 1:
+                lReturn = (playerClass == "Knight") ? new weapon("Morning Star", level) : (playerClass == "Archer") ? new weapon("Broadhead", level) : new weapon("Fireball", level);
+                break;
+
+            case 2:
+                lReturn = (playerClass == "Knight") ? new weapon("Halberd", level) : (playerClass == "Archer") ? new weapon("Poison-Tipped", level) : new weapon("Frostbolt", level);
+                break;
+
+            case 3:
+                lReturn = (playerClass == "Knight") ? new weapon("Battleaxe", level) : (playerClass == "Archer") ? new weapon("Heavy Bolts", level) : new weapon("Eldritch Blast", level);
+                break;
+        }
+    }
+    return lReturn;
+}
+

@@ -65,12 +65,10 @@ canvas.onclick = function (event) {
     turnDelay = defaultTurnDelay / 2;
     autoTurn = true;
 
-    console.log("clicked on enemy");
     var distance = Vector.distance(player.position, enemy.position);
     if (distance.x <= player.combat.weapon.range && distance.y <= player.combat.weapon.range) {
       turnDelay = defaultTurnDelay;
       autoTurn = false;
-      console.log("enemy within range");
       combatController.handleAttack(player.combat, enemy.combat);
       processTurn();
     } else {
