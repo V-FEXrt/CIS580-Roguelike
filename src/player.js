@@ -3,6 +3,9 @@
 const Tilemap = require('./tilemap');
 const Vector = require('./vector');
 const CombatStruct = require("./combat_struct");
+const Inventory = require('./inventory.js');
+const Weapon = require('./weapon.js');
+const Armor = require('./armor.js');
 
 /**
  * @module exports the Player class
@@ -25,7 +28,7 @@ function Player(position, tilemap, combatClass) {
     this.walk = [];
     this.class = combatClass;
     this.combat = new CombatStruct(this.class);
-
+    this.inventory = new Inventory(this.combat.weapon, this.combat.armor);
 }
 
 /**
@@ -101,6 +104,8 @@ Player.prototype.processTurn = function (input) {
 }
 
 Player.prototype.collided = function (entity) {
+    if(typeof entity == Weapon) { this.inventory.addWeapon(weapon); }
+    if(typeof entity == Armor) { this.inventory.addArmor(armor); }
 }
 
 Player.prototype.retain = function () {

@@ -22,7 +22,7 @@ function Inventory(weapon, armor) {
 Inventory.prototype.addWeapon = function(weapon) {
     checkWeapon(weapon);
     if(this.inventory.length >= 17) { /* Tell GUI that inventory is full */ }
-    if(weapon.damage > this.inventory[0].damage) {
+    if(weapon.type.damageMax > this.inventory[0].type.damageMax) { // This needs to be changed to prompting the user, I'll wait until there's a working GUI class to do that
         this.push(this.inventory[0]);
         this.inventory[0] = weapon;
     }
@@ -38,7 +38,7 @@ Inventory.prototype.addWeapon = function(weapon) {
 Inventory.prototype.addArmor = function(armor) {
     checkArmor(armor);
     if(this.inventory.length >= 17) { /* Tell GUI that inventory is full */ }
-    if(armor.strength > this.inventory[1].strength) {
+    if(armor.type.defense > this.inventory[1].type.defense) { // See line 25
         this.push(this.inventory[0]);
         this.inventory[0] = armor;
     }
@@ -52,15 +52,15 @@ Inventory.prototype.addArmor = function(armor) {
  * 
  */
 Inventory.prototype.powerupWeapon = function(damage) {
-    this.inventory[0].damage += damage;
+    this.inventory[0].type.damageMax += damage;
 }
 
 /**
  * @function power up the equipped armor
  * 
  */
-Inventory.prototype.powerupArmor = function(strength) {
-    this.inventory[1].strength += strength;
+Inventory.prototype.powerupArmor = function(defense) {
+    this.inventory[1].type.defense += defense;
 }
 
 /**
@@ -86,7 +86,14 @@ Inventory.prototype.removeItem = function(item) {
  */
 function checkWeapon(item) {
     if(typeof item == 'undefined') failWeapon();
-    if(typeof item.damage == 'undefined') failWeapon();
+    if(typeof item.type == 'undefined') failWeapon();
+    if(typeof item.level == "undefined") failWeapon();
+    if(typeof item.type.damageMax == "undefined") failWeapon();
+    if(typeof item.type.damageMin == "undefined") failWeapon();
+    if(typeof item.type.damageType == "undefined") failWeapon();
+    if(typeof item.type.range == "undefined") failWeapon();
+    if(typeof item.type.hitBonus == "undefined") failWeapon();
+    if(typeof item.type.properties == "undefined") failWeapon();
 }
 
 /**
@@ -95,7 +102,10 @@ function checkWeapon(item) {
  */
 function checkArmor(item) {
     if(typeof item == 'undefined') failArmor();
-    if(typeof item.strength == 'undefined') failArmor();
+    if(typeof item.type == 'undefined') failArmor();
+    if(typeof item.type.defense == "undefined") failArmor();
+    if(typeof item.type.strongType == "undefined") failArmor();
+    if(typeof item.type.weakType == "undefined") failArmor();
 }
 
 function failWeapon() {
