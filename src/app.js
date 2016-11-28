@@ -13,11 +13,15 @@ const Pathfinder = require('./pathfinder.js');
 const CombatController = require("./combat_controller");
 const Vector = require('./vector');
 const Click = require('./click');
+const Stairs = require('./stairs');
+const ProgressManager = require('./progress_manager');
 
 /* Global variables */
 var canvas = document.getElementById('screen');
 var game = new Game(canvas, update, render);
 var entityManager = new EntityManager();
+var fadeAnimationProgress = new ProgressManager(0, function(){});
+var isFadeOut = true;
 window.combatController = new CombatController();
 
 
@@ -37,22 +41,18 @@ var input = {
   right: false
 }
 
-var randPos = tilemap.findOpenSpace();                    //{x: , y: }
 var turnTimer = 0;
 var defaultTurnDelay = 400;     //Default turn between turns
 var turnDelay = defaultTurnDelay; //current time between turns
 var autoTurn = false;           //If true, reduces time between turns and turns happen automatically
 var resetTimer = true;          //Take turn immediately on movement key press if true
 
-var player = new Player({ x: randPos.x, y: randPos.y }, tilemap, "Knight");
-
-EntitySpawner.spawn(entityManager, player, tilemap, 30, 20);
+var player = new Player({ x: 0, y: 0 }, tilemap, "Knight");
 
 window.player = player;
 
-entityManager.addEntity(player);
-
-tilemap.moveTo({ x: randPos.x - 5, y: randPos.y - 3 });
+// Init the level
+nextLevel(false);
 
 canvas.onclick = function (event) {
   var node = {
@@ -199,6 +199,7 @@ function update(elapsedTime) {
     }
   }
   entityManager.update(elapsedTime);
+  fadeAnimationProgress.progress(elapsedTime);
 }
 
 /**
@@ -214,6 +215,11 @@ function render(elapsedTime, ctx) {
 
   tilemap.render(ctx);
   entityManager.render(elapsedTime, ctx);
+
+  ctx.save();
+  ctx.globalAlpha = (isFadeOut) ? fadeAnimationProgress.percent : 1 - fadeAnimationProgress.percent;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.restore();
 }
 
 /**
@@ -222,4 +228,51 @@ function render(elapsedTime, ctx) {
   */
 function processTurn() {
   entityManager.processTurn(input);
+}
+
+function nextLevel(fadeOut){
+
+  var init = function(){
+    // reset entities
+    entityManager.reset();
+
+    //gen new map
+    tilemap.generateMap();
+
+    //place new entities
+    EntitySpawner.spawn(entityManager, player, tilemap, 30, 0);
+
+    //move player to valid location
+    var pos = tilemap.findOpenSpace();
+    player.position = {x: pos.x, y: pos.y};
+    tilemap.moveTo({ x: pos.x - 5, y: pos.y - 3 });
+
+    // add player
+    entityManager.addEntity(player);
+
+    // add new Stairs.
+    var pos = tilemap.findOpenSpace();
+    while(pathfinder.findPath(player.position, pos).length == 0){
+      pos = tilemap.findOpenSpace();
+    }
+    console.log(pos);
+    entityManager.addEntity(new Stairs(pos, tilemap, function(){nextLevel(true)}));
+
+    unfadeFromBlack();
+
+  };
+
+  (fadeOut) ? fadeToBlack(init) : init()
+}
+
+function fadeToBlack(completion){
+  isFadeOut = true;
+  fadeAnimationProgress = new ProgressManager(500, completion);
+  fadeAnimationProgress.isActive = true;
+}
+
+function unfadeFromBlack(){
+  isFadeOut = false;
+  fadeAnimationProgress = new ProgressManager(500, function(){});
+  fadeAnimationProgress.isActive = true;
 }

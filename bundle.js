@@ -14,11 +14,15 @@ const Pathfinder = require('./pathfinder.js');
 const CombatController = require("./combat_controller");
 const Vector = require('./vector');
 const Click = require('./click');
+const Stairs = require('./stairs');
+const ProgressManager = require('./progress_manager');
 
 /* Global variables */
 var canvas = document.getElementById('screen');
 var game = new Game(canvas, update, render);
 var entityManager = new EntityManager();
+var fadeAnimationProgress = new ProgressManager(0, function(){});
+var isFadeOut = true;
 window.combatController = new CombatController();
 
 
@@ -38,22 +42,18 @@ var input = {
   right: false
 }
 
-var randPos = tilemap.findOpenSpace();                    //{x: , y: }
 var turnTimer = 0;
 var defaultTurnDelay = 400;     //Default turn between turns
 var turnDelay = defaultTurnDelay; //current time between turns
 var autoTurn = false;           //If true, reduces time between turns and turns happen automatically
 var resetTimer = true;          //Take turn immediately on movement key press if true
 
-var player = new Player({ x: randPos.x, y: randPos.y }, tilemap, "Knight");
-
-EntitySpawner.spawn(entityManager, player, tilemap, 30, 20);
+var player = new Player({ x: 0, y: 0 }, tilemap, "Knight");
 
 window.player = player;
 
-entityManager.addEntity(player);
-
-tilemap.moveTo({ x: randPos.x - 5, y: randPos.y - 3 });
+// Init the level
+nextLevel(false);
 
 canvas.onclick = function (event) {
   var node = {
@@ -200,6 +200,7 @@ function update(elapsedTime) {
     }
   }
   entityManager.update(elapsedTime);
+  fadeAnimationProgress.progress(elapsedTime);
 }
 
 /**
@@ -215,6 +216,11 @@ function render(elapsedTime, ctx) {
 
   tilemap.render(ctx);
   entityManager.render(elapsedTime, ctx);
+
+  ctx.save();
+  ctx.globalAlpha = (isFadeOut) ? fadeAnimationProgress.percent : 1 - fadeAnimationProgress.percent;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.restore();
 }
 
 /**
@@ -225,7 +231,54 @@ function processTurn() {
   entityManager.processTurn(input);
 }
 
-},{"../tilemaps/tiledef.json":17,"./click":3,"./combat_controller":4,"./entity_manager":7,"./entity_spawner":8,"./game":9,"./pathfinder.js":11,"./player":12,"./tilemap":14,"./vector":15}],2:[function(require,module,exports){
+function nextLevel(fadeOut){
+
+  var init = function(){
+    // reset entities
+    entityManager.reset();
+
+    //gen new map
+    tilemap.generateMap();
+
+    //place new entities
+    EntitySpawner.spawn(entityManager, player, tilemap, 30, 0);
+
+    //move player to valid location
+    var pos = tilemap.findOpenSpace();
+    player.position = {x: pos.x, y: pos.y};
+    tilemap.moveTo({ x: pos.x - 5, y: pos.y - 3 });
+
+    // add player
+    entityManager.addEntity(player);
+
+    // add new Stairs.
+    var pos = tilemap.findOpenSpace();
+    while(pathfinder.findPath(player.position, pos).length == 0){
+      pos = tilemap.findOpenSpace();
+    }
+    console.log(pos);
+    entityManager.addEntity(new Stairs(pos, tilemap, function(){nextLevel(true)}));
+
+    unfadeFromBlack();
+
+  };
+
+  (fadeOut) ? fadeToBlack(init) : init()
+}
+
+function fadeToBlack(completion){
+  isFadeOut = true;
+  fadeAnimationProgress = new ProgressManager(500, completion);
+  fadeAnimationProgress.isActive = true;
+}
+
+function unfadeFromBlack(){
+  isFadeOut = false;
+  fadeAnimationProgress = new ProgressManager(500, function(){});
+  fadeAnimationProgress.isActive = true;
+}
+
+},{"../tilemaps/tiledef.json":19,"./click":3,"./combat_controller":4,"./entity_manager":7,"./entity_spawner":8,"./game":9,"./pathfinder.js":11,"./player":12,"./progress_manager":14,"./stairs":15,"./tilemap":16,"./vector":17}],2:[function(require,module,exports){
 "use strict";
 
 module.exports = exports = Armor;
@@ -535,7 +588,7 @@ function CombatStruct(aType) {
 }
 
 
-},{"./armor":2,"./tilemap":14,"./vector":15,"./weapon":16}],6:[function(require,module,exports){
+},{"./armor":2,"./tilemap":16,"./vector":17,"./weapon":18}],6:[function(require,module,exports){
 "use strict";
 
 const Tilemap = require('./tilemap');
@@ -591,7 +644,7 @@ Enemy.prototype.render = function (elapsedTime, ctx) {
     );
 }
 
-},{"./combat_struct":5,"./tilemap":14}],7:[function(require,module,exports){
+},{"./combat_struct":5,"./tilemap":16}],7:[function(require,module,exports){
 "use strict";
 
 /**
@@ -1403,7 +1456,7 @@ function hasUserInput(input) {
     return input.up || input.down || input.right || input.left;
 }
 
-},{"./combat_struct":5,"./tilemap":14,"./vector":15}],13:[function(require,module,exports){
+},{"./combat_struct":5,"./tilemap":16,"./vector":17}],13:[function(require,module,exports){
 "use strict";
 
 const Tilemap = require('./tilemap');
@@ -1495,7 +1548,110 @@ Powerup.prototype.render = function (elapsedTime, ctx) {
     //ctx.drawImage(this.power,0,25,25,25,position.x*this.size.width, position.y*this.size.height,96,96);
     //ctx.drawImage(this.power,25,50,25,25,position.x*this.size.width, position.y*this.size.height,96,96);
 
-},{"./tilemap":14}],14:[function(require,module,exports){
+},{"./tilemap":16}],14:[function(require,module,exports){
+"use strict";
+
+module.exports = exports = ProgressManager;
+
+function ProgressManager(length, callbackComplete) {
+  this.progressTimer = 0;
+  this.progressLength = length;
+  this.isProgressing = true;
+  this.callbackComplete = callbackComplete;
+  this.isActive = false;
+  this.percent = 0
+}
+
+ProgressManager.prototype.progress = function(time){
+  if(!this.isActive) return;
+  if(this.isProgressing){
+    this.progressTimer += time;
+    this.percent = this.progressTimer / this.progressLength;
+    if(this.percent > 1){
+      this.percent = 1;
+      this.isProgressing = false;
+      this.callbackComplete();
+    }
+  }
+}
+
+ProgressManager.prototype.reset = function(){
+  this.progressTimer = 0;
+  this.isProgressing = true;
+  this.isActive = false;
+  this.percent = 0;
+}
+
+},{}],15:[function(require,module,exports){
+"use strict";
+
+/**
+ * @module exports the Stairs class
+ */
+module.exports = exports = Stairs;
+
+/**
+ * @constructor Stairs
+ * Creates a new Stairs object
+ * @param {postition} position object specifying an x and y
+ */
+function Stairs(position, tilemap, travelStairs) {
+    this.position = { x: position.x, y: position.y };
+    this.size = { width: 96, height: 96 };
+    this.type = "Stairs";
+    this.tilemap = tilemap;
+    this.travelStairs = travelStairs;
+
+    this.spritesheet = new Image();
+    this.spritesheet.src = './spritesheets/powerup.png';
+
+    this.beginTransition = false
+    this.time = 0;
+
+    this.spriteOff = 0;
+}
+
+/**
+ * @function updates the Stairs object
+ * {DOMHighResTimeStamp} time the elapsed time since the last frame
+ */
+Stairs.prototype.update = function (time) {
+  if(this.beginTransition){
+    this.time += time;
+    if(this.time >= 100){
+      this.spriteOff = 25;
+    }
+    if(this.time >= 500){
+      this.travelStairs();
+      this.travelStairs = function(){};
+    }
+  }
+}
+
+Stairs.prototype.processTurn = function (input) {
+}
+
+Stairs.prototype.collided = function (entity) {
+  if(entity.type == "Player"){
+    this.beginTransition = true;
+  }
+}
+
+Stairs.prototype.retain = function () {
+    return true;
+}
+
+/**
+ * @function renders the Stairs into the provided context
+ * {CanvasRenderingContext2D} ctx the context to render into
+ */
+Stairs.prototype.render = function (elapsedTime, ctx) {
+  var position = this.tilemap.toScreenCoords(this.position);
+
+  ctx.drawImage(this.spritesheet, 25 + this.spriteOff, 0, 25, 25, (position.x * this.size.width), (position.y * this.size.height), 96, 96);
+}
+
+},{}],16:[function(require,module,exports){
 "use strict";
 
 const MapGenerator = require('./map_generator');
@@ -1511,6 +1667,7 @@ function Tilemap(canvas, width, height, tileset, options){
   this.tileHeight = tileset.tileheight;
   this.mapWidth = width;
   this.mapHeight = height;
+  this.tileset = tileset
 
   this.draw = {};
   this.draw.origin = {x: 0, y: 0};
@@ -1523,7 +1680,6 @@ function Tilemap(canvas, width, height, tileset, options){
 
   // Load the tileset(s)
 
-  var map = new MapGenerator(tileset.edges, this.mapWidth, this.mapHeight);
   var tset = new Image();
   tset.onload = function() {
     if(options.onload) options.onload();
@@ -1547,6 +1703,13 @@ function Tilemap(canvas, width, height, tileset, options){
     this.tiles.push(tile);
   }
 
+  this.generateMap();
+
+}
+
+Tilemap.prototype.generateMap = function(){
+  var map = new MapGenerator(this.tileset.edges, this.mapWidth, this.mapHeight);
+
   // Set up the layer's data array.  We'll try to optimize
   // by keeping the index data type as small as possible
   if(this.tiles.length < Math.pow(2,8))
@@ -1563,7 +1726,6 @@ function Tilemap(canvas, width, height, tileset, options){
       this.data[i] = (Math.random() > 0.1) ? 49 : 50 + rand(7);
     }
   }
-
 }
 
 Tilemap.prototype.moveTo = function(position){
@@ -1702,8 +1864,7 @@ Tilemap.prototype.getRandomAdjacent = function (aTile) {
   }
 }
 
-
-},{"./map_generator":10,"./vector":15}],15:[function(require,module,exports){
+},{"./map_generator":10,"./vector":17}],17:[function(require,module,exports){
 "use strict";
 
 /**
@@ -1805,7 +1966,7 @@ function distance(a, b){
   var distance=this.subtract(a,b);
   return {x: Math.abs(distance.x), y: Math.abs(distance.y)};
 }
-},{}],16:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 "use strict";
 
 module.exports = exports = Weapon;
@@ -1929,7 +2090,7 @@ function Weapon(aType, aLevel) {
             break;
     }
 }
-},{}],17:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 module.exports={
  "tileheight":96,
  "tilewidth":96,
