@@ -14,7 +14,7 @@ module.exports = exports = Powerup;
  */
 function Powerup(position, tilemap) {
     this.position = { x: position.x, y: position.y };
-    this.size = { width: 95, height: 95 };
+    this.size = { width: 96, height: 96 };
     this.spritesheet = new Image();
     this.tilemap = tilemap;
     this.spritesheet.src = './spritesheets/powerup.png';

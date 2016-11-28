@@ -281,8 +281,8 @@ function Click(position, tilemap, player, collisionCallback) {
   this.position = { x: position.x, y: position.y };
   // To change AOE change size of the click.
   this.size = {
-    width: 95,
-    height: 95
+    width: 96,
+    height: 96
   }
 
   this.shouldRetain = true;
@@ -546,7 +546,7 @@ module.exports = exports = Enemy;
 function Enemy(position, tilemap, combatClass, target) {
     this.state = "idle";
     this.position = { x: position.x, y: position.y };
-    this.size = { width: 95, height: 95 };
+    this.size = { width: 96, height: 96 };
     this.tilemap = tilemap;
     this.spritesheet = new Image();
     this.spritesheet.src = "./spritesheets/sprites.png";
@@ -661,7 +661,7 @@ EntityManager.prototype.update = function(elapsedTime) {
     active = active.filter(function(oentity){
       var e1r = entity.size.width / 2;
       var e2r = oentity.size.width / 2;
-      return ((entity.position.x * 96) + e1r) - ((oentity.position.x * 96) + e2r)  <= e1r + e2r;
+      return ((entity.position.x * 96) + e1r) - ((oentity.position.x * 96) + e2r)  < e1r + e2r;
     });
     // Since only balls within colliding distance of
     // our current ball are left in the active list,
@@ -752,8 +752,8 @@ function failType(){
 
 function collision(entity1, entity2){
   return !(
-    ((entity1.position.y * 96) + entity1.size.height < (entity2.position.y * 96)) ||
-    ((entity1.position.y  * 96) > (entity2.position.y * 96) + entity2.size.height) ||
+    ((entity1.position.y * 96) + (entity1.size.height - 1) < (entity2.position.y * 96)) ||
+    ((entity1.position.y  * 96) > (entity2.position.y * 96) + (entity2.size.height - 1)) ||
     ((entity1.position.x  * 96) > (entity2.position.x * 96) + entity2.size.width) ||
     ((entity1.position.x  * 96) + entity1.size.width < (entity2.position.x * 96)))
 
@@ -1290,7 +1290,7 @@ module.exports = exports = Player;
 function Player(position, tilemap, combatClass) {
     this.state = "idle";
     this.position = { x: position.x, y: position.y };
-    this.size = { width: 95, height: 95 };
+    this.size = { width: 96, height: 96 };
     this.spritesheet = new Image();
     this.tilemap = tilemap;
     this.spritesheet.src = './spritesheets/sprites.png';
@@ -1420,7 +1420,7 @@ module.exports = exports = Powerup;
  */
 function Powerup(position, tilemap) {
     this.position = { x: position.x, y: position.y };
-    this.size = { width: 95, height: 95 };
+    this.size = { width: 96, height: 96 };
     this.spritesheet = new Image();
     this.tilemap = tilemap;
     this.spritesheet.src = './spritesheets/powerup.png';
