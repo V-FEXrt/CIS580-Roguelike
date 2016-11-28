@@ -40,8 +40,10 @@ Enemy.prototype.collided = function (entity) {
 }
 
 Enemy.prototype.retain = function () {
-    this.onDeathCB(this.position, this.tilemap);
-    return this.combat.health > 0;
+    if (this.combat.health <= 0) {
+        this.onDeathCB(this.position, this.tilemap);
+        return true;
+    }
 }
 
 Enemy.prototype.render = function (elapsedTime, ctx) {

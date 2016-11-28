@@ -17,7 +17,7 @@ const Click = require('./click');
 /* Global variables */
 var canvas = document.getElementById('screen');
 var game = new Game(canvas, update, render);
-var entityManager = new EntityManager();
+window.entityManager = new EntityManager();
 window.combatController = new CombatController();
 
 
