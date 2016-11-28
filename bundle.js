@@ -241,7 +241,7 @@ function nextLevel(fadeOut){
     tilemap.generateMap();
 
     //place new entities
-    EntitySpawner.spawn(entityManager, player, tilemap, 30, 0);
+    EntitySpawner.spawn(entityManager, player, tilemap, 30, 20);
 
     //move player to valid location
     var pos = tilemap.findOpenSpace();
