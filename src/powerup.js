@@ -74,13 +74,13 @@ Powerup.prototype.render = function (elapsedTime, ctx) {
     var position = this.tilemap.toScreenCoords(this.position);
     switch (this.currPower) {
         case 1:
-            ctx.drawImage(this.spritesheet, 0, 49.7, 25, 25, (position.x * this.size.width), (position.y * this.size.height) + this.currY, 96, 96);
+            ctx.drawImage(this.spritesheet, 0, 150, 75, 75, (position.x * this.size.width), (position.y * this.size.height) + this.currY, 96, 96);
             break;
         case 2:
-            ctx.drawImage(this.spritesheet, 50, 49.7, 25, 25, (position.x * this.size.width), (position.y * this.size.height) + this.currY, 96, 96);
+            ctx.drawImage(this.spritesheet, 150, 150, 75, 75, (position.x * this.size.width), (position.y * this.size.height) + this.currY, 96, 96);
             break;
         case 3:
-            ctx.drawImage(this.spritesheet, 25, 49.7, 25, 25, (position.x * this.size.width), (position.y * this.size.height) + this.currY, 96, 96);
+            ctx.drawImage(this.spritesheet, 75, 150, 75, 75, (position.x * this.size.width), (position.y * this.size.height) + this.currY, 96, 96);
             break;
     }
 }
