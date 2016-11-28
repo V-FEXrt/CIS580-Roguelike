@@ -32,7 +32,6 @@ Enemy.prototype.update = function (time) {
     // if we're dead, we should probably do something
     if (this.combat.health <= 0) {
         this.state = "dead";
-        onDeathCB(this.position, this.tilemap)
     }
 }
 
@@ -41,6 +40,7 @@ Enemy.prototype.collided = function (entity) {
 }
 
 Enemy.prototype.retain = function () {
+    this.onDeathCB(this.position, this.tilemap);
     return this.combat.health > 0;
 }
 
