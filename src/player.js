@@ -26,6 +26,18 @@ function Player(position, tilemap, combatClass) {
     this.class = combatClass;
     this.combat = new CombatStruct(this.class);
 
+    if(this.class == "Knight")
+    {
+      this.spritesheetPos = {x: 1, y: 5};
+    }
+    else if(this.class == "Mage")
+    {
+      this.spritesheetPos = {x: 9, y: 5};
+    }
+    else if(this.class == "Archer")
+    {
+      this.spritesheetPos = {x: 7, y: 6};
+    }
 }
 
 /**
@@ -118,8 +130,8 @@ Player.prototype.render = function (elapsedTime, ctx) {
 
     ctx.drawImage(
         this.spritesheet,
-        96, 480,
-        96, 96,
+        96 * this.spritesheetPos.x, 96 * this.spritesheetPos.y,
+        96 , 96,
         position.x * this.size.width, position.y * this.size.height,
         96, 96
     );

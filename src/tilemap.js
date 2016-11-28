@@ -187,7 +187,8 @@ Tilemap.prototype.findOpenSpace = function()
   {
     throw new Error("Could not find free space. Check map generation algorithms and definition of empty spaces.")
   }
-	return {x: randIndex % this.mapWidth, y: Math.floor(randIndex/this.mapWidth)};
+  
+	return {x: tile % this.mapWidth, y: Math.floor(tile / this.mapWidth)};
 }
 
 // Finds an random open tile adjacent to a given tile.

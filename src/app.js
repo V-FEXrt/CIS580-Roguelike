@@ -15,6 +15,7 @@ const Vector = require('./vector');
 const Click = require('./click');
 const Stairs = require('./stairs');
 const ProgressManager = require('./progress_manager');
+const GUI = require('./gui');
 
 /* Global variables */
 var canvas = document.getElementById('screen');
@@ -24,6 +25,7 @@ var fadeAnimationProgress = new ProgressManager(0, function(){});
 var isFadeOut = true;
 window.combatController = new CombatController();
 
+var gui = new GUI({width: canvas.width, height: canvas.height});
 
 var tilemap = new Tilemap({ width: canvas.width, height: canvas.height }, 64, 64, tileset, {
   onload: function () {
@@ -47,7 +49,7 @@ var turnDelay = defaultTurnDelay; //current time between turns
 var autoTurn = false;           //If true, reduces time between turns and turns happen automatically
 var resetTimer = true;          //Take turn immediately on movement key press if true
 
-var player = new Player({ x: 0, y: 0 }, tilemap, "Knight");
+var player = new Player({ x: 0, y: 0 }, tilemap, "Archer");
 
 window.player = player;
 
@@ -220,6 +222,8 @@ function render(elapsedTime, ctx) {
   ctx.globalAlpha = (isFadeOut) ? fadeAnimationProgress.percent : 1 - fadeAnimationProgress.percent;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.restore();
+  
+  gui.render(elapsedTime, ctx);
 }
 
 /**

@@ -34,7 +34,7 @@ Stairs.prototype.update = function (time) {
   if(this.beginTransition){
     this.time += time;
     if(this.time >= 100){
-      this.spriteOff = 25;
+      this.spriteOff = 75;
     }
     if(this.time >= 500){
       this.travelStairs();
@@ -63,5 +63,5 @@ Stairs.prototype.retain = function () {
 Stairs.prototype.render = function (elapsedTime, ctx) {
   var position = this.tilemap.toScreenCoords(this.position);
 
-  ctx.drawImage(this.spritesheet, 25 + this.spriteOff, 0, 25, 25, (position.x * this.size.width), (position.y * this.size.height), 96, 96);
+  ctx.drawImage(this.spritesheet, 75 + this.spriteOff, 0, 75, 75, (position.x * this.size.width), (position.y * this.size.height), 96, 96);
 }

@@ -16,6 +16,7 @@ const Vector = require('./vector');
 const Click = require('./click');
 const Stairs = require('./stairs');
 const ProgressManager = require('./progress_manager');
+const GUI = require('./gui');
 
 /* Global variables */
 var canvas = document.getElementById('screen');
@@ -25,6 +26,7 @@ var fadeAnimationProgress = new ProgressManager(0, function(){});
 var isFadeOut = true;
 window.combatController = new CombatController();
 
+var gui = new GUI({width: canvas.width, height: canvas.height});
 
 var tilemap = new Tilemap({ width: canvas.width, height: canvas.height }, 64, 64, tileset, {
   onload: function () {
@@ -48,7 +50,7 @@ var turnDelay = defaultTurnDelay; //current time between turns
 var autoTurn = false;           //If true, reduces time between turns and turns happen automatically
 var resetTimer = true;          //Take turn immediately on movement key press if true
 
-var player = new Player({ x: 0, y: 0 }, tilemap, "Knight");
+var player = new Player({ x: 0, y: 0 }, tilemap, "Archer");
 
 window.player = player;
 
@@ -221,6 +223,8 @@ function render(elapsedTime, ctx) {
   ctx.globalAlpha = (isFadeOut) ? fadeAnimationProgress.percent : 1 - fadeAnimationProgress.percent;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.restore();
+  
+  gui.render(elapsedTime, ctx);
 }
 
 /**
@@ -278,7 +282,7 @@ function unfadeFromBlack(){
   fadeAnimationProgress.isActive = true;
 }
 
-},{"../tilemaps/tiledef.json":19,"./click":3,"./combat_controller":4,"./entity_manager":7,"./entity_spawner":8,"./game":9,"./pathfinder.js":11,"./player":12,"./progress_manager":14,"./stairs":15,"./tilemap":16,"./vector":17}],2:[function(require,module,exports){
+},{"../tilemaps/tiledef.json":20,"./click":3,"./combat_controller":4,"./entity_manager":7,"./entity_spawner":8,"./game":9,"./gui":10,"./pathfinder.js":12,"./player":13,"./progress_manager":15,"./stairs":16,"./tilemap":17,"./vector":18}],2:[function(require,module,exports){
 "use strict";
 
 module.exports = exports = Armor;
@@ -588,7 +592,7 @@ function CombatStruct(aType) {
 }
 
 
-},{"./armor":2,"./tilemap":16,"./vector":17,"./weapon":18}],6:[function(require,module,exports){
+},{"./armor":2,"./tilemap":17,"./vector":18,"./weapon":19}],6:[function(require,module,exports){
 "use strict";
 
 const Tilemap = require('./tilemap');
@@ -644,7 +648,7 @@ Enemy.prototype.render = function (elapsedTime, ctx) {
     );
 }
 
-},{"./combat_struct":5,"./tilemap":16}],7:[function(require,module,exports){
+},{"./combat_struct":5,"./tilemap":17}],7:[function(require,module,exports){
 "use strict";
 
 /**
@@ -852,7 +856,7 @@ function spawnEnemy(em, tilemap, player){
   em.addEntity(new Enemy(tilemap.findOpenSpace(), tilemap, "Zombie", player))
 }
 
-},{"./enemy":6,"./powerup":13}],9:[function(require,module,exports){
+},{"./enemy":6,"./powerup":14}],9:[function(require,module,exports){
 "use strict";
 
 /**
@@ -911,6 +915,93 @@ Game.prototype.loop = function(newTime) {
 }
 
 },{}],10:[function(require,module,exports){
+"use strict";
+
+/**
+ * @module exports the GUI class
+ */
+module.exports = exports = GUI;
+
+/**
+ * @constructor GUI
+ * Creates a new GUI object
+ * @param {postition} position object specifying an x and y
+ */
+function GUI(size) {
+  this.state = "start";
+  this.state = "";
+  this.size = size;
+  this.playerSprites = new Image();
+  this.playerSprites.src = './spritesheets/sprites.png';
+}
+
+/**
+ * @function updates the GUI objects
+ * {DOMHighResTimeStamp} time the elapsed time since the last frame
+ */
+GUI.prototype.update = function (time) {
+
+}
+
+/**
+ * @function renders the GUI into the provided context
+ * {CanvasRenderingContext2D} ctx the context to render into
+ */
+GUI.prototype.render = function (elapsedTime, ctx) {
+  if(this.state == "start")
+  {
+    ctx.fillStyle = "lightgrey";   
+    ctx.strokeStyle = "grey";
+    ctx.lineWidth =  10;
+    var x = this.size.width/4;
+    var y = this.size.height/3;
+    ctx.fillRect(x, y, this.size.width/2, this.size.height/3);
+    ctx.strokeRect(x, y, this.size.width/2, this.size.height/3);
+    
+    ctx.font = "20px Arial"
+    ctx.fillStyle = "black"
+    ctx.drawImage(
+      this.playerSprites,
+      96, 96 *5,
+      96 , 96,
+      x+60, y + 50,
+      96, 96
+    );
+    ctx.fillText("Knight", x+80, y+ 180);
+    
+    ctx.drawImage(
+      this.playerSprites,
+      96 * 7, 96 *6,
+      96 , 96,
+      x+210, y + 50,
+      96, 96
+    );
+    ctx.fillText("Archer", x+230, y+ 180);
+    
+    ctx.drawImage(
+      this.playerSprites,
+      96*9, 96 *5,
+      96 , 96,
+      x+360, y + 50,
+      96, 96
+    );
+    ctx.fillText("Mage", x+380, y+ 180);
+  }
+  else if(this.state == "paused")
+  {
+    
+  }
+  else if(this.state == "playing")
+  {
+    
+  }
+  else if(this.state == "game over")
+  {
+    
+  }
+}
+
+},{}],11:[function(require,module,exports){
 "use strict";
 
 module.exports = exports = MapGenerator;
@@ -1082,7 +1173,7 @@ function rand(upper){
   return Math.floor(Math.random() * upper);
 }
 
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 /**
  * @module A pathfinding module providing
  * a visualizaiton of common tree-search
@@ -1323,7 +1414,7 @@ Pathfinder.prototype.step = function() {
   return undefined;
 }
 
-},{}],12:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 "use strict";
 
 const Tilemap = require('./tilemap');
@@ -1352,6 +1443,18 @@ function Player(position, tilemap, combatClass) {
     this.class = combatClass;
     this.combat = new CombatStruct(this.class);
 
+    if(this.class == "Knight")
+    {
+      this.spritesheetPos = {x: 1, y: 5};
+    }
+    else if(this.class == "Mage")
+    {
+      this.spritesheetPos = {x: 9, y: 5};
+    }
+    else if(this.class == "Archer")
+    {
+      this.spritesheetPos = {x: 7, y: 6};
+    }
 }
 
 /**
@@ -1444,8 +1547,8 @@ Player.prototype.render = function (elapsedTime, ctx) {
 
     ctx.drawImage(
         this.spritesheet,
-        96, 480,
-        96, 96,
+        96 * this.spritesheetPos.x, 96 * this.spritesheetPos.y,
+        96 , 96,
         position.x * this.size.width, position.y * this.size.height,
         96, 96
     );
@@ -1456,7 +1559,7 @@ function hasUserInput(input) {
     return input.up || input.down || input.right || input.left;
 }
 
-},{"./combat_struct":5,"./tilemap":16,"./vector":17}],13:[function(require,module,exports){
+},{"./combat_struct":5,"./tilemap":17,"./vector":18}],14:[function(require,module,exports){
 "use strict";
 
 const Tilemap = require('./tilemap');
@@ -1533,13 +1636,13 @@ Powerup.prototype.render = function (elapsedTime, ctx) {
     var position = this.tilemap.toScreenCoords(this.position);
     switch (this.currPower) {
         case 1:
-            ctx.drawImage(this.spritesheet, 0, 49.7, 25, 25, (position.x * this.size.width), (position.y * this.size.height) + this.currY, 96, 96);
+            ctx.drawImage(this.spritesheet, 0, 150, 75, 75, (position.x * this.size.width), (position.y * this.size.height) + this.currY, 96, 96);
             break;
         case 2:
-            ctx.drawImage(this.spritesheet, 50, 49.7, 25, 25, (position.x * this.size.width), (position.y * this.size.height) + this.currY, 96, 96);
+            ctx.drawImage(this.spritesheet, 150, 150, 75, 75, (position.x * this.size.width), (position.y * this.size.height) + this.currY, 96, 96);
             break;
         case 3:
-            ctx.drawImage(this.spritesheet, 25, 49.7, 25, 25, (position.x * this.size.width), (position.y * this.size.height) + this.currY, 96, 96);
+            ctx.drawImage(this.spritesheet, 75, 150, 75, 75, (position.x * this.size.width), (position.y * this.size.height) + this.currY, 96, 96);
             break;
     }
 }
@@ -1548,7 +1651,7 @@ Powerup.prototype.render = function (elapsedTime, ctx) {
     //ctx.drawImage(this.power,0,25,25,25,position.x*this.size.width, position.y*this.size.height,96,96);
     //ctx.drawImage(this.power,25,50,25,25,position.x*this.size.width, position.y*this.size.height,96,96);
 
-},{"./tilemap":16}],14:[function(require,module,exports){
+},{"./tilemap":17}],15:[function(require,module,exports){
 "use strict";
 
 module.exports = exports = ProgressManager;
@@ -1582,7 +1685,7 @@ ProgressManager.prototype.reset = function(){
   this.percent = 0;
 }
 
-},{}],15:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 "use strict";
 
 /**
@@ -1619,7 +1722,7 @@ Stairs.prototype.update = function (time) {
   if(this.beginTransition){
     this.time += time;
     if(this.time >= 100){
-      this.spriteOff = 25;
+      this.spriteOff = 75;
     }
     if(this.time >= 500){
       this.travelStairs();
@@ -1648,10 +1751,10 @@ Stairs.prototype.retain = function () {
 Stairs.prototype.render = function (elapsedTime, ctx) {
   var position = this.tilemap.toScreenCoords(this.position);
 
-  ctx.drawImage(this.spritesheet, 25 + this.spriteOff, 0, 25, 25, (position.x * this.size.width), (position.y * this.size.height), 96, 96);
+  ctx.drawImage(this.spritesheet, 75 + this.spriteOff, 0, 75, 75, (position.x * this.size.width), (position.y * this.size.height), 96, 96);
 }
 
-},{}],16:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 "use strict";
 
 const MapGenerator = require('./map_generator');
@@ -1841,7 +1944,8 @@ Tilemap.prototype.findOpenSpace = function()
   {
     throw new Error("Could not find free space. Check map generation algorithms and definition of empty spaces.")
   }
-	return {x: randIndex % this.mapWidth, y: Math.floor(randIndex/this.mapWidth)};
+  
+	return {x: tile % this.mapWidth, y: Math.floor(tile / this.mapWidth)};
 }
 
 // Finds an random open tile adjacent to a given tile.
@@ -1864,7 +1968,7 @@ Tilemap.prototype.getRandomAdjacent = function (aTile) {
   }
 }
 
-},{"./map_generator":10,"./vector":17}],17:[function(require,module,exports){
+},{"./map_generator":11,"./vector":18}],18:[function(require,module,exports){
 "use strict";
 
 /**
@@ -1966,7 +2070,7 @@ function distance(a, b){
   var distance=this.subtract(a,b);
   return {x: Math.abs(distance.x), y: Math.abs(distance.y)};
 }
-},{}],18:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 "use strict";
 
 module.exports = exports = Weapon;
@@ -2090,7 +2194,7 @@ function Weapon(aType, aLevel) {
             break;
     }
 }
-},{}],19:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 module.exports={
  "tileheight":96,
  "tilewidth":96,
