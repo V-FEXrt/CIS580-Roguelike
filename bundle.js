@@ -1518,19 +1518,19 @@ Player.prototype.processTurn = function (input) {
 
     var screenCoor = this.tilemap.toScreenCoords(this.position);
 
-    if (screenCoor.y < 1) {
+    if (screenCoor.y < 3) {
         this.tilemap.moveBy({ x: 0, y: -1 });
     }
 
-    if (screenCoor.y + 1 == this.tilemap.draw.size.height) {
+    if (screenCoor.y + 3 == this.tilemap.draw.size.height) {
         this.tilemap.moveBy({ x: 0, y: 1 });
     }
 
-    if (screenCoor.x < 1) {
+    if (screenCoor.x < 5) {
         this.tilemap.moveBy({ x: -1, y: 0 });
     }
 
-    if (screenCoor.x + 1 == this.tilemap.draw.size.width) {
+    if (screenCoor.x + 5 >= this.tilemap.draw.size.width) {
         this.tilemap.moveBy({ x: 1, y: 0 });
     }
 
