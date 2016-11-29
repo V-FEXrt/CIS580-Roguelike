@@ -25,6 +25,7 @@ function Player(position, tilemap, combatClass) {
     this.walk = [];
     this.class = combatClass;
     this.combat = new CombatStruct(this.class);
+    this.shouldProcessTurn = true;
 
     if(this.class == "Knight")
     {
@@ -64,6 +65,9 @@ Player.prototype.walkPath = function (path, completion) {
  *{input} keyboard input given for this turn
  */
 Player.prototype.processTurn = function (input) {
+
+    if(!this.shouldProcessTurn) return;
+
     if (this.combat.health <= 0) this.state = "dead";
     if (this.state == "dead") return; // shouldnt be necessary
 
@@ -113,6 +117,9 @@ Player.prototype.processTurn = function (input) {
 }
 
 Player.prototype.collided = function (entity) {
+  if(entity.type == "Stairs"){
+    this.shouldProcessTurn = false;
+  }
 }
 
 Player.prototype.retain = function () {
