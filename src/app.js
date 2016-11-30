@@ -233,6 +233,7 @@ function processTurn() {
 }
 
 function nextLevel(fadeOut){
+  player.level++;
 
   var init = function(){
     // reset entities

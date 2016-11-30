@@ -4,11 +4,12 @@ module.exports = exports = Weapon;
 
 // I'm sure there's a better way to do this,
 // especially wince we have to restrict weapon types to different classes. 
-function Weapon(aType, aLevel) {
-    this.type = aType;
+function Weapon(aName, aLevel) {
+    this.type = "Weapon";
+    this.name = aName;
     this.level = aLevel;
 
-    switch (aType) {
+    switch (aName) {
         // Melee
         case "Longsword":
             this.damageMax = 10
@@ -120,4 +121,29 @@ function Weapon(aType, aLevel) {
             this.properties = "-1 to Hit";
             break;
     }
+
+    // static properties for entities
+    this.position = { x: -1, y: -1 };
+    this.size = { width: 72, height: 72 }; // correct size for sprites? Dylan?
 }
+
+Weapon.prototype.collided = function (aEntity) {
+
+}
+
+Weapon.prototype.processTurn = function () {
+
+}
+
+Weapon.prototype.retain = function () {
+    return true;
+}
+
+Weapon.prototype.update = function () {
+
+}
+
+Weapon.prototype.render = function () {
+
+}
+

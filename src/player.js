@@ -25,6 +25,7 @@ function Player(position, tilemap, combatClass) {
     this.walk = [];
     this.class = combatClass;
     this.combat = new CombatStruct(this.class);
+    this.level = 0;
 
     if(this.class == "Knight")
     {

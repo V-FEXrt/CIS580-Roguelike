@@ -38,8 +38,8 @@ function spawnEnemy(tilemap, player){
   window.entityManager.addEntity(new Enemy(tilemap.findOpenSpace(), tilemap, "Zombie", player, spawnDrop))
 }
 
-function spawnDrop(position, tilemap){
+function spawnDrop(position){
   pu++;
-  window.entityManager.addEntity(position, tilemap, window.combatController.randomDrop());
+  window.entityManager.addEntity(window.combatController.randomDrop(position));
 }
 

@@ -56,8 +56,8 @@ function rollRandom(aMinimum, aMaximum) {
     return Math.floor(Math.random() * (aMaximum - aMinimum) + aMinimum);
 }
 
-CombatController.prototype.randomDrop = function() {
-    var lReturn;
+CombatController.prototype.randomDrop = function(aPosition) {
+    var lDrop = new Object();
     var lRand = rollRandom(1, 21); // need to set up weighted rands
     if (lRand > 17) {
         // spawn armor?
@@ -68,22 +68,23 @@ CombatController.prototype.randomDrop = function() {
         switch (lRand % 4) {
             // this is awful, why is this still here?
             case 0:
-                lReturn = (playerClass == "Knight") ? new Weapon("Longsword", level) : (playerClass == "Archer") ? new Weapon("Bodkin", level) : new Weapon("Magic Missile", level);
+                lDrop = (playerClass == "Knight") ? new Weapon("Longsword", level) : (playerClass == "Archer") ? new Weapon("Bodkin", level) : new Weapon("Magic Missile", level);
                 break;
 
             case 1:
-                lReturn = (playerClass == "Knight") ? new Weapon("Morning Star", level) : (playerClass == "Archer") ? new Weapon("Broadhead", level) : new Weapon("Fireball", level);
+                lDrop = (playerClass == "Knight") ? new Weapon("Morning Star", level) : (playerClass == "Archer") ? new Weapon("Broadhead", level) : new Weapon("Fireball", level);
                 break;
 
             case 2:
-                lReturn = (playerClass == "Knight") ? new Weapon("Halberd", level) : (playerClass == "Archer") ? new Weapon("Poison-Tipped", level) : new Weapon("Frostbolt", level);
+                lDrop = (playerClass == "Knight") ? new Weapon("Halberd", level) : (playerClass == "Archer") ? new Weapon("Poison-Tipped", level) : new Weapon("Frostbolt", level);
                 break;
 
             case 3:
-                lReturn = (playerClass == "Knight") ? new Weapon("Battleaxe", level) : (playerClass == "Archer") ? new Weapon("Heavy Bolts", level) : new Weapon("Eldritch Blast", level);
+                lDrop = (playerClass == "Knight") ? new Weapon("Battleaxe", level) : (playerClass == "Archer") ? new Weapon("Heavy Bolts", level) : new Weapon("Eldritch Blast", level);
                 break;
         }
     }
-    return lReturn;
+    lDrop.position = aPosition;
+    return lDrop;
 }
 
