@@ -56,7 +56,7 @@ function rollRandom(aMinimum, aMaximum) {
     return Math.floor(Math.random() * (aMaximum - aMinimum) + aMinimum);
 }
 
-function randomDrop() {
+CombatController.prototype.randomDrop = function() {
     var lReturn;
     var lRand = rollRandom(1, 21); // need to set up weighted rands
     if (lRand > 17) {
@@ -68,19 +68,19 @@ function randomDrop() {
         switch (lRand % 4) {
             // this is awful, why is this still here?
             case 0:
-                lReturn = (playerClass == "Knight") ? new weapon("Longsword", level) : (playerClass == "Archer") ? new weapon("Bodkin", level) : new weapon("Magic Missile", level);
+                lReturn = (playerClass == "Knight") ? new Weapon("Longsword", level) : (playerClass == "Archer") ? new Weapon("Bodkin", level) : new Weapon("Magic Missile", level);
                 break;
 
             case 1:
-                lReturn = (playerClass == "Knight") ? new weapon("Morning Star", level) : (playerClass == "Archer") ? new weapon("Broadhead", level) : new weapon("Fireball", level);
+                lReturn = (playerClass == "Knight") ? new Weapon("Morning Star", level) : (playerClass == "Archer") ? new Weapon("Broadhead", level) : new Weapon("Fireball", level);
                 break;
 
             case 2:
-                lReturn = (playerClass == "Knight") ? new weapon("Halberd", level) : (playerClass == "Archer") ? new weapon("Poison-Tipped", level) : new weapon("Frostbolt", level);
+                lReturn = (playerClass == "Knight") ? new Weapon("Halberd", level) : (playerClass == "Archer") ? new Weapon("Poison-Tipped", level) : new Weapon("Frostbolt", level);
                 break;
 
             case 3:
-                lReturn = (playerClass == "Knight") ? new weapon("Battleaxe", level) : (playerClass == "Archer") ? new weapon("Heavy Bolts", level) : new weapon("Eldritch Blast", level);
+                lReturn = (playerClass == "Knight") ? new Weapon("Battleaxe", level) : (playerClass == "Archer") ? new Weapon("Heavy Bolts", level) : new Weapon("Eldritch Blast", level);
                 break;
         }
     }
