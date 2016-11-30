@@ -173,6 +173,12 @@ window.onkeyup = function (event) {
   }
   if (!(input.left || input.right || input.up || input.down)) resetTimer = true;
 }
+
+window.onmousemove = function(event)
+{
+  gui.onmousemove({x: event.offsetX, y: event.offsetY});
+}
+
 /**
  * @function masterLoop
  * Advances the game in sync with the refresh rate of the screen
