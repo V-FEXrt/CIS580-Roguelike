@@ -7,8 +7,8 @@ function Click(position, tilemap, player, collisionCallback) {
   this.position = { x: position.x, y: position.y };
   // To change AOE change size of the click.
   this.size = {
-    width: 95,
-    height: 95
+    width: 96,
+    height: 96
   }
 
   this.shouldRetain = true;

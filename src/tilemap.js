@@ -13,6 +13,7 @@ function Tilemap(canvas, width, height, tileset, options){
   this.tileHeight = tileset.tileheight;
   this.mapWidth = width;
   this.mapHeight = height;
+  this.tileset = tileset
 
   this.draw = {};
   this.draw.origin = {x: 0, y: 0};
@@ -25,7 +26,6 @@ function Tilemap(canvas, width, height, tileset, options){
 
   // Load the tileset(s)
 
-  var map = new MapGenerator(tileset.edges, this.mapWidth, this.mapHeight);
   var tset = new Image();
   tset.onload = function() {
     if(options.onload) options.onload();
@@ -49,6 +49,13 @@ function Tilemap(canvas, width, height, tileset, options){
     this.tiles.push(tile);
   }
 
+  this.generateMap();
+
+}
+
+Tilemap.prototype.generateMap = function(){
+  var map = new MapGenerator(this.tileset.edges, this.mapWidth, this.mapHeight);
+
   // Set up the layer's data array.  We'll try to optimize
   // by keeping the index data type as small as possible
   if(this.tiles.length < Math.pow(2,8))
@@ -65,7 +72,6 @@ function Tilemap(canvas, width, height, tileset, options){
       this.data[i] = (Math.random() > 0.1) ? 49 : 50 + rand(7);
     }
   }
-
 }
 
 Tilemap.prototype.moveTo = function(position){
@@ -181,7 +187,8 @@ Tilemap.prototype.findOpenSpace = function()
   {
     throw new Error("Could not find free space. Check map generation algorithms and definition of empty spaces.")
   }
-	return {x: randIndex % this.mapWidth, y: Math.floor(randIndex/this.mapWidth)};
+  
+	return {x: tile % this.mapWidth, y: Math.floor(tile / this.mapWidth)};
 }
 
 // Finds an random open tile adjacent to a given tile.
@@ -203,4 +210,3 @@ Tilemap.prototype.getRandomAdjacent = function (aTile) {
     return adjacents[rand(adjacents.length)];
   }
 }
-
