@@ -61,7 +61,8 @@ CombatController.prototype.randomDrop = function(aPosition) {
     var lRand = rollRandom(1, 21); // need to set up weighted rands
     if (lRand > 17) {                           // spawn armor
         lDrop.type = "Armor";
-        console.log("drop armor?");
+        // TODO > properly implement...
+        lDrop = new Armor("Leather");
     } else if (lRand >= 1 && lRand < 17) {      // spawn weapon
         lDrop.type = "Weapon";
         var playerClass = window.player.class;
