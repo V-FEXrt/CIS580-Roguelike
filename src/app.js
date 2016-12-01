@@ -20,7 +20,7 @@ const GUI = require('./gui');
 /* Global variables */
 var canvas = document.getElementById('screen');
 var game = new Game(canvas, update, render);
-var entityManager = new EntityManager();
+window.entityManager = new EntityManager();
 var fadeAnimationProgress = new ProgressManager(0, function(){});
 var isFadeOut = true;
 
@@ -64,16 +64,14 @@ canvas.onclick = function (event) {
   }
 
   var clickedWorldPos = tilemap.toWorldCoords(node);
-  entityManager.addEntity(new Click(clickedWorldPos, tilemap, player, function(enemy){
+  window.entityManager.addEntity(new Click(clickedWorldPos, tilemap, player, function(enemy){
     turnDelay = defaultTurnDelay / 2;
     autoTurn = true;
 
-    console.log("clicked on enemy");
     var distance = Vector.distance(player.position, enemy.position);
     if (distance.x <= player.combat.weapon.range && distance.y <= player.combat.weapon.range) {
       turnDelay = defaultTurnDelay;
       autoTurn = false;
-      console.log("enemy within range");
       combatController.handleAttack(player.combat, enemy.combat);
       processTurn();
     } else {
@@ -201,7 +199,7 @@ function update(elapsedTime) {
       processTurn();
     }
   }
-  entityManager.update(elapsedTime);
+  window.entityManager.update(elapsedTime);
   fadeAnimationProgress.progress(elapsedTime);
 }
 
@@ -232,19 +230,20 @@ function render(elapsedTime, ctx) {
   * Proccesses one turn, updating the states of all entities.
   */
 function processTurn() {
-  entityManager.processTurn(input);
+  window.entityManager.processTurn(input);
 }
 
 function nextLevel(fadeOut){
+  player.level++;
   var init = function(){
     // reset entities
-    entityManager.reset();
+    window.entityManager.reset();
 
     //gen new map
     tilemap.generateMap();
 
     //place new entities
-    EntitySpawner.spawn(entityManager, player, tilemap, 30, 20);
+    EntitySpawner.spawn(player, tilemap, 30, 25);
 
     //move player to valid location
     var pos = tilemap.findOpenSpace();
@@ -255,7 +254,7 @@ function nextLevel(fadeOut){
     player.shouldProcessTurn = true;
 
     // add player
-    entityManager.addEntity(player);
+    window.entityManager.addEntity(player);
 
     // add new Stairs.
     var pos = tilemap.findOpenSpace();
@@ -263,7 +262,7 @@ function nextLevel(fadeOut){
       pos = tilemap.findOpenSpace();
     }
     console.log(pos);
-    entityManager.addEntity(new Stairs(pos, tilemap, function(){nextLevel(true)}));
+    window.entityManager.addEntity(new Stairs(pos, tilemap, function(){nextLevel(true)}));
 
     unfadeFromBlack();
 

@@ -8,7 +8,8 @@ const Powerup = require('./powerup');
  * A class representing a EntitySpawner
  */
  module.exports = exports = {
-   spawn: spawn
+   spawn: spawn,
+   drop: spawnDrop
  }
 
  var pu = 0;
@@ -17,9 +18,9 @@ const Powerup = require('./powerup');
  * @constructor EntitySpawner
  * Creates a EntitySpawner
  */
-function spawn(em, player, tilemap, count, percentEnemy) {
+function spawn(player, tilemap, count, percentEnemy) {
   for(var i = 0; i < count; i++){
-    (Math.random() < (percentEnemy/100)) ? spawnEnemy(em, tilemap, player) : spawnPowerup(em, tilemap);
+    (Math.random() < (percentEnemy/100)) ? spawnEnemy(tilemap, player) : spawnPowerup(tilemap);
   }
   if(window.debug){
     console.log(pu + " powerups spawned");
@@ -27,12 +28,19 @@ function spawn(em, player, tilemap, count, percentEnemy) {
   }
 }
 
-function spawnPowerup(em, tilemap){
+function spawnPowerup(tilemap){
   pu++;
-  em.addEntity(new Powerup(tilemap.findOpenSpace(), tilemap));
+  window.entityManager.addEntity(new Powerup(tilemap.findOpenSpace(), tilemap));
 }
 
-function spawnEnemy(em, tilemap, player){
+function spawnEnemy(tilemap, player){
   en++;
-  em.addEntity(new Enemy(tilemap.findOpenSpace(), tilemap, "Zombie", player))
+  window.entityManager.addEntity(new Enemy(tilemap.findOpenSpace(), tilemap, "Zombie", player, spawnDrop))
 }
+
+function spawnDrop(position){
+  pu++;
+  var drop = window.combatController.randomDrop(position);
+  if(drop.type != "None") window.entityManager.addEntity(drop);
+}
+
