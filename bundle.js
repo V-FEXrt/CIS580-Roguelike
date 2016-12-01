@@ -24,6 +24,7 @@ var game = new Game(canvas, update, render);
 var entityManager = new EntityManager();
 var fadeAnimationProgress = new ProgressManager(0, function(){});
 var isFadeOut = true;
+
 window.combatController = new CombatController();
 
 var gui = new GUI({width: canvas.width, height: canvas.height});
@@ -223,7 +224,7 @@ function render(elapsedTime, ctx) {
   ctx.globalAlpha = (isFadeOut) ? fadeAnimationProgress.percent : 1 - fadeAnimationProgress.percent;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.restore();
-  
+
   gui.render(elapsedTime, ctx);
 }
 
@@ -236,7 +237,6 @@ function processTurn() {
 }
 
 function nextLevel(fadeOut){
-
   var init = function(){
     // reset entities
     entityManager.reset();
@@ -251,6 +251,9 @@ function nextLevel(fadeOut){
     var pos = tilemap.findOpenSpace();
     player.position = {x: pos.x, y: pos.y};
     tilemap.moveTo({ x: pos.x - 5, y: pos.y - 3 });
+
+    // allow player to move
+    player.shouldProcessTurn = true;
 
     // add player
     entityManager.addEntity(player);
@@ -1442,6 +1445,7 @@ function Player(position, tilemap, combatClass) {
     this.walk = [];
     this.class = combatClass;
     this.combat = new CombatStruct(this.class);
+    this.shouldProcessTurn = true;
 
     if(this.class == "Knight")
     {
@@ -1481,6 +1485,9 @@ Player.prototype.walkPath = function (path, completion) {
  *{input} keyboard input given for this turn
  */
 Player.prototype.processTurn = function (input) {
+
+    if(!this.shouldProcessTurn) return;
+
     if (this.combat.health <= 0) this.state = "dead";
     if (this.state == "dead") return; // shouldnt be necessary
 
@@ -1511,25 +1518,28 @@ Player.prototype.processTurn = function (input) {
 
     var screenCoor = this.tilemap.toScreenCoords(this.position);
 
-    if (screenCoor.y < 1) {
+    if (screenCoor.y < 3) {
         this.tilemap.moveBy({ x: 0, y: -1 });
     }
 
-    if (screenCoor.y + 1 == this.tilemap.draw.size.height) {
+    if (screenCoor.y + 3 == this.tilemap.draw.size.height) {
         this.tilemap.moveBy({ x: 0, y: 1 });
     }
 
-    if (screenCoor.x < 1) {
+    if (screenCoor.x < 5) {
         this.tilemap.moveBy({ x: -1, y: 0 });
     }
 
-    if (screenCoor.x + 1 == this.tilemap.draw.size.width) {
+    if (screenCoor.x + 5 >= this.tilemap.draw.size.width) {
         this.tilemap.moveBy({ x: 1, y: 0 });
     }
 
 }
 
 Player.prototype.collided = function (entity) {
+  if(entity.type == "Stairs"){
+    this.shouldProcessTurn = false;
+  }
 }
 
 Player.prototype.retain = function () {

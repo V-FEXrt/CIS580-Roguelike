@@ -23,6 +23,7 @@ var game = new Game(canvas, update, render);
 window.entityManager = new EntityManager();
 var fadeAnimationProgress = new ProgressManager(0, function(){});
 var isFadeOut = true;
+
 window.combatController = new CombatController();
 
 var gui = new GUI({width: canvas.width, height: canvas.height});
@@ -220,7 +221,7 @@ function render(elapsedTime, ctx) {
   ctx.globalAlpha = (isFadeOut) ? fadeAnimationProgress.percent : 1 - fadeAnimationProgress.percent;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.restore();
-  
+
   gui.render(elapsedTime, ctx);
 }
 
@@ -234,7 +235,6 @@ function processTurn() {
 
 function nextLevel(fadeOut){
   player.level++;
-
   var init = function(){
     // reset entities
     window.entityManager.reset();
@@ -249,6 +249,9 @@ function nextLevel(fadeOut){
     var pos = tilemap.findOpenSpace();
     player.position = {x: pos.x, y: pos.y};
     tilemap.moveTo({ x: pos.x - 5, y: pos.y - 3 });
+
+    // allow player to move
+    player.shouldProcessTurn = true;
 
     // add player
     window.entityManager.addEntity(player);
