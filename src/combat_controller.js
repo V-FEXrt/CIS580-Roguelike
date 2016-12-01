@@ -59,10 +59,11 @@ function rollRandom(aMinimum, aMaximum) {
 CombatController.prototype.randomDrop = function(aPosition) {
     var lDrop = new Object();
     var lRand = rollRandom(1, 21); // need to set up weighted rands
-    if (lRand > 17) {
-        // spawn armor?
+    if (lRand > 17) {                           // spawn armor
+        lDrop.type = "Armor";
         console.log("drop armor?");
-    } else {
+    } else if (lRand >= 1 && lRand < 17) {      // spawn weapon
+        lDrop.type = "Weapon";
         var playerClass = window.player.class;
         var level = rollRandom(window.player.level, window.player.level + 3); // need to set up weighted rands
         switch (lRand % 4) {
@@ -83,6 +84,8 @@ CombatController.prototype.randomDrop = function(aPosition) {
                 lDrop = (playerClass == "Knight") ? new Weapon("Battleaxe", level) : (playerClass == "Archer") ? new Weapon("Heavy Bolts", level) : new Weapon("Eldritch Blast", level);
                 break;
         }
+    } else {                                    // dont spawn anything
+        lDrop.type = "None";
     }
     lDrop.position = aPosition;
     return lDrop;

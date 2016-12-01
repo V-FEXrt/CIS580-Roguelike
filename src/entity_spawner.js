@@ -40,6 +40,7 @@ function spawnEnemy(tilemap, player){
 
 function spawnDrop(position){
   pu++;
-  window.entityManager.addEntity(window.combatController.randomDrop(position));
+  var drop = window.combatController.randomDrop(position);
+  if(drop.type != "None") window.entityManager.addEntity(drop);
 }
 
