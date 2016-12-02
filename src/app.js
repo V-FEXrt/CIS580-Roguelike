@@ -91,15 +91,6 @@ canvas.onclick = function (event) {
       autoTurn = false;
       combatController.handleAttack(player.combat, enemy.combat);
       processTurn();
-    } else {
-        var path = pathfinder.findPath(player.position, enemy.position);
-        path = path.splice(0, path.length - player.combat.weapon.range);
-        player.walkPath(path, function () {
-          turnDelay = defaultTurnDelay;
-          autoTurn = false;
-          combatController.handleAttack(player.combat, enemy.combat);
-          processTurn();
-        });
     }
   }));
 }

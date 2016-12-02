@@ -23,30 +23,21 @@ function Player(position, tilemap, combatClass) {
     this.spritesheet.src = './spritesheets/sprites.png';
     this.type = "Player";
     this.walk = [];
-    this.class = combatClass;
-    this.combat = new CombatClass(this.class);
+    this.changeClass(combatClass);
     this.level = 0;
     this.shouldProcessTurn = true;
-
-    if (this.class == "Knight") {
-        this.spritesheetPos = { x: 1, y: 5 };
-    } else if (this.class == "Mage") {
-        this.spritesheetPos = { x: 9, y: 5 };
-    } else if (this.class == "Archer") {
-        this.spritesheetPos = { x: 7, y: 6 };
-    }
 }
 
 /**
  * @function updates the player object
  * {DOMHighResTimeStamp} time the elapsed time since the last frame
  */
-Player.prototype.update = function (time) {
+Player.prototype.update = function(time) {
     // if we're dead, we should probably do something
     if (this.combat.health <= 0) this.state = "dead";
 }
 
-Player.prototype.walkPath = function (path, completion) {
+Player.prototype.walkPath = function(path, completion) {
     if (this.state == "dead") return; // shouldnt be necessary
 
     path.shift();
@@ -59,22 +50,16 @@ Player.prototype.walkPath = function (path, completion) {
 //Changes the player class, used because right now things
 //rely on player being created before class is actually chosen.
 //Potentially change this
-Player.prototype.changeClass = function(chosenClass)
-{
+Player.prototype.changeClass = function(chosenClass) {
     this.class = chosenClass;
-    this.combat = new CombatStruct(chosenClass);
-    
-    if(this.class == "Knight")
-    {
-      this.spritesheetPos = {x: 1, y: 5};
-    }
-    else if(this.class == "Mage")
-    {
-      this.spritesheetPos = {x: 9, y: 5};
-    }
-    else if(this.class == "Archer")
-    {
-      this.spritesheetPos = {x: 7, y: 6};
+    this.combat = new CombatClass(chosenClass);
+
+    if (this.class == "Knight") {
+        this.spritesheetPos = { x: 1, y: 5 };
+    } else if (this.class == "Mage") {
+        this.spritesheetPos = { x: 9, y: 5 };
+    } else if (this.class == "Archer") {
+        this.spritesheetPos = { x: 7, y: 6 };
     }
 };
 
@@ -82,7 +67,7 @@ Player.prototype.changeClass = function(chosenClass)
  *@function handles the players turn
  *{input} keyboard input given for this turn
  */
-Player.prototype.processTurn = function (input) {
+Player.prototype.processTurn = function(input) {
 
     if (!this.shouldProcessTurn) return;
 
@@ -134,13 +119,13 @@ Player.prototype.processTurn = function (input) {
 
 }
 
-Player.prototype.collided = function (entity) {
+Player.prototype.collided = function(entity) {
     if (entity.type == "Stairs") {
         this.shouldProcessTurn = false;
     }
 }
 
-Player.prototype.retain = function () {
+Player.prototype.retain = function() {
     return this.combat.health > 0;
 }
 
@@ -148,7 +133,7 @@ Player.prototype.retain = function () {
  * @function renders the player into the provided context
  * {CanvasRenderingContext2D} ctx the context to render into
  */
-Player.prototype.render = function (elapsedTime, ctx) {
+Player.prototype.render = function(elapsedTime, ctx) {
     if (this.state == "dead") return; // shouldnt be necessary
 
     var position = this.tilemap.toScreenCoords(this.position);
