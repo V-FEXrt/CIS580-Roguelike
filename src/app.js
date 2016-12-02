@@ -44,6 +44,31 @@ var input = {
   right: false
 }
 
+/*var myAudio = new Audio('sounds/tempBGMusic.wav');
+myAudio.loop = true;
+myAudio.volume = 0.3;
+myAudio.play();*/
+
+/*var myAudio = new Audio('sounds/tempBGMusic.wav');
+myAudio.volume = 0.3;
+myAudio.addEventListener('ended', function() {
+    this.currentTime = 0;
+    this.play();
+}, false);
+myAudio.play();*/
+
+var myAudio = new Audio('sounds/tempBGMusic.wav');
+myAudio.volume = 0.3;
+var count = 1;
+myAudio.addEventListener('ended', function(){
+   myAudio = new Audio('sounds/tempBGMusicLoop.wav');
+   myAudio.volume = 0.3;
+   this.play();
+}, false);
+count++;
+myAudio.play();
+
+
 var turnTimer = 0;
 var defaultTurnDelay = 400;     //Default turn between turns
 var turnDelay = defaultTurnDelay; //current time between turns

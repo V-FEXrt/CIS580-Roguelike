@@ -21,7 +21,7 @@ const GUI = require('./gui');
 /* Global variables */
 var canvas = document.getElementById('screen');
 var game = new Game(canvas, update, render);
-var entityManager = new EntityManager();
+window.entityManager = new EntityManager();
 var fadeAnimationProgress = new ProgressManager(0, function(){});
 var isFadeOut = true;
 
@@ -45,6 +45,31 @@ var input = {
   right: false
 }
 
+/*var myAudio = new Audio('sounds/tempBGMusic.wav');
+myAudio.loop = true;
+myAudio.volume = 0.3;
+myAudio.play();*/
+
+/*var myAudio = new Audio('sounds/tempBGMusic.wav');
+myAudio.volume = 0.3;
+myAudio.addEventListener('ended', function() {
+    this.currentTime = 0;
+    this.play();
+}, false);
+myAudio.play();*/
+
+var myAudio = new Audio('sounds/tempBGMusic.wav');
+myAudio.volume = 0.3;
+var count = 1;
+myAudio.addEventListener('ended', function(){
+   myAudio = new Audio('sounds/tempBGMusicLoop.wav');
+   myAudio.volume = 0.3;
+   this.play();
+}, false);
+count++;
+myAudio.play();
+
+
 var turnTimer = 0;
 var defaultTurnDelay = 400;     //Default turn between turns
 var turnDelay = defaultTurnDelay; //current time between turns
@@ -65,16 +90,14 @@ canvas.onclick = function (event) {
   }
 
   var clickedWorldPos = tilemap.toWorldCoords(node);
-  entityManager.addEntity(new Click(clickedWorldPos, tilemap, player, function(enemy){
+  window.entityManager.addEntity(new Click(clickedWorldPos, tilemap, player, function(enemy){
     turnDelay = defaultTurnDelay / 2;
     autoTurn = true;
 
-    console.log("clicked on enemy");
     var distance = Vector.distance(player.position, enemy.position);
     if (distance.x <= player.combat.weapon.range && distance.y <= player.combat.weapon.range) {
       turnDelay = defaultTurnDelay;
       autoTurn = false;
-      console.log("enemy within range");
       combatController.handleAttack(player.combat, enemy.combat);
       processTurn();
     } else {
@@ -202,7 +225,7 @@ function update(elapsedTime) {
       processTurn();
     }
   }
-  entityManager.update(elapsedTime);
+  window.entityManager.update(elapsedTime);
   fadeAnimationProgress.progress(elapsedTime);
 }
 
@@ -233,19 +256,20 @@ function render(elapsedTime, ctx) {
   * Proccesses one turn, updating the states of all entities.
   */
 function processTurn() {
-  entityManager.processTurn(input);
+  window.entityManager.processTurn(input);
 }
 
 function nextLevel(fadeOut){
+  player.level++;
   var init = function(){
     // reset entities
-    entityManager.reset();
+    window.entityManager.reset();
 
     //gen new map
     tilemap.generateMap();
 
     //place new entities
-    EntitySpawner.spawn(entityManager, player, tilemap, 30, 20);
+    EntitySpawner.spawn(player, tilemap, 30, 25);
 
     //move player to valid location
     var pos = tilemap.findOpenSpace();
@@ -256,7 +280,7 @@ function nextLevel(fadeOut){
     player.shouldProcessTurn = true;
 
     // add player
-    entityManager.addEntity(player);
+    window.entityManager.addEntity(player);
 
     // add new Stairs.
     var pos = tilemap.findOpenSpace();
@@ -264,7 +288,7 @@ function nextLevel(fadeOut){
       pos = tilemap.findOpenSpace();
     }
     console.log(pos);
-    entityManager.addEntity(new Stairs(pos, tilemap, function(){nextLevel(true)}));
+    window.entityManager.addEntity(new Stairs(pos, tilemap, function(){nextLevel(true)}));
 
     unfadeFromBlack();
 
@@ -330,7 +354,33 @@ function Armor(aType) {
             this.weakType = "b";
             break;
     }
+
+    // static properties for entities
+    this.position = { x: -1, y: -1 };
+    this.size = { width: 72, height: 72 }; // correct size for sprites? Dylan?
 }
+
+Armor.prototype.collided = function (aEntity) {
+
+}
+
+Armor.prototype.processTurn = function () {
+
+}
+
+Armor.prototype.retain = function () {
+    return true;
+}
+
+Armor.prototype.update = function () {
+
+}
+
+Armor.prototype.render = function () {
+
+}
+
+
 },{}],3:[function(require,module,exports){
 "use strict";
 
@@ -386,12 +436,14 @@ Click.prototype.render = function (elapsedTime, ctx) {
 module.exports = exports = CombatController;
 
 const CombatStruct = require("./combat_struct");
+const Weapon = require("./weapon");
+const Armor = require("./armor");
 
 function CombatController() {
 
 }
 
-CombatController.prototype.handleAttack = function (aAttackerStruct, aDefenderStruct) {
+CombatController.prototype.handleAttack = function(aAttackerStruct, aDefenderStruct) {
     // console.log("attacker health: " + aAttackerStruct.health);
     // console.log("defender health: " + aDefenderStruct.health);
 
@@ -436,7 +488,45 @@ CombatController.prototype.handleAttack = function (aAttackerStruct, aDefenderSt
 function rollRandom(aMinimum, aMaximum) {
     return Math.floor(Math.random() * (aMaximum - aMinimum) + aMinimum);
 }
-},{"./combat_struct":5}],5:[function(require,module,exports){
+
+CombatController.prototype.randomDrop = function(aPosition) {
+    var lDrop = new Object();
+    var lRand = rollRandom(1, 21); // need to set up weighted rands
+    if (lRand > 17) {                           // spawn armor
+        lDrop.type = "Armor";
+        // TODO > properly implement...
+        lDrop = new Armor("Leather");
+    } else if (lRand >= 1 && lRand < 17) {      // spawn weapon
+        lDrop.type = "Weapon";
+        var playerClass = window.player.class;
+        var level = rollRandom(window.player.level, window.player.level + 3); // need to set up weighted rands
+        switch (lRand % 4) {
+            // this is awful, why is this still here?
+            case 0:
+                lDrop = (playerClass == "Knight") ? new Weapon("Longsword", level) : (playerClass == "Archer") ? new Weapon("Bodkin", level) : new Weapon("Magic Missile", level);
+                break;
+
+            case 1:
+                lDrop = (playerClass == "Knight") ? new Weapon("Morning Star", level) : (playerClass == "Archer") ? new Weapon("Broadhead", level) : new Weapon("Fireball", level);
+                break;
+
+            case 2:
+                lDrop = (playerClass == "Knight") ? new Weapon("Halberd", level) : (playerClass == "Archer") ? new Weapon("Poison-Tipped", level) : new Weapon("Frostbolt", level);
+                break;
+
+            case 3:
+                lDrop = (playerClass == "Knight") ? new Weapon("Battleaxe", level) : (playerClass == "Archer") ? new Weapon("Heavy Bolts", level) : new Weapon("Eldritch Blast", level);
+                break;
+        }
+    } else {                                    // dont spawn anything
+        lDrop.type = "None";
+    }
+    lDrop.position = aPosition;
+    return lDrop;
+}
+
+
+},{"./armor":2,"./combat_struct":5,"./weapon":19}],5:[function(require,module,exports){
 "use strict";
 
 const Tilemap = require('./tilemap');
@@ -603,7 +693,7 @@ const CombatStruct = require("./combat_struct");
 
 module.exports = exports = Enemy;
 
-function Enemy(position, tilemap, combatClass, target) {
+function Enemy(position, tilemap, combatClass, target, onDeathCB) {
     this.state = "idle";
     this.position = { x: position.x, y: position.y };
     this.size = { width: 96, height: 96 };
@@ -614,6 +704,7 @@ function Enemy(position, tilemap, combatClass, target) {
     this.class = combatClass;
     this.combat = new CombatStruct(this.class);
     this.target = target;
+    this.onDeathCB = onDeathCB;
 
     // console.log(this.position.x + " " + this.position.y);
 }
@@ -627,7 +718,9 @@ Enemy.prototype.processTurn = function () {
 
 Enemy.prototype.update = function (time) {
     // if we're dead, we should probably do something
-    if (this.combat.health <= 0) this.state = "dead";
+    if (this.combat.health <= 0) {
+        this.state = "dead";
+    }
 }
 
 Enemy.prototype.collided = function (entity) {
@@ -635,7 +728,12 @@ Enemy.prototype.collided = function (entity) {
 }
 
 Enemy.prototype.retain = function () {
-    return this.combat.health > 0;
+    if (this.combat.health <= 0) {
+        this.onDeathCB(this.position, this.tilemap);
+        return false;
+    } else {
+        return true;
+    }
 }
 
 Enemy.prototype.render = function (elapsedTime, ctx) {
@@ -830,7 +928,8 @@ const Powerup = require('./powerup');
  * A class representing a EntitySpawner
  */
  module.exports = exports = {
-   spawn: spawn
+   spawn: spawn,
+   drop: spawnDrop
  }
 
  var pu = 0;
@@ -839,9 +938,9 @@ const Powerup = require('./powerup');
  * @constructor EntitySpawner
  * Creates a EntitySpawner
  */
-function spawn(em, player, tilemap, count, percentEnemy) {
+function spawn(player, tilemap, count, percentEnemy) {
   for(var i = 0; i < count; i++){
-    (Math.random() < (percentEnemy/100)) ? spawnEnemy(em, tilemap, player) : spawnPowerup(em, tilemap);
+    (Math.random() < (percentEnemy/100)) ? spawnEnemy(tilemap, player) : spawnPowerup(tilemap);
   }
   if(window.debug){
     console.log(pu + " powerups spawned");
@@ -849,15 +948,22 @@ function spawn(em, player, tilemap, count, percentEnemy) {
   }
 }
 
-function spawnPowerup(em, tilemap){
+function spawnPowerup(tilemap){
   pu++;
-  em.addEntity(new Powerup(tilemap.findOpenSpace(), tilemap));
+  window.entityManager.addEntity(new Powerup(tilemap.findOpenSpace(), tilemap));
 }
 
-function spawnEnemy(em, tilemap, player){
+function spawnEnemy(tilemap, player){
   en++;
-  em.addEntity(new Enemy(tilemap.findOpenSpace(), tilemap, "Zombie", player))
+  window.entityManager.addEntity(new Enemy(tilemap.findOpenSpace(), tilemap, "Zombie", player, spawnDrop))
 }
+
+function spawnDrop(position){
+  pu++;
+  var drop = window.combatController.randomDrop(position);
+  if(drop.type != "None") window.entityManager.addEntity(drop);
+}
+
 
 },{"./enemy":6,"./powerup":14}],9:[function(require,module,exports){
 "use strict";
@@ -1445,6 +1551,7 @@ function Player(position, tilemap, combatClass) {
     this.walk = [];
     this.class = combatClass;
     this.combat = new CombatStruct(this.class);
+    this.level = 0;
     this.shouldProcessTurn = true;
 
     if(this.class == "Knight")
@@ -2087,11 +2194,12 @@ module.exports = exports = Weapon;
 
 // I'm sure there's a better way to do this,
 // especially wince we have to restrict weapon types to different classes. 
-function Weapon(aType, aLevel) {
-    this.type = aType;
+function Weapon(aName, aLevel) {
+    this.type = "Weapon";
+    this.name = aName;
     this.level = aLevel;
 
-    switch (aType) {
+    switch (aName) {
         // Melee
         case "Longsword":
             this.damageMax = 10
@@ -2203,7 +2311,33 @@ function Weapon(aType, aLevel) {
             this.properties = "-1 to Hit";
             break;
     }
+
+    // static properties for entities
+    this.position = { x: -1, y: -1 };
+    this.size = { width: 72, height: 72 }; // correct size for sprites? Dylan?
 }
+
+Weapon.prototype.collided = function (aEntity) {
+
+}
+
+Weapon.prototype.processTurn = function () {
+
+}
+
+Weapon.prototype.retain = function () {
+    return true;
+}
+
+Weapon.prototype.update = function () {
+
+}
+
+Weapon.prototype.render = function () {
+
+}
+
+
 },{}],20:[function(require,module,exports){
 module.exports={
  "tileheight":96,
