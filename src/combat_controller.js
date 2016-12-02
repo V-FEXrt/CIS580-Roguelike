@@ -30,18 +30,19 @@ CombatController.prototype.handleAttack = function(aAttackerClass, aDefenderClas
     if (lAttackRoll == 1) {
         var lSelfDamage = rollRandom(1, lDamageMax + 1);
         aAttackerClass.health -= lSelfDamage;
-        console.log("Crit Fail, take " + lSelfDamage + " damage.");
+        window.terminal.log("Crit Fail, take " + lSelfDamage + " damage.");
     } else if (lAttackRoll == 20 || (lAttackRoll == 19 && (aAttackerClass.attackType == "Ranged" || aAttackerClass.weapon.type == "Battleaxe"))) {
         lDamageTotal += lDamageMax;
         aDefenderClass.health -= lDamageTotal;
     } else {
         if (lAttackTotal > lDefenseTotal) {
             aDefenderClass.health -= lDamageTotal;
-            console.log("Hit, deal " + lDamageTotal + " damage");
+            window.terminal.log("Hit, deal " + lDamageTotal + " damage");
         } else {
-            console.log("Miss, " + lAttackTotal + " against " + lDefenseTotal);
+            window.terminal.log("Miss, " + lAttackTotal + " against " + lDefenseTotal);
         }
     }
+    window.terminal.log("\n\n");
 }
 
 function rollRandom(aMinimum, aMaximum) {
