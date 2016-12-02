@@ -13,15 +13,27 @@ const Pathfinder = require('./pathfinder.js');
 const CombatController = require("./combat_controller");
 const Vector = require('./vector');
 const Click = require('./click');
+const Stairs = require('./stairs');
+const ProgressManager = require('./progress_manager');
+const GUI = require('./gui');
+const Terminal = require('./terminal.js');
 
 /* Global variables */
 var canvas = document.getElementById('screen');
 var game = new Game(canvas, update, render);
-var entityManager = new EntityManager();
+window.entityManager = new EntityManager();
+var fadeAnimationProgress = new ProgressManager(0, function(){});
+var isFadeOut = true;
+var screenSize = {width: 1056, height: 672};
+
 window.combatController = new CombatController();
 
+window.terminal = new Terminal();
+window.terminal.log("Terminal successfully loaded");
 
-var tilemap = new Tilemap({ width: canvas.width, height: canvas.height }, 64, 64, tileset, {
+var gui = new GUI(screenSize);
+
+var tilemap = new Tilemap(screenSize, 64, 64, tileset, {
   onload: function () {
     masterLoop(performance.now());
   }
@@ -37,22 +49,35 @@ var input = {
   right: false
 }
 
-var randPos = tilemap.findOpenSpace();                    //{x: , y: }
 var turnTimer = 0;
 var defaultTurnDelay = 400;     //Default turn between turns
 var turnDelay = defaultTurnDelay; //current time between turns
 var autoTurn = false;           //If true, reduces time between turns and turns happen automatically
 var resetTimer = true;          //Take turn immediately on movement key press if true
 
-var player = new Player({ x: randPos.x, y: randPos.y }, tilemap, "Knight");
-
-EntitySpawner.spawn(entityManager, player, tilemap, 30, 20);
+var player = new Player({ x: 0, y: 0 }, tilemap, "Archer");
 
 window.player = player;
 
-entityManager.addEntity(player);
+window.onmousemove = function(event) {
+	gui.onmousemove(event);
+}
 
-tilemap.moveTo({ x: randPos.x - 5, y: randPos.y - 3 });
+window.onmousedown = function(event)
+{
+    // Init the level when class is chosen
+    if(gui.state == "start" || gui.state == "choose class")
+    { 
+        gui.onmousedown(event);
+        if(gui.chosenClass != "")
+        {
+            player.changeClass(gui.chosenClass);
+            nextLevel(false);
+        }
+    }
+	
+}
+
 
 canvas.onclick = function (event) {
   var node = {
@@ -61,16 +86,14 @@ canvas.onclick = function (event) {
   }
 
   var clickedWorldPos = tilemap.toWorldCoords(node);
-  entityManager.addEntity(new Click(clickedWorldPos, tilemap, player, function(enemy){
+  window.entityManager.addEntity(new Click(clickedWorldPos, tilemap, player, function(enemy){
     turnDelay = defaultTurnDelay / 2;
     autoTurn = true;
 
-    console.log("clicked on enemy");
     var distance = Vector.distance(player.position, enemy.position);
     if (distance.x <= player.combat.weapon.range && distance.y <= player.combat.weapon.range) {
       turnDelay = defaultTurnDelay;
       autoTurn = false;
-      console.log("enemy within range");
       combatController.handleAttack(player.combat, enemy.combat);
       processTurn();
     } else {
@@ -171,6 +194,7 @@ window.onkeyup = function (event) {
   }
   if (!(input.left || input.right || input.up || input.down)) resetTimer = true;
 }
+
 /**
  * @function masterLoop
  * Advances the game in sync with the refresh rate of the screen
@@ -190,7 +214,7 @@ var masterLoop = function (timestamp) {
  * the number of milliseconds passed since the last frame.
  */
 function update(elapsedTime) {
-
+	gui.update(elapsedTime);
   if (input.left || input.right || input.up || input.down || autoTurn) {
     turnTimer += elapsedTime;
     if (turnTimer >= turnDelay) {
@@ -198,7 +222,9 @@ function update(elapsedTime) {
       processTurn();
     }
   }
-  entityManager.update(elapsedTime);
+  window.entityManager.update(elapsedTime);
+  fadeAnimationProgress.progress(elapsedTime);
+  window.terminal.update(elapsedTime);
 }
 
 /**
@@ -214,6 +240,18 @@ function render(elapsedTime, ctx) {
 
   tilemap.render(ctx);
   entityManager.render(elapsedTime, ctx);
+
+  ctx.save();
+  ctx.globalAlpha = (isFadeOut) ? fadeAnimationProgress.percent : 1 - fadeAnimationProgress.percent;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.restore();
+
+  ctx.fillRect(1060,0,256,672);
+
+  ctx.fillStyle = "white";
+  ctx.fillRect(1057,0,2,672);
+  window.terminal.render(elapsedTime, ctx);
+  gui.render(elapsedTime, ctx);
 }
 
 /**
@@ -221,5 +259,55 @@ function render(elapsedTime, ctx) {
   * Proccesses one turn, updating the states of all entities.
   */
 function processTurn() {
-  entityManager.processTurn(input);
+  window.entityManager.processTurn(input);
+}
+
+function nextLevel(fadeOut){
+  player.level++;
+  var init = function(){
+    // reset entities
+    window.entityManager.reset();
+
+    //gen new map
+    tilemap.generateMap();
+
+    //place new entities
+    EntitySpawner.spawn(player, tilemap, 30, 25);
+
+    //move player to valid location
+    var pos = tilemap.findOpenSpace();
+    player.position = {x: pos.x, y: pos.y};
+    tilemap.moveTo({ x: pos.x - 5, y: pos.y - 3 });
+
+    // allow player to move
+    player.shouldProcessTurn = true;
+
+    // add player
+    window.entityManager.addEntity(player);
+
+    // add new Stairs.
+    var pos = tilemap.findOpenSpace();
+    while(pathfinder.findPath(player.position, pos).length == 0){
+      pos = tilemap.findOpenSpace();
+    }
+    console.log(pos);
+    window.entityManager.addEntity(new Stairs(pos, tilemap, function(){nextLevel(true)}));
+
+    unfadeFromBlack();
+
+  };
+
+  (fadeOut) ? fadeToBlack(init) : init()
+}
+
+function fadeToBlack(completion){
+  isFadeOut = true;
+  fadeAnimationProgress = new ProgressManager(500, completion);
+  fadeAnimationProgress.isActive = true;
+}
+
+function unfadeFromBlack(){
+  isFadeOut = false;
+  fadeAnimationProgress = new ProgressManager(500, function(){});
+  fadeAnimationProgress.isActive = true;
 }

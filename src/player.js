@@ -29,6 +29,21 @@ function Player(position, tilemap, combatClass) {
     this.class = combatClass;
     this.combat = new CombatStruct(this.class);
     this.inventory = new Inventory(this.combat.weapon, this.combat.armor);
+    this.level = 0;
+    this.shouldProcessTurn = true;
+
+    if(this.class == "Knight")
+    {
+      this.spritesheetPos = {x: 1, y: 5};
+    }
+    else if(this.class == "Mage")
+    {
+      this.spritesheetPos = {x: 9, y: 5};
+    }
+    else if(this.class == "Archer")
+    {
+      this.spritesheetPos = {x: 7, y: 6};
+    }
 }
 
 /**
@@ -50,11 +65,36 @@ Player.prototype.walkPath = function (path, completion) {
     if (this.walk.length == 0) completion();
 };
 
+//Changes the player class, used because right now things
+//rely on player being created before class is actually chosen.
+//Potentially change this
+Player.prototype.changeClass = function(chosenClass)
+{
+    this.class = chosenClass;
+    this.combat = new CombatStruct(chosenClass);
+
+    if(this.class == "Knight")
+    {
+      this.spritesheetPos = {x: 1, y: 5};
+    }
+    else if(this.class == "Mage")
+    {
+      this.spritesheetPos = {x: 9, y: 5};
+    }
+    else if(this.class == "Archer")
+    {
+      this.spritesheetPos = {x: 7, y: 6};
+    }
+};
+
 /**
  *@function handles the players turn
  *{input} keyboard input given for this turn
  */
 Player.prototype.processTurn = function (input) {
+
+    if(!this.shouldProcessTurn) return;
+
     if (this.combat.health <= 0) this.state = "dead";
     if (this.state == "dead") return; // shouldnt be necessary
 
@@ -85,19 +125,19 @@ Player.prototype.processTurn = function (input) {
 
     var screenCoor = this.tilemap.toScreenCoords(this.position);
 
-    if (screenCoor.y < 1) {
+    if (screenCoor.y < 3) {
         this.tilemap.moveBy({ x: 0, y: -1 });
     }
 
-    if (screenCoor.y + 1 == this.tilemap.draw.size.height) {
+    if (screenCoor.y + 3 == this.tilemap.draw.size.height) {
         this.tilemap.moveBy({ x: 0, y: 1 });
     }
 
-    if (screenCoor.x < 1) {
+    if (screenCoor.x < 5) {
         this.tilemap.moveBy({ x: -1, y: 0 });
     }
 
-    if (screenCoor.x + 1 == this.tilemap.draw.size.width) {
+    if (screenCoor.x + 5 >= this.tilemap.draw.size.width) {
         this.tilemap.moveBy({ x: 1, y: 0 });
     }
 
@@ -106,6 +146,10 @@ Player.prototype.processTurn = function (input) {
 Player.prototype.collided = function (entity) {
     if(typeof entity == Weapon) { this.inventory.addWeapon(weapon); }
     if(typeof entity == Armor) { this.inventory.addArmor(armor); }
+
+    if(entity.type == "Stairs"){
+      this.shouldProcessTurn = false;
+    }
 }
 
 Player.prototype.retain = function () {
@@ -123,8 +167,8 @@ Player.prototype.render = function (elapsedTime, ctx) {
 
     ctx.drawImage(
         this.spritesheet,
-        96, 480,
-        96, 96,
+        96 * this.spritesheetPos.x, 96 * this.spritesheetPos.y,
+        96 , 96,
         position.x * this.size.width, position.y * this.size.height,
         96, 96
     );

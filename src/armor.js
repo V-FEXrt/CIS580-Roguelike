@@ -42,4 +42,29 @@ function Armor(aType) {
             this.weakType = "b";
             break;
     }
+
+    // static properties for entities
+    this.position = { x: -1, y: -1 };
+    this.size = { width: 72, height: 72 }; // correct size for sprites? Dylan?
 }
+
+Armor.prototype.collided = function (aEntity) {
+
+}
+
+Armor.prototype.processTurn = function () {
+
+}
+
+Armor.prototype.retain = function () {
+    return true;
+}
+
+Armor.prototype.update = function () {
+
+}
+
+Armor.prototype.render = function () {
+
+}
+
