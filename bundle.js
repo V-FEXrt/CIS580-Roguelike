@@ -53,6 +53,7 @@ var input = {
 var backgroundMusic = new Audio('sounds/tempBGMusic.wav');
 var backgroundMusicOnLoop = new Audio('sounds/tempBGMusicLoop.wav');
 backgroundMusic.volume = 0.3;
+backgroundMusicOnLoop.volume = 0.3;
 backgroundMusic.addEventListener('ended', function(){
    this.currentTime = 0;
    backgroundMusicOnLoop.play();
