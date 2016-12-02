@@ -56,6 +56,28 @@ Player.prototype.walkPath = function (path, completion) {
     if (this.walk.length == 0) completion();
 };
 
+//Changes the player class, used because right now things
+//rely on player being created before class is actually chosen.
+//Potentially change this
+Player.prototype.changeClass = function(chosenClass)
+{
+    this.class = chosenClass;
+    this.combat = new CombatStruct(chosenClass);
+    
+    if(this.class == "Knight")
+    {
+      this.spritesheetPos = {x: 1, y: 5};
+    }
+    else if(this.class == "Mage")
+    {
+      this.spritesheetPos = {x: 9, y: 5};
+    }
+    else if(this.class == "Archer")
+    {
+      this.spritesheetPos = {x: 7, y: 6};
+    }
+};
+
 /**
  *@function handles the players turn
  *{input} keyboard input given for this turn
