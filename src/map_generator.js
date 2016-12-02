@@ -37,6 +37,8 @@ MapGenerator.prototype.randomFillMap = function(){
       if (column == 0 || row == 0 || column == this.width - 1 || row == this.height - 1){
         // y * width + x
         this.map[row * this.width + column] = this.filled;
+      }else if(row == Math.floor(this.height / 2) || column == Math.floor(this.width / 2)){
+        this.map[row * this.width + column] = this.open;
       }
       else{
         if(!window.debug) this.map[row * this.width + column] = this.pickTile();
