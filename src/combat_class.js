@@ -13,6 +13,7 @@ const Armor = require("./armor");
 module.exports = exports = CombatClass;
 
 function CombatClass(aType) {
+    this.type = aType;
     switch (aType) {
         case "Knight":
             this.health = 20;

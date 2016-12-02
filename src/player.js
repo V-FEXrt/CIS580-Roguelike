@@ -27,7 +27,6 @@ function Player(position, tilemap, combatClass) {
     this.type = "Player";
     this.walk = [];
     this.changeClass(combatClass);
-    this.inventory = new Inventory(this.combat.weapon, this.combat.armor);
     this.level = 0;
     this.shouldProcessTurn = true;
 }
@@ -57,6 +56,7 @@ Player.prototype.walkPath = function(path, completion) {
 Player.prototype.changeClass = function(chosenClass) {
     this.class = chosenClass;
     this.combat = new CombatClass(chosenClass);
+    this.inventory = new Inventory(this.combat.weapon, this.combat.armor);
 
     if (this.class == "Knight") {
         this.spritesheetPos = { x: 1, y: 5 };

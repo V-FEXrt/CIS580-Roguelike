@@ -31,13 +31,17 @@ CombatController.prototype.handleAttack = function(aAttackerClass, aDefenderClas
         var lSelfDamage = rollRandom(1, lDamageMax + 1);
         aAttackerClass.health -= lSelfDamage;
         window.terminal.log("Crit Fail, take " + lSelfDamage + " damage.");
+        // attacker hit itself, play attacker hit sound
+        // aDefenderClass.type != "Knight"||"Archer"||"Mage"
     } else if (lAttackRoll == 20 || (lAttackRoll == 19 && (aAttackerClass.attackType == "Ranged" || aAttackerClass.weapon.type == "Battleaxe"))) {
         lDamageTotal += lDamageMax;
         aDefenderClass.health -= lDamageTotal;
+        // defender hit, play defender hit sound
     } else {
         if (lAttackTotal > lDefenseTotal) {
             aDefenderClass.health -= lDamageTotal;
             window.terminal.log("Hit, deal " + lDamageTotal + " damage");
+            // defender hit, play defender hit sound
         } else {
             window.terminal.log("Miss, " + lAttackTotal + " against " + lDefenseTotal);
         }
