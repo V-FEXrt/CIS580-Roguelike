@@ -68,7 +68,7 @@ window.onmousedown = function(event)
 {
     // Init the level when class is chosen
     if(gui.state == "start" || gui.state == "choose class")
-    { 
+    {
         gui.onmousedown(event);
         if(gui.chosenClass != "")
         {
@@ -76,7 +76,7 @@ window.onmousedown = function(event)
             nextLevel(false);
         }
     }
-	
+
 }
 
 
@@ -269,30 +269,46 @@ function nextLevel(fadeOut){
     // reset entities
     window.entityManager.reset();
 
-    //gen new map
-    tilemap.generateMap();
+    var regen = false;
 
-    //place new entities
-    EntitySpawner.spawn(player, tilemap, 30, 25);
+    do{
+      //reset the regen flag
+      regen = false;
 
-    //move player to valid location
-    var pos = tilemap.findOpenSpace();
-    player.position = {x: pos.x, y: pos.y};
-    tilemap.moveTo({ x: pos.x - 5, y: pos.y - 3 });
+      //gen new map
+      tilemap.generateMap();
 
-    // allow player to move
-    player.shouldProcessTurn = true;
+      //move player to valid location
+      var pos = tilemap.findOpenSpace();
+      player.position = {x: pos.x, y: pos.y};
+      tilemap.moveTo({ x: pos.x - 5, y: pos.y - 3 });
+
+      // allow player to move
+      player.shouldProcessTurn = true;
+
+      // Find stairs location that is at least 5 away.
+      var pos;
+      var dist;
+      var iterations = 0;
+      do {
+        pos = tilemap.findOpenSpace();
+        dist = pathfinder.findPath(player.position, pos).length
+        iterations++;
+        if(iterations > 20) {
+          regen = true;
+          window.terminal.log("Regen");
+          break;
+        }
+      } while(dist == 0 && dist < 8);
+
+    } while(regen);
 
     // add player
     window.entityManager.addEntity(player);
-
-    // add new Stairs.
-    var pos = tilemap.findOpenSpace();
-    while(pathfinder.findPath(player.position, pos).length == 0){
-      pos = tilemap.findOpenSpace();
-    }
-    console.log(pos);
+    // add stairs
     window.entityManager.addEntity(new Stairs(pos, tilemap, function(){nextLevel(true)}));
+    //place new entities
+    EntitySpawner.spawn(player, tilemap, 30, 25);
 
     unfadeFromBlack();
 
@@ -313,7 +329,7 @@ function unfadeFromBlack(){
   fadeAnimationProgress.isActive = true;
 }
 
-},{"../tilemaps/tiledef.json":21,"./click":3,"./combat_controller":4,"./entity_manager":7,"./entity_spawner":8,"./game":9,"./gui":10,"./pathfinder.js":12,"./player":13,"./progress_manager":15,"./stairs":16,"./terminal.js":17,"./tilemap":18,"./vector":19}],2:[function(require,module,exports){
+},{"../tilemaps/tiledef.json":22,"./click":3,"./combat_controller":4,"./entity_manager":7,"./entity_spawner":8,"./game":9,"./gui":10,"./pathfinder.js":13,"./player":14,"./progress_manager":16,"./stairs":17,"./terminal.js":18,"./tilemap":19,"./vector":20}],2:[function(require,module,exports){
 "use strict";
 
 module.exports = exports = Armor;
@@ -530,7 +546,7 @@ CombatController.prototype.randomDrop = function(aPosition) {
 }
 
 
-},{"./armor":2,"./combat_struct":5,"./weapon":20}],5:[function(require,module,exports){
+},{"./armor":2,"./combat_struct":5,"./weapon":21}],5:[function(require,module,exports){
 "use strict";
 
 const Tilemap = require('./tilemap');
@@ -689,7 +705,7 @@ function CombatStruct(aType) {
 }
 
 
-},{"./armor":2,"./tilemap":18,"./vector":19,"./weapon":20}],6:[function(require,module,exports){
+},{"./armor":2,"./tilemap":19,"./vector":20,"./weapon":21}],6:[function(require,module,exports){
 "use strict";
 
 const Tilemap = require('./tilemap');
@@ -753,7 +769,7 @@ Enemy.prototype.render = function (elapsedTime, ctx) {
     );
 }
 
-},{"./combat_struct":5,"./tilemap":18}],7:[function(require,module,exports){
+},{"./combat_struct":5,"./tilemap":19}],7:[function(require,module,exports){
 "use strict";
 
 /**
@@ -969,7 +985,7 @@ function spawnDrop(position){
 }
 
 
-},{"./enemy":6,"./powerup":14}],9:[function(require,module,exports){
+},{"./enemy":6,"./powerup":15}],9:[function(require,module,exports){
 "use strict";
 
 /**
@@ -1321,6 +1337,124 @@ GUI.prototype.render = function (elapsedTime, ctx) {
 },{}],11:[function(require,module,exports){
 "use strict";
 
+/**
+ * @module exports the Inventory class
+ */
+module.exports = exports = Inventory;
+
+/**
+ * @constructor Inventory
+ * Creates a new inventory
+ */
+function Inventory(weapon, armor) {
+	this.inventory = [];
+    this.inventory.push(weapon);
+    this.inventory.push(armor);
+}
+
+/**
+ * @function processes a new weapon item
+ * 
+ */
+Inventory.prototype.addWeapon = function(weapon) {
+    checkWeapon(weapon);
+    if(this.inventory.length >= 17) { /* Tell GUI that inventory is full */ }
+    if(weapon.type.damageMax > this.inventory[0].type.damageMax) { // This needs to be changed to prompting the user, I'll wait until there's a working GUI class to do that
+        this.push(this.inventory[0]);
+        this.inventory[0] = weapon;
+    }
+    else {
+        this.push(weapon);
+    }
+}
+
+/**
+ * @function processes a new armor item
+ * 
+ */
+Inventory.prototype.addArmor = function(armor) {
+    checkArmor(armor);
+    if(this.inventory.length >= 17) { /* Tell GUI that inventory is full */ }
+    if(armor.type.defense > this.inventory[1].type.defense) { // See line 25
+        this.push(this.inventory[0]);
+        this.inventory[0] = armor;
+    }
+    else {
+        this.push(armor);
+    }
+}
+
+/**
+ * @function power up the equipped weapon
+ * 
+ */
+Inventory.prototype.powerupWeapon = function(damage) {
+    this.inventory[0].type.damageMax += damage;
+}
+
+/**
+ * @function power up the equipped armor
+ * 
+ */
+Inventory.prototype.powerupArmor = function(defense) {
+    this.inventory[1].type.defense += defense;
+}
+
+/**
+ * @function add item to inventory
+ * 
+ */
+Inventory.prototype.addItem = function(item) {
+    if(this.inventory.length >= 17) { /* Tell GUI inventory is full */ }
+    this.inventory.push(item);
+}
+
+/**
+ * @function remove item from inventory
+ * 
+ */
+Inventory.prototype.removeItem = function(item) {
+    this.inventory.remove(this.inventory.indexOf(item));
+}
+
+/**
+ * @function makes sure item is a weapon
+ * 
+ */
+function checkWeapon(item) {
+    if(typeof item == 'undefined') failWeapon();
+    if(typeof item.type == 'undefined') failWeapon();
+    if(typeof item.level == "undefined") failWeapon();
+    if(typeof item.type.damageMax == "undefined") failWeapon();
+    if(typeof item.type.damageMin == "undefined") failWeapon();
+    if(typeof item.type.damageType == "undefined") failWeapon();
+    if(typeof item.type.range == "undefined") failWeapon();
+    if(typeof item.type.hitBonus == "undefined") failWeapon();
+    if(typeof item.type.properties == "undefined") failWeapon();
+}
+
+/**
+ * @function makes sure item is armor
+ * 
+ */
+function checkArmor(item) {
+    if(typeof item == 'undefined') failArmor();
+    if(typeof item.type == 'undefined') failArmor();
+    if(typeof item.type.defense == "undefined") failArmor();
+    if(typeof item.type.strongType == "undefined") failArmor();
+    if(typeof item.type.weakType == "undefined") failArmor();
+}
+
+function failWeapon() {
+    throw new Error("Item doesn't match type definition for 'Weapon'");
+}
+
+function failArmor() {
+    throw new Error("Item doesn't match type definition for 'Armor'");
+}
+},{}],12:[function(require,module,exports){
+"use strict";
+
 module.exports = exports = MapGenerator;
 
 
@@ -1358,6 +1492,8 @@ MapGenerator.prototype.randomFillMap = function(){
       if (column == 0 || row == 0 || column == this.width - 1 || row == this.height - 1){
         // y * width + x
         this.map[row * this.width + column] = this.filled;
+      }else if(row == Math.floor(this.height / 2) || column == Math.floor(this.width / 2)){
+        this.map[row * this.width + column] = this.open;
       }
       else{
         if(!window.debug) this.map[row * this.width + column] = this.pickTile();
@@ -1490,7 +1626,7 @@ function rand(upper){
   return Math.floor(Math.random() * upper);
 }
 
-},{}],12:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 /**
  * @module A pathfinding module providing
  * a visualizaiton of common tree-search
@@ -1731,12 +1867,15 @@ Pathfinder.prototype.step = function() {
   return undefined;
 }
 
-},{}],13:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 "use strict";
 
 const Tilemap = require('./tilemap');
 const Vector = require('./vector');
 const CombatStruct = require("./combat_struct");
+const Inventory = require('./inventory.js');
+const Weapon = require('./weapon.js');
+const Armor = require('./armor.js');
 
 /**
  * @module exports the Player class
@@ -1759,6 +1898,7 @@ function Player(position, tilemap, combatClass) {
     this.walk = [];
     this.class = combatClass;
     this.combat = new CombatStruct(this.class);
+    this.inventory = new Inventory(this.combat.weapon, this.combat.armor);
     this.level = 0;
     this.shouldProcessTurn = true;
 
@@ -1802,7 +1942,7 @@ Player.prototype.changeClass = function(chosenClass)
 {
     this.class = chosenClass;
     this.combat = new CombatStruct(chosenClass);
-    
+
     if(this.class == "Knight")
     {
       this.spritesheetPos = {x: 1, y: 5};
@@ -1874,9 +2014,12 @@ Player.prototype.processTurn = function (input) {
 }
 
 Player.prototype.collided = function (entity) {
-  if(entity.type == "Stairs"){
-    this.shouldProcessTurn = false;
-  }
+    if(typeof entity == Weapon) { this.inventory.addWeapon(weapon); }
+    if(typeof entity == Armor) { this.inventory.addArmor(armor); }
+
+    if(entity.type == "Stairs"){
+      this.shouldProcessTurn = false;
+    }
 }
 
 Player.prototype.retain = function () {
@@ -1906,7 +2049,7 @@ function hasUserInput(input) {
     return input.up || input.down || input.right || input.left;
 }
 
-},{"./combat_struct":5,"./tilemap":18,"./vector":19}],14:[function(require,module,exports){
+},{"./armor.js":2,"./combat_struct":5,"./inventory.js":11,"./tilemap":19,"./vector":20,"./weapon.js":21}],15:[function(require,module,exports){
 "use strict";
 
 const Tilemap = require('./tilemap');
@@ -1998,7 +2141,7 @@ Powerup.prototype.render = function (elapsedTime, ctx) {
     //ctx.drawImage(this.power,0,25,25,25,position.x*this.size.width, position.y*this.size.height,96,96);
     //ctx.drawImage(this.power,25,50,25,25,position.x*this.size.width, position.y*this.size.height,96,96);
 
-},{"./tilemap":18}],15:[function(require,module,exports){
+},{"./tilemap":19}],16:[function(require,module,exports){
 "use strict";
 
 module.exports = exports = ProgressManager;
@@ -2032,7 +2175,7 @@ ProgressManager.prototype.reset = function(){
   this.percent = 0;
 }
 
-},{}],16:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 "use strict";
 
 /**
@@ -2101,7 +2244,7 @@ Stairs.prototype.render = function (elapsedTime, ctx) {
   ctx.drawImage(this.spritesheet, 75 + this.spriteOff, 0, 75, 75, (position.x * this.size.width), (position.y * this.size.height), 96, 96);
 }
 
-},{}],17:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 "use strict";
 
 const MAX_MSG_COUNT = 50;
@@ -2133,7 +2276,7 @@ Terminal.prototype.render = function(elapsedTime, ctx) {
         ctx.fillText(message, self.startPos.x, self.startPos.y - 18*i);
     });
 }
-},{}],18:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 "use strict";
 
 const MapGenerator = require('./map_generator');
@@ -2347,7 +2490,7 @@ Tilemap.prototype.getRandomAdjacent = function (aTile) {
   }
 }
 
-},{"./map_generator":11,"./vector":19}],19:[function(require,module,exports){
+},{"./map_generator":12,"./vector":20}],20:[function(require,module,exports){
 "use strict";
 
 /**
@@ -2449,7 +2592,7 @@ function distance(a, b){
   var distance=this.subtract(a,b);
   return {x: Math.abs(distance.x), y: Math.abs(distance.y)};
 }
-},{}],20:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 "use strict";
 
 module.exports = exports = Weapon;
@@ -2600,7 +2743,7 @@ Weapon.prototype.render = function () {
 }
 
 
-},{}],21:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 module.exports={
  "tileheight":96,
  "tilewidth":96,

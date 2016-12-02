@@ -67,7 +67,7 @@ window.onmousedown = function(event)
 {
     // Init the level when class is chosen
     if(gui.state == "start" || gui.state == "choose class")
-    { 
+    {
         gui.onmousedown(event);
         if(gui.chosenClass != "")
         {
@@ -75,7 +75,7 @@ window.onmousedown = function(event)
             nextLevel(false);
         }
     }
-	
+
 }
 
 
@@ -268,30 +268,46 @@ function nextLevel(fadeOut){
     // reset entities
     window.entityManager.reset();
 
-    //gen new map
-    tilemap.generateMap();
+    var regen = false;
 
-    //place new entities
-    EntitySpawner.spawn(player, tilemap, 30, 25);
+    do{
+      //reset the regen flag
+      regen = false;
 
-    //move player to valid location
-    var pos = tilemap.findOpenSpace();
-    player.position = {x: pos.x, y: pos.y};
-    tilemap.moveTo({ x: pos.x - 5, y: pos.y - 3 });
+      //gen new map
+      tilemap.generateMap();
 
-    // allow player to move
-    player.shouldProcessTurn = true;
+      //move player to valid location
+      var pos = tilemap.findOpenSpace();
+      player.position = {x: pos.x, y: pos.y};
+      tilemap.moveTo({ x: pos.x - 5, y: pos.y - 3 });
+
+      // allow player to move
+      player.shouldProcessTurn = true;
+
+      // Find stairs location that is at least 5 away.
+      var pos;
+      var dist;
+      var iterations = 0;
+      do {
+        pos = tilemap.findOpenSpace();
+        dist = pathfinder.findPath(player.position, pos).length
+        iterations++;
+        if(iterations > 20) {
+          regen = true;
+          window.terminal.log("Regen");
+          break;
+        }
+      } while(dist == 0 && dist < 8);
+
+    } while(regen);
 
     // add player
     window.entityManager.addEntity(player);
-
-    // add new Stairs.
-    var pos = tilemap.findOpenSpace();
-    while(pathfinder.findPath(player.position, pos).length == 0){
-      pos = tilemap.findOpenSpace();
-    }
-    console.log(pos);
+    // add stairs
     window.entityManager.addEntity(new Stairs(pos, tilemap, function(){nextLevel(true)}));
+    //place new entities
+    EntitySpawner.spawn(player, tilemap, 30, 25);
 
     unfadeFromBlack();
 
