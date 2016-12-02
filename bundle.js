@@ -21,7 +21,7 @@ const GUI = require('./gui');
 /* Global variables */
 var canvas = document.getElementById('screen');
 var game = new Game(canvas, update, render);
-var entityManager = new EntityManager();
+window.entityManager = new EntityManager();
 var fadeAnimationProgress = new ProgressManager(0, function(){});
 var isFadeOut = true;
 
@@ -55,8 +55,25 @@ var player = new Player({ x: 0, y: 0 }, tilemap, "Archer");
 
 window.player = player;
 
-// Init the level
-nextLevel(false);
+window.onmousemove = function(event) {
+	gui.onmousemove(event);
+}
+
+window.onmousedown = function(event)
+{
+    // Init the level when class is chosen
+    if(gui.state == "start" || gui.state == "choose class")
+    { 
+        gui.onmousedown(event);
+        if(gui.chosenClass != "")
+        {
+            player.changeClass(gui.chosenClass);
+            nextLevel(false);
+        }
+    }
+	
+}
+
 
 canvas.onclick = function (event) {
   var node = {
@@ -65,16 +82,14 @@ canvas.onclick = function (event) {
   }
 
   var clickedWorldPos = tilemap.toWorldCoords(node);
-  entityManager.addEntity(new Click(clickedWorldPos, tilemap, player, function(enemy){
+  window.entityManager.addEntity(new Click(clickedWorldPos, tilemap, player, function(enemy){
     turnDelay = defaultTurnDelay / 2;
     autoTurn = true;
 
-    console.log("clicked on enemy");
     var distance = Vector.distance(player.position, enemy.position);
     if (distance.x <= player.combat.weapon.range && distance.y <= player.combat.weapon.range) {
       turnDelay = defaultTurnDelay;
       autoTurn = false;
-      console.log("enemy within range");
       combatController.handleAttack(player.combat, enemy.combat);
       processTurn();
     } else {
@@ -175,6 +190,7 @@ window.onkeyup = function (event) {
   }
   if (!(input.left || input.right || input.up || input.down)) resetTimer = true;
 }
+
 /**
  * @function masterLoop
  * Advances the game in sync with the refresh rate of the screen
@@ -194,7 +210,7 @@ var masterLoop = function (timestamp) {
  * the number of milliseconds passed since the last frame.
  */
 function update(elapsedTime) {
-
+	gui.update(elapsedTime);
   if (input.left || input.right || input.up || input.down || autoTurn) {
     turnTimer += elapsedTime;
     if (turnTimer >= turnDelay) {
@@ -202,7 +218,7 @@ function update(elapsedTime) {
       processTurn();
     }
   }
-  entityManager.update(elapsedTime);
+  window.entityManager.update(elapsedTime);
   fadeAnimationProgress.progress(elapsedTime);
 }
 
@@ -233,19 +249,20 @@ function render(elapsedTime, ctx) {
   * Proccesses one turn, updating the states of all entities.
   */
 function processTurn() {
-  entityManager.processTurn(input);
+  window.entityManager.processTurn(input);
 }
 
 function nextLevel(fadeOut){
+  player.level++;
   var init = function(){
     // reset entities
-    entityManager.reset();
+    window.entityManager.reset();
 
     //gen new map
     tilemap.generateMap();
 
     //place new entities
-    EntitySpawner.spawn(entityManager, player, tilemap, 30, 20);
+    EntitySpawner.spawn(player, tilemap, 30, 25);
 
     //move player to valid location
     var pos = tilemap.findOpenSpace();
@@ -256,7 +273,7 @@ function nextLevel(fadeOut){
     player.shouldProcessTurn = true;
 
     // add player
-    entityManager.addEntity(player);
+    window.entityManager.addEntity(player);
 
     // add new Stairs.
     var pos = tilemap.findOpenSpace();
@@ -264,7 +281,7 @@ function nextLevel(fadeOut){
       pos = tilemap.findOpenSpace();
     }
     console.log(pos);
-    entityManager.addEntity(new Stairs(pos, tilemap, function(){nextLevel(true)}));
+    window.entityManager.addEntity(new Stairs(pos, tilemap, function(){nextLevel(true)}));
 
     unfadeFromBlack();
 
@@ -330,7 +347,33 @@ function Armor(aType) {
             this.weakType = "b";
             break;
     }
+
+    // static properties for entities
+    this.position = { x: -1, y: -1 };
+    this.size = { width: 72, height: 72 }; // correct size for sprites? Dylan?
 }
+
+Armor.prototype.collided = function (aEntity) {
+
+}
+
+Armor.prototype.processTurn = function () {
+
+}
+
+Armor.prototype.retain = function () {
+    return true;
+}
+
+Armor.prototype.update = function () {
+
+}
+
+Armor.prototype.render = function () {
+
+}
+
+
 },{}],3:[function(require,module,exports){
 "use strict";
 
@@ -386,12 +429,14 @@ Click.prototype.render = function (elapsedTime, ctx) {
 module.exports = exports = CombatController;
 
 const CombatStruct = require("./combat_struct");
+const Weapon = require("./weapon");
+const Armor = require("./armor");
 
 function CombatController() {
 
 }
 
-CombatController.prototype.handleAttack = function (aAttackerStruct, aDefenderStruct) {
+CombatController.prototype.handleAttack = function(aAttackerStruct, aDefenderStruct) {
     // console.log("attacker health: " + aAttackerStruct.health);
     // console.log("defender health: " + aDefenderStruct.health);
 
@@ -436,7 +481,45 @@ CombatController.prototype.handleAttack = function (aAttackerStruct, aDefenderSt
 function rollRandom(aMinimum, aMaximum) {
     return Math.floor(Math.random() * (aMaximum - aMinimum) + aMinimum);
 }
-},{"./combat_struct":5}],5:[function(require,module,exports){
+
+CombatController.prototype.randomDrop = function(aPosition) {
+    var lDrop = new Object();
+    var lRand = rollRandom(1, 21); // need to set up weighted rands
+    if (lRand > 17) {                           // spawn armor
+        lDrop.type = "Armor";
+        // TODO > properly implement...
+        lDrop = new Armor("Leather");
+    } else if (lRand >= 1 && lRand < 17) {      // spawn weapon
+        lDrop.type = "Weapon";
+        var playerClass = window.player.class;
+        var level = rollRandom(window.player.level, window.player.level + 3); // need to set up weighted rands
+        switch (lRand % 4) {
+            // this is awful, why is this still here?
+            case 0:
+                lDrop = (playerClass == "Knight") ? new Weapon("Longsword", level) : (playerClass == "Archer") ? new Weapon("Bodkin", level) : new Weapon("Magic Missile", level);
+                break;
+
+            case 1:
+                lDrop = (playerClass == "Knight") ? new Weapon("Morning Star", level) : (playerClass == "Archer") ? new Weapon("Broadhead", level) : new Weapon("Fireball", level);
+                break;
+
+            case 2:
+                lDrop = (playerClass == "Knight") ? new Weapon("Halberd", level) : (playerClass == "Archer") ? new Weapon("Poison-Tipped", level) : new Weapon("Frostbolt", level);
+                break;
+
+            case 3:
+                lDrop = (playerClass == "Knight") ? new Weapon("Battleaxe", level) : (playerClass == "Archer") ? new Weapon("Heavy Bolts", level) : new Weapon("Eldritch Blast", level);
+                break;
+        }
+    } else {                                    // dont spawn anything
+        lDrop.type = "None";
+    }
+    lDrop.position = aPosition;
+    return lDrop;
+}
+
+
+},{"./armor":2,"./combat_struct":5,"./weapon":19}],5:[function(require,module,exports){
 "use strict";
 
 const Tilemap = require('./tilemap');
@@ -603,7 +686,7 @@ const CombatStruct = require("./combat_struct");
 
 module.exports = exports = Enemy;
 
-function Enemy(position, tilemap, combatClass, target) {
+function Enemy(position, tilemap, combatClass, target, onDeathCB) {
     this.state = "idle";
     this.position = { x: position.x, y: position.y };
     this.size = { width: 96, height: 96 };
@@ -614,6 +697,7 @@ function Enemy(position, tilemap, combatClass, target) {
     this.class = combatClass;
     this.combat = new CombatStruct(this.class);
     this.target = target;
+    this.onDeathCB = onDeathCB;
 
     // console.log(this.position.x + " " + this.position.y);
 }
@@ -627,7 +711,9 @@ Enemy.prototype.processTurn = function () {
 
 Enemy.prototype.update = function (time) {
     // if we're dead, we should probably do something
-    if (this.combat.health <= 0) this.state = "dead";
+    if (this.combat.health <= 0) {
+        this.state = "dead";
+    }
 }
 
 Enemy.prototype.collided = function (entity) {
@@ -635,7 +721,12 @@ Enemy.prototype.collided = function (entity) {
 }
 
 Enemy.prototype.retain = function () {
-    return this.combat.health > 0;
+    if (this.combat.health <= 0) {
+        this.onDeathCB(this.position, this.tilemap);
+        return false;
+    } else {
+        return true;
+    }
 }
 
 Enemy.prototype.render = function (elapsedTime, ctx) {
@@ -830,7 +921,8 @@ const Powerup = require('./powerup');
  * A class representing a EntitySpawner
  */
  module.exports = exports = {
-   spawn: spawn
+   spawn: spawn,
+   drop: spawnDrop
  }
 
  var pu = 0;
@@ -839,9 +931,9 @@ const Powerup = require('./powerup');
  * @constructor EntitySpawner
  * Creates a EntitySpawner
  */
-function spawn(em, player, tilemap, count, percentEnemy) {
+function spawn(player, tilemap, count, percentEnemy) {
   for(var i = 0; i < count; i++){
-    (Math.random() < (percentEnemy/100)) ? spawnEnemy(em, tilemap, player) : spawnPowerup(em, tilemap);
+    (Math.random() < (percentEnemy/100)) ? spawnEnemy(tilemap, player) : spawnPowerup(tilemap);
   }
   if(window.debug){
     console.log(pu + " powerups spawned");
@@ -849,15 +941,22 @@ function spawn(em, player, tilemap, count, percentEnemy) {
   }
 }
 
-function spawnPowerup(em, tilemap){
+function spawnPowerup(tilemap){
   pu++;
-  em.addEntity(new Powerup(tilemap.findOpenSpace(), tilemap));
+  window.entityManager.addEntity(new Powerup(tilemap.findOpenSpace(), tilemap));
 }
 
-function spawnEnemy(em, tilemap, player){
+function spawnEnemy(tilemap, player){
   en++;
-  em.addEntity(new Enemy(tilemap.findOpenSpace(), tilemap, "Zombie", player))
+  window.entityManager.addEntity(new Enemy(tilemap.findOpenSpace(), tilemap, "Zombie", player, spawnDrop))
 }
+
+function spawnDrop(position){
+  pu++;
+  var drop = window.combatController.randomDrop(position);
+  if(drop.type != "None") window.entityManager.addEntity(drop);
+}
+
 
 },{"./enemy":6,"./powerup":14}],9:[function(require,module,exports){
 "use strict";
@@ -932,10 +1031,112 @@ module.exports = exports = GUI;
  */
 function GUI(size) {
   this.state = "start";
-  this.state = "";
   this.size = size;
   this.playerSprites = new Image();
   this.playerSprites.src = './spritesheets/sprites.png';
+  this.startSprites = new Image();
+  this.startSprites.src = './spritesheets/start.png';
+  this.highlightSize = 10;
+  
+  this.swordHighlights = [0, 0, 0];
+  this.swordYPos = [288, 384, 480];
+  
+  this.playerHighlights = [0, 0, 0];
+  this.playerXPos = [336, 480, 624];
+  
+  this.titleMinY = 75;
+  this.titleY = 75;
+  this.titleMaxY = 80;
+  this.titleDirection = 1;
+  
+  this.chosenClass = "";
+}
+
+var x, y;
+GUI.prototype.onmousemove = function(event)
+{
+	x = event.offsetX;
+	y = event.offsetY;
+	if(this.state == "start")
+	{
+		if(x >= 384 && x <= 672)
+		{
+			if(y >= this.swordYPos[0] + 20 && y <= this.swordYPos[0] + 76)
+			{
+				this.swordHighlights[0] = this.highlightSize;
+			}
+			else if(y >= this.swordYPos[1] + 20 && y <= this.swordYPos[1] + 76)
+			{
+				this.swordHighlights[1] = this.highlightSize;
+			}
+			else if(y >= this.swordYPos[2] + 20 && y <= this.swordYPos[2] + 76)
+			{
+				this.swordHighlights[2] = this.highlightSize;
+			}
+			else this.swordHighlights = [0, 0, 0];
+		}
+		else this.swordHighlights = [0, 0, 0];
+	}
+	else if(this.state == "choose class")
+	{
+		if(y >= 288 && y <= 384)
+		{
+			if(x >= this.playerXPos[0] + 20 && x <= this.playerXPos[0] + 76)
+			{
+				this.playerHighlights[0] = this.highlightSize;
+			}
+			else if(x >= this.playerXPos[1] + 20 && x <= this.playerXPos[1] + 76)
+			{
+				this.playerHighlights[1] = this.highlightSize;
+			}
+			else if(x >= this.playerXPos[2] + 20 && x <= this.playerXPos[2] + 76)
+			{
+				this.playerHighlights[2] = this.highlightSize;
+			}
+			else this.playerHighlights = [0, 0, 0];
+		}
+		else this.playerHighlights = [0, 0, 0];
+	}
+}
+
+GUI.prototype.onmousedown = function(event)
+{
+	if(this.state == "start")
+	{
+		if(this.swordHighlights[0] != 0)
+		{
+			this.state = "choose class";
+		}
+		else if(this.swordHighlights[1] != 0)
+		{
+            //this.state = "controls";
+		}
+		else if(this.swordHighlights[2] != 0)
+		{
+            //this.state = "credits";
+		}
+	}
+    else if(this.state == "choose class")
+    {
+        if(this.playerHighlights[0] != 0)
+		{
+			//Knight
+            this.chosenClass = "Knight";
+            this.state = "playing";
+		}
+		else if(this.playerHighlights[1] != 0)
+		{
+            //Archer
+            this.chosenClass = "Archer";
+            this.state = "playing";
+		}
+		else if(this.playerHighlights[2] != 0)
+		{
+            //Mage
+            this.chosenClass = "Mage";
+            this.state = "playing";
+		}
+    }
 }
 
 /**
@@ -943,7 +1144,19 @@ function GUI(size) {
  * {DOMHighResTimeStamp} time the elapsed time since the last frame
  */
 GUI.prototype.update = function (time) {
-
+	if(this.state == "start")
+	{
+		if(this.titleY >= this.titleMaxY)
+		{
+			this.titleDirection = -1;
+		}
+		else if(this.titleY <= this.titleMinY)
+		{
+			this.titleDirection = 1;
+		}
+		
+		this.titleY += this.titleDirection * time/150;
+	}
 }
 
 /**
@@ -951,44 +1164,134 @@ GUI.prototype.update = function (time) {
  * {CanvasRenderingContext2D} ctx the context to render into
  */
 GUI.prototype.render = function (elapsedTime, ctx) {
+	ctx.imageSmoothingEnabled = false;
+
   if(this.state == "start")
   {
-    ctx.fillStyle = "lightgrey";   
+	//Background
+	ctx.drawImage(
+		this.startSprites,
+		0, 0,
+		this.size.width,
+		this.size.height,
+		0, 0,
+		this.size.width,
+		this.size.height
+	);
+	
+	//Shadow
+	ctx.drawImage(
+		this.startSprites,
+		0, 1056,
+		480, 480,
+		285, 96,
+		480, 480
+	);
+	
+	//Title
+	ctx.drawImage(
+		this.startSprites,
+		0, 768,
+		576, 288,
+		285, this.titleY,
+		576, 288
+	);
+	
+	//Start Game
+	ctx.drawImage(
+		this.startSprites,
+		0, 672,
+		288, 96,
+		384 - this.swordHighlights[0]/2, 288 - this.swordHighlights[0]/2,
+		288 +this.swordHighlights[0], 96 + this.swordHighlights[0]
+	);
+	
+	//Controls
+	ctx.drawImage(
+		this.startSprites,
+		288, 672,
+		288, 96,
+		384 - this.swordHighlights[1]/2, 384 - this.swordHighlights[1]/2,
+		288 +this.swordHighlights[1], 96 + this.swordHighlights[1]
+	);
+	
+	//Credits
+	ctx.drawImage(
+		this.startSprites,
+		576, 672,
+		288, 96,
+		384 - this.swordHighlights[2]/2, 480 - this.swordHighlights[2]/2,
+		288 +this.swordHighlights[2], 96 + this.swordHighlights[2]
+	);
+  }
+  else if(this.state == "choose class")
+  {
+  	//Background
+	ctx.drawImage(
+		this.startSprites,
+		0, 0,
+		this.size.width,
+		this.size.height,
+		0, 0,
+		this.size.width,
+		this.size.height
+	);
+	
+    //Shadow
+    ctx.drawImage(
+        this.startSprites,
+        672, 1248,
+        480, 384,
+        288, 165,
+        480, 384
+    );
+    
+	//Nameplates
+	ctx.drawImage(
+		this.startSprites,
+		576, 768,
+		672, 480,
+		192, 96,
+		672, 480
+	);
+	
+	ctx.fillStyle = "lightgrey";   
     ctx.strokeStyle = "grey";
     ctx.lineWidth =  10;
-    var x = this.size.width/4;
-    var y = this.size.height/3;
+
     ctx.fillRect(x, y, this.size.width/2, this.size.height/3);
     ctx.strokeRect(x, y, this.size.width/2, this.size.height/3);
-    
+    var x = this.size.width/4;
+    var y = this.size.height/3;
     ctx.font = "20px Arial"
     ctx.fillStyle = "black"
+	
+	//Knight
     ctx.drawImage(
       this.playerSprites,
       96, 96 *5,
       96 , 96,
-      x+60, y + 50,
-      96, 96
+      this.playerXPos[0] - this.playerHighlights[0]/2, 282 - this.playerHighlights[0]/2,
+      96 + this.playerHighlights[0], 96 + this.playerHighlights[0]
     );
-    ctx.fillText("Knight", x+80, y+ 180);
     
+	//Archer
     ctx.drawImage(
       this.playerSprites,
       96 * 7, 96 *6,
       96 , 96,
-      x+210, y + 50,
-      96, 96
+      this.playerXPos[1]  - this.playerHighlights[1]/2, 282  - this.playerHighlights[1]/2,
+	  96 + this.playerHighlights[1], 96 + this.playerHighlights[1]
     );
-    ctx.fillText("Archer", x+230, y+ 180);
     
+	//Mage
     ctx.drawImage(
       this.playerSprites,
       96*9, 96 *5,
       96 , 96,
-      x+360, y + 50,
-      96, 96
+      this.playerXPos[2]  - this.playerHighlights[2]/2, 282  - this.playerHighlights[2]/2,
+      96 + this.playerHighlights[2] , 96 + this.playerHighlights[2]
     );
-    ctx.fillText("Mage", x+380, y+ 180);
   }
   else if(this.state == "paused")
   {
@@ -1445,6 +1748,7 @@ function Player(position, tilemap, combatClass) {
     this.walk = [];
     this.class = combatClass;
     this.combat = new CombatStruct(this.class);
+    this.level = 0;
     this.shouldProcessTurn = true;
 
     if(this.class == "Knight")
@@ -1478,6 +1782,28 @@ Player.prototype.walkPath = function (path, completion) {
     this.walkCompletion = completion;
 
     if (this.walk.length == 0) completion();
+};
+
+//Changes the player class, used because right now things
+//rely on player being created before class is actually chosen.
+//Potentially change this
+Player.prototype.changeClass = function(chosenClass)
+{
+    this.class = chosenClass;
+    this.combat = new CombatStruct(chosenClass);
+    
+    if(this.class == "Knight")
+    {
+      this.spritesheetPos = {x: 1, y: 5};
+    }
+    else if(this.class == "Mage")
+    {
+      this.spritesheetPos = {x: 9, y: 5};
+    }
+    else if(this.class == "Archer")
+    {
+      this.spritesheetPos = {x: 7, y: 6};
+    }
 };
 
 /**
@@ -2087,11 +2413,12 @@ module.exports = exports = Weapon;
 
 // I'm sure there's a better way to do this,
 // especially wince we have to restrict weapon types to different classes. 
-function Weapon(aType, aLevel) {
-    this.type = aType;
+function Weapon(aName, aLevel) {
+    this.type = "Weapon";
+    this.name = aName;
     this.level = aLevel;
 
-    switch (aType) {
+    switch (aName) {
         // Melee
         case "Longsword":
             this.damageMax = 10
@@ -2203,7 +2530,33 @@ function Weapon(aType, aLevel) {
             this.properties = "-1 to Hit";
             break;
     }
+
+    // static properties for entities
+    this.position = { x: -1, y: -1 };
+    this.size = { width: 72, height: 72 }; // correct size for sprites? Dylan?
 }
+
+Weapon.prototype.collided = function (aEntity) {
+
+}
+
+Weapon.prototype.processTurn = function () {
+
+}
+
+Weapon.prototype.retain = function () {
+    return true;
+}
+
+Weapon.prototype.update = function () {
+
+}
+
+Weapon.prototype.render = function () {
+
+}
+
+
 },{}],20:[function(require,module,exports){
 module.exports={
  "tileheight":96,
