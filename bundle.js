@@ -51,15 +51,18 @@ var input = {
 }
 
 var backgroundMusic = new Audio('sounds/tempBGMusic.wav');
-var backgroundMusicOnLoop = new Audio('sounds/tempBGMusicLoop.wav');
 backgroundMusic.volume = 0.3;
-backgroundMusicOnLoop.volume = 0.3;
 backgroundMusic.addEventListener('ended', function(){
-   this.currentTime = 0;
-   backgroundMusicOnLoop.play();
+   setNewMusic();
 }, false);
 backgroundMusic.play();
 
+var setNewMusic = function() {
+  var backgroundMusicOnLoop = new Audio('sounds/tempBGMusicLoop.wav');
+  backgroundMusicOnLoop.volume = 0.3;
+  backgroundMusicOnLoop.loop = true;
+  backgroundMusicOnLoop.play();
+}
 
 var turnTimer = 0;
 var defaultTurnDelay = 400;     //Default turn between turns
