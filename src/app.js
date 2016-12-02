@@ -16,6 +16,7 @@ const Click = require('./click');
 const Stairs = require('./stairs');
 const ProgressManager = require('./progress_manager');
 const GUI = require('./gui');
+const Terminal = require('./terminal.js');
 
 /* Global variables */
 var canvas = document.getElementById('screen');
@@ -23,12 +24,16 @@ var game = new Game(canvas, update, render);
 window.entityManager = new EntityManager();
 var fadeAnimationProgress = new ProgressManager(0, function(){});
 var isFadeOut = true;
+var screenSize = {width: 1056, height: 672};
 
 window.combatController = new CombatController();
 
-var gui = new GUI({width: canvas.width, height: canvas.height});
+window.terminal = new Terminal();
+window.terminal.log("Terminal successfully loaded");
 
-var tilemap = new Tilemap({ width: canvas.width, height: canvas.height }, 64, 64, tileset, {
+var gui = new GUI(screenSize);
+
+var tilemap = new Tilemap(screenSize, 64, 64, tileset, {
   onload: function () {
     masterLoop(performance.now());
   }
@@ -219,6 +224,7 @@ function update(elapsedTime) {
   }
   window.entityManager.update(elapsedTime);
   fadeAnimationProgress.progress(elapsedTime);
+  window.terminal.update(elapsedTime);
 }
 
 /**
@@ -240,6 +246,11 @@ function render(elapsedTime, ctx) {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.restore();
 
+  ctx.fillRect(1060,0,256,672);
+
+  ctx.fillStyle = "white";
+  ctx.fillRect(1057,0,2,672);
+  window.terminal.render(elapsedTime, ctx);
   gui.render(elapsedTime, ctx);
 }
 

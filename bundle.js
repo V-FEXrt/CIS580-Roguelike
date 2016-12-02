@@ -17,6 +17,7 @@ const Click = require('./click');
 const Stairs = require('./stairs');
 const ProgressManager = require('./progress_manager');
 const GUI = require('./gui');
+const Terminal = require('./terminal.js');
 
 /* Global variables */
 var canvas = document.getElementById('screen');
@@ -24,12 +25,16 @@ var game = new Game(canvas, update, render);
 window.entityManager = new EntityManager();
 var fadeAnimationProgress = new ProgressManager(0, function(){});
 var isFadeOut = true;
+var screenSize = {width: 1056, height: 672};
 
 window.combatController = new CombatController();
 
-var gui = new GUI({width: canvas.width, height: canvas.height});
+window.terminal = new Terminal();
+window.terminal.log("Terminal successfully loaded");
 
-var tilemap = new Tilemap({ width: canvas.width, height: canvas.height }, 64, 64, tileset, {
+var gui = new GUI(screenSize);
+
+var tilemap = new Tilemap(screenSize, 64, 64, tileset, {
   onload: function () {
     masterLoop(performance.now());
   }
@@ -220,6 +225,7 @@ function update(elapsedTime) {
   }
   window.entityManager.update(elapsedTime);
   fadeAnimationProgress.progress(elapsedTime);
+  window.terminal.update(elapsedTime);
 }
 
 /**
@@ -241,6 +247,11 @@ function render(elapsedTime, ctx) {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.restore();
 
+  ctx.fillRect(1060,0,256,672);
+
+  ctx.fillStyle = "white";
+  ctx.fillRect(1057,0,2,672);
+  window.terminal.render(elapsedTime, ctx);
   gui.render(elapsedTime, ctx);
 }
 
@@ -302,7 +313,7 @@ function unfadeFromBlack(){
   fadeAnimationProgress.isActive = true;
 }
 
-},{"../tilemaps/tiledef.json":20,"./click":3,"./combat_controller":4,"./entity_manager":7,"./entity_spawner":8,"./game":9,"./gui":10,"./pathfinder.js":12,"./player":13,"./progress_manager":15,"./stairs":16,"./tilemap":17,"./vector":18}],2:[function(require,module,exports){
+},{"../tilemaps/tiledef.json":21,"./click":3,"./combat_controller":4,"./entity_manager":7,"./entity_spawner":8,"./game":9,"./gui":10,"./pathfinder.js":12,"./player":13,"./progress_manager":15,"./stairs":16,"./terminal.js":17,"./tilemap":18,"./vector":19}],2:[function(require,module,exports){
 "use strict";
 
 module.exports = exports = Armor;
@@ -459,23 +470,23 @@ CombatController.prototype.handleAttack = function(aAttackerStruct, aDefenderStr
     if (lAttackRoll == 1) {
         var lSelfDamage = rollRandom(1, lDamageMax + 1);
         aAttackerStruct.health -= lSelfDamage;
-        console.log("Crit Fail, take " + lSelfDamage + " damage.");
+        window.terminal.log("Crit Fail, take " + lSelfDamage + " damage.");
     } else if (lAttackRoll == 20 || (lAttackRoll == 19 && (aAttackerStruct.attackType == "Ranged" || aAttackerStruct.weapon.type == "Battleaxe"))) {
         lDamageTotal += lDamageMax;
         aDefenderStruct.health -= lDamageTotal;
     } else {
         if (lAttackTotal > lDefenseTotal) {
             aDefenderStruct.health -= lDamageTotal;
-            console.log("Hit, deal " + lDamageTotal + " damage");
+            window.terminal.log("Hit, deal " + lDamageTotal + " damage");
         } else {
-            console.log("Miss, " + lAttackTotal + " against " + lDefenseTotal);
+            window.terminal.log("Miss, " + lAttackTotal + " against " + lDefenseTotal);
         }
     }
 
 
     // console.log("attacker health: " + aAttackerStruct.health);
     // console.log("defender health: " + aDefenderStruct.health);
-    console.log("\n\n");
+    window.terminal.log("\n\n");
 }
 
 function rollRandom(aMinimum, aMaximum) {
@@ -519,7 +530,7 @@ CombatController.prototype.randomDrop = function(aPosition) {
 }
 
 
-},{"./armor":2,"./combat_struct":5,"./weapon":19}],5:[function(require,module,exports){
+},{"./armor":2,"./combat_struct":5,"./weapon":20}],5:[function(require,module,exports){
 "use strict";
 
 const Tilemap = require('./tilemap');
@@ -678,7 +689,7 @@ function CombatStruct(aType) {
 }
 
 
-},{"./armor":2,"./tilemap":17,"./vector":18,"./weapon":19}],6:[function(require,module,exports){
+},{"./armor":2,"./tilemap":18,"./vector":19,"./weapon":20}],6:[function(require,module,exports){
 "use strict";
 
 const Tilemap = require('./tilemap');
@@ -742,7 +753,7 @@ Enemy.prototype.render = function (elapsedTime, ctx) {
     );
 }
 
-},{"./combat_struct":5,"./tilemap":17}],7:[function(require,module,exports){
+},{"./combat_struct":5,"./tilemap":18}],7:[function(require,module,exports){
 "use strict";
 
 /**
@@ -1895,7 +1906,7 @@ function hasUserInput(input) {
     return input.up || input.down || input.right || input.left;
 }
 
-},{"./combat_struct":5,"./tilemap":17,"./vector":18}],14:[function(require,module,exports){
+},{"./combat_struct":5,"./tilemap":18,"./vector":19}],14:[function(require,module,exports){
 "use strict";
 
 const Tilemap = require('./tilemap');
@@ -1987,7 +1998,7 @@ Powerup.prototype.render = function (elapsedTime, ctx) {
     //ctx.drawImage(this.power,0,25,25,25,position.x*this.size.width, position.y*this.size.height,96,96);
     //ctx.drawImage(this.power,25,50,25,25,position.x*this.size.width, position.y*this.size.height,96,96);
 
-},{"./tilemap":17}],15:[function(require,module,exports){
+},{"./tilemap":18}],15:[function(require,module,exports){
 "use strict";
 
 module.exports = exports = ProgressManager;
@@ -2091,6 +2102,38 @@ Stairs.prototype.render = function (elapsedTime, ctx) {
 }
 
 },{}],17:[function(require,module,exports){
+"use strict";
+
+const MAX_MSG_COUNT = 50;
+
+module.exports = exports = Terminal;
+
+function Terminal() {
+    this.messages = [];
+    this.startPos = {x: 1063, y: 667};
+}
+
+Terminal.prototype.log = function(message) {
+    this.messages.unshift(message);
+    if(this.messages.length > MAX_MSG_COUNT) {
+        this.messages.pop();
+    }
+    if(window.debug) console.log(message);
+}
+
+Terminal.prototype.update = function(time) {
+
+}
+
+Terminal.prototype.render = function(elapsedTime, ctx) {
+    ctx.fillStyle = 'white';
+    ctx.font = "15px Arial";
+    var self = this;
+    this.messages.forEach(function(message, i) {
+        ctx.fillText(message, self.startPos.x, self.startPos.y - 18*i);
+    });
+}
+},{}],18:[function(require,module,exports){
 "use strict";
 
 const MapGenerator = require('./map_generator');
@@ -2304,7 +2347,7 @@ Tilemap.prototype.getRandomAdjacent = function (aTile) {
   }
 }
 
-},{"./map_generator":11,"./vector":18}],18:[function(require,module,exports){
+},{"./map_generator":11,"./vector":19}],19:[function(require,module,exports){
 "use strict";
 
 /**
@@ -2406,7 +2449,7 @@ function distance(a, b){
   var distance=this.subtract(a,b);
   return {x: Math.abs(distance.x), y: Math.abs(distance.y)};
 }
-},{}],19:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 "use strict";
 
 module.exports = exports = Weapon;
@@ -2557,7 +2600,7 @@ Weapon.prototype.render = function () {
 }
 
 
-},{}],20:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 module.exports={
  "tileheight":96,
  "tilewidth":96,
