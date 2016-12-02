@@ -70,9 +70,7 @@ window.onmousedown = function(event)
             nextLevel(false);
         }
     }
-	
 }
-
 
 canvas.onclick = function (event) {
   var node = {
@@ -82,9 +80,6 @@ canvas.onclick = function (event) {
 
   var clickedWorldPos = tilemap.toWorldCoords(node);
   window.entityManager.addEntity(new Click(clickedWorldPos, tilemap, player, function(enemy){
-    turnDelay = defaultTurnDelay / 2;
-    autoTurn = true;
-
     var distance = Vector.distance(player.position, enemy.position);
     if (distance.x <= player.combat.weapon.range && distance.y <= player.combat.weapon.range) {
       turnDelay = defaultTurnDelay;
