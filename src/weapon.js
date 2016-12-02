@@ -47,6 +47,15 @@ function Weapon(aName, aLevel) {
             this.properties = "+3 Min Damage, +1 Crit Chance";
             break;
 
+        case "Claw":
+            this.damageMax = 4
+            this.damageMin = 2;
+            this.damageType = "s";
+            this.range = 1;
+            this.hitBonus = 0;
+            this.properties = "+1 Min Damage";
+            break;
+
         // Ranged
         case "Bodkin":
             this.damageMax = 4
