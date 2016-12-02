@@ -295,7 +295,6 @@ function nextLevel(fadeOut){
         iterations++;
         if(iterations > 20) {
           regen = true;
-          window.terminal.log("Regen");
           break;
         }
       } while(dist == 0 && dist < 8);
