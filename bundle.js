@@ -1155,7 +1155,7 @@ GUI.prototype.update = function (time) {
 			this.titleDirection = 1;
 		}
 		
-		this.titleY += this.titleDirection * time/150;
+		this.titleY += this.titleDirection/10;
 	}
 }
 
