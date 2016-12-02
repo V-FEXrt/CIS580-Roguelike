@@ -54,8 +54,25 @@ var player = new Player({ x: 0, y: 0 }, tilemap, "Archer");
 
 window.player = player;
 
-// Init the level
-nextLevel(false);
+window.onmousemove = function(event) {
+	gui.onmousemove(event);
+}
+
+window.onmousedown = function(event)
+{
+    // Init the level when class is chosen
+    if(gui.state == "start" || gui.state == "choose class")
+    { 
+        gui.onmousedown(event);
+        if(gui.chosenClass != "")
+        {
+            player.changeClass(gui.chosenClass);
+            nextLevel(false);
+        }
+    }
+	
+}
+
 
 canvas.onclick = function (event) {
   var node = {
@@ -172,6 +189,7 @@ window.onkeyup = function (event) {
   }
   if (!(input.left || input.right || input.up || input.down)) resetTimer = true;
 }
+
 /**
  * @function masterLoop
  * Advances the game in sync with the refresh rate of the screen
@@ -191,7 +209,7 @@ var masterLoop = function (timestamp) {
  * the number of milliseconds passed since the last frame.
  */
 function update(elapsedTime) {
-
+	gui.update(elapsedTime);
   if (input.left || input.right || input.up || input.down || autoTurn) {
     turnTimer += elapsedTime;
     if (turnTimer >= turnDelay) {
