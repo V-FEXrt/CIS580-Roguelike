@@ -2,7 +2,7 @@
 
 const Tilemap = require('./tilemap');
 const Vector = require('./vector');
-const CombatStruct = require("./combat_struct");
+const CombatClass = require("./combat_class");
 
 /**
  * @module exports the Player class
@@ -24,21 +24,16 @@ function Player(position, tilemap, combatClass) {
     this.type = "Player";
     this.walk = [];
     this.class = combatClass;
-    this.combat = new CombatStruct(this.class);
+    this.combat = new CombatClass(this.class);
     this.level = 0;
     this.shouldProcessTurn = true;
 
-    if(this.class == "Knight")
-    {
-      this.spritesheetPos = {x: 1, y: 5};
-    }
-    else if(this.class == "Mage")
-    {
-      this.spritesheetPos = {x: 9, y: 5};
-    }
-    else if(this.class == "Archer")
-    {
-      this.spritesheetPos = {x: 7, y: 6};
+    if (this.class == "Knight") {
+        this.spritesheetPos = { x: 1, y: 5 };
+    } else if (this.class == "Mage") {
+        this.spritesheetPos = { x: 9, y: 5 };
+    } else if (this.class == "Archer") {
+        this.spritesheetPos = { x: 7, y: 6 };
     }
 }
 
@@ -67,7 +62,7 @@ Player.prototype.walkPath = function (path, completion) {
  */
 Player.prototype.processTurn = function (input) {
 
-    if(!this.shouldProcessTurn) return;
+    if (!this.shouldProcessTurn) return;
 
     if (this.combat.health <= 0) this.state = "dead";
     if (this.state == "dead") return; // shouldnt be necessary
@@ -118,9 +113,9 @@ Player.prototype.processTurn = function (input) {
 }
 
 Player.prototype.collided = function (entity) {
-  if(entity.type == "Stairs"){
-    this.shouldProcessTurn = false;
-  }
+    if (entity.type == "Stairs") {
+        this.shouldProcessTurn = false;
+    }
 }
 
 Player.prototype.retain = function () {
@@ -139,13 +134,13 @@ Player.prototype.render = function (elapsedTime, ctx) {
     ctx.drawImage(
         this.spritesheet,
         96 * this.spritesheetPos.x, 96 * this.spritesheetPos.y,
-        96 , 96,
+        96, 96,
         position.x * this.size.width, position.y * this.size.height,
         96, 96
     );
-
 }
 
 function hasUserInput(input) {
     return input.up || input.down || input.right || input.left;
 }
+

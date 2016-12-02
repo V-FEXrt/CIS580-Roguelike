@@ -10,9 +10,9 @@ const Vector = require('./vector');
 const Weapon = require("./weapon");
 const Armor = require("./armor");
 
-module.exports = exports = CombatStruct;
+module.exports = exports = CombatClass;
 
-function CombatStruct(aType) {
+function CombatClass(aType) {
     switch (aType) {
         case "Knight":
             this.health = 20;
@@ -46,7 +46,7 @@ function CombatStruct(aType) {
             this.health = 10;
             this.stamina = 100;
             this.someOtherPowerup = 50;
-            this.weapon = new Weapon("Longsword", 1);
+            this.weapon = new Weapon("Claw", 1);
             this.armor = new Armor("Flesh");
             this.attackType = "Melee";
             this.senseRange = 10; // This might be too high, what if we keep the camera centered..?
@@ -103,7 +103,7 @@ function CombatStruct(aType) {
             this.health = 25;
             this.stamina = 100;
             this.someOtherPowerup = 50;
-            this.weapon = new Weapon("Longsword", 1);
+            this.weapon = new Weapon("Battleaxe", 1);
             this.armor = new Armor("Chain");
             this.attackType = "Melee";
             this.senseRange = 20;
