@@ -33,23 +33,23 @@ CombatController.prototype.handleAttack = function(aAttackerStruct, aDefenderStr
     if (lAttackRoll == 1) {
         var lSelfDamage = rollRandom(1, lDamageMax + 1);
         aAttackerStruct.health -= lSelfDamage;
-        console.log("Crit Fail, take " + lSelfDamage + " damage.");
+        window.terminal.log("Crit Fail, take " + lSelfDamage + " damage.");
     } else if (lAttackRoll == 20 || (lAttackRoll == 19 && (aAttackerStruct.attackType == "Ranged" || aAttackerStruct.weapon.type == "Battleaxe"))) {
         lDamageTotal += lDamageMax;
         aDefenderStruct.health -= lDamageTotal;
     } else {
         if (lAttackTotal > lDefenseTotal) {
             aDefenderStruct.health -= lDamageTotal;
-            console.log("Hit, deal " + lDamageTotal + " damage");
+            window.terminal.log("Hit, deal " + lDamageTotal + " damage");
         } else {
-            console.log("Miss, " + lAttackTotal + " against " + lDefenseTotal);
+            window.terminal.log("Miss, " + lAttackTotal + " against " + lDefenseTotal);
         }
     }
 
 
     // console.log("attacker health: " + aAttackerStruct.health);
     // console.log("defender health: " + aDefenderStruct.health);
-    console.log("\n\n");
+    window.terminal.log("\n\n");
 }
 
 function rollRandom(aMinimum, aMaximum) {
