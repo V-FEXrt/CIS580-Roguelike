@@ -1,6 +1,454 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 "use strict";
 
+module.exports = exports = CellularAutomata;
+
+
+function CellularAutomata(width, height, percent, open, filled){
+  this.map = [];
+  this.width = width;
+  this.height = height;
+  this.percent = percent;
+
+  this.open = 0;
+  this.filled = 1;
+}
+
+CellularAutomata.prototype.generate = function(){
+  this.randomFillMap();
+  this.makeCaverns();
+  return this.map
+}
+
+CellularAutomata.prototype.randomFillMap = function(){
+  var mapMiddleX = Math.floor(this.height / 2);
+  var mapMiddleY = Math.floor(this.width / 2);
+
+  this.map = [];
+  for(var i = 0; i < this.width * this.height; i++){
+    this.map.push(this.open);
+  }
+
+  for(var row = 0; row < this.height; row++){
+    for(var column = 0; column < this.width; column++){
+      //column is x, row is y
+
+      // If coordinants lie on the the edge of the map (creates a border)
+      if (column == 0 || row == 0 || column == this.width - 1 || row == this.height - 1){
+        // y * width + x
+        this.map[row * this.width + column] = this.filled;
+      }else if(row == mapMiddleX || column == mapMiddleY){
+        this.map[row * this.width + column] = this.open;
+      }
+      else{
+        this.map[row * this.width + column] = this.pickTile();
+      }
+    }
+  }
+}
+
+CellularAutomata.prototype.pickTile = function() {
+  if(this.percent >= rand(100) + 1) return this.filled;
+  return this.open;
+}
+
+CellularAutomata.prototype.makeCaverns = function(){
+  for(var row = 0; row < this.height; row++){
+    for(var column = 0; column < this.width; column++){
+      this.map[row * this.width + column] = this.pickCavernTile(column, row);
+    }
+  }
+}
+
+CellularAutomata.prototype.pickCavernTile = function(x, y){
+  var wallCount = this.countAdjacentWalls(x, y, 1, 1);
+
+  if(this.map[y * this.width + x] == this.filled){
+    if(wallCount >= 4) return this.filled;
+    if(wallCount < 2) return this.open;
+  }
+  else{
+    if(wallCount >= 5) return this.filled;
+  }
+  return this.open;
+}
+
+CellularAutomata.prototype.countAdjacentWalls = function(x, y, scopeX, scopeY){
+  var startX = x - scopeX;
+  var startY = y - scopeY;
+  var endX = x + scopeX;
+  var endY = y + scopeY;
+
+  var count = 0;
+
+  for(var iY = startY; iY <= endY; iY++){
+    for(var iX = startX; iX <= endX; iX++){
+      if(iX == x && iY == y) continue;
+      if(this.isWallOrOutOfBounds(iX, iY)) count++;
+    }
+  }
+
+  return count;
+}
+
+CellularAutomata.prototype.isWallOrOutOfBounds = function(x, y){
+  return (this.isOutOfBounds(x, y) || this.isWall(x, y));
+}
+
+CellularAutomata.prototype.isWall = function(x, y){
+  return (this.map[y * this.width + x] != this.open);
+}
+
+CellularAutomata.prototype.isOutOfBounds = function(x, y){
+  return (x < 0 || y < 0 || x > this.width - 1 || y > this.height - 1);
+}
+
+function rand(upper){
+  return Math.floor(Math.random() * upper);
+}
+
+},{}],2:[function(require,module,exports){
+"use strict";
+
+module.exports = exports = DebugMap;
+
+
+function DebugMap(width, height, percent, open, filled){
+  this.map = [];
+  this.width = width;
+  this.height = height;
+  this.percent = percent;
+
+  this.open = 0;
+  this.filled = 1;
+}
+
+DebugMap.prototype.generate = function(){
+  this.fillMap()
+  return this.map
+}
+
+DebugMap.prototype.fillMap = function(){
+  this.map = [];
+  for(var i = 0; i < this.width * this.height; i++){
+    this.map.push(this.open);
+  }
+
+  for(var row = 0; row < this.height; row++){
+    for(var column = 0; column < this.width; column++){
+      //column is x, row is y
+
+      // If coordinants lie on the the edge of the map (creates a border)
+      if (column == 0 || row == 0 || column == this.width - 1 || row == this.height - 1){
+        // y * width + x
+        this.map[row * this.width + column] = this.filled;
+      }else{
+        this.map[row * this.width + column] = this.open;
+      }
+    }
+  }
+}
+
+},{}],3:[function(require,module,exports){
+"use strict";
+
+const Vector = require('./../vector');
+
+module.exports = exports = RoomsHallways;
+
+function RoomsHallways(width, height, percent, open, filled){
+  this.map = [];
+  this.width = width;
+  this.height = height;
+
+  this.numRoomTries = 50;
+  this.increaseRoomSize = 0;
+  this.windingPercent = 15;
+  this.extraConnectorsPercent = 30;
+
+  if(width % 2 == 0 || height % 2 == 0){
+    throw new Error("Map must have odd demensions");
+  }
+
+  this.open = 0;
+  this.filled = 1;
+
+  this.rooms = [];
+  this.regions = [];
+  this.currentRegion = -1;
+
+  this.cardinal = [
+    {x: 0, y: -1},
+    {x: 0, y: 1},
+    {x: -1, y: 0},
+    {x: 1, y: 0}
+  ];
+}
+
+RoomsHallways.prototype.generate = function(){
+  this.fillMap();
+  this.placeRooms();
+  this.carveHallways();
+  this.connectRoomsAndHalls();
+  this.removeDeadEnds();
+  return this.map;
+}
+
+RoomsHallways.prototype.removeDeadEnds = function(){
+  var done = false;
+  while (done == false) {
+    done = true;
+    for(var y = 0; y < this.height; y++){
+      for(var x = 0; x < this.width; x++){
+        var point = {x: x, y: y};
+        if(this.getTile(point) == this.filled) continue;
+        var exits = 0;
+        for(var i = 0; i < this.cardinal.length; i++){
+          var pos = Vector.add(point, this.cardinal[i])
+          if (this.getTile(pos) == this.open) exits++;
+        }
+        if (exits != 1) continue;
+
+        done = false;
+        this.fill(point);
+      }
+    }
+  }
+}
+
+RoomsHallways.prototype.fillMap = function(){
+  this.map = [];
+  for(var i = 0; i < this.width * this.height; i++){
+    this.map.push(this.filled);
+    this.regions.push(-1);
+  }
+}
+
+RoomsHallways.prototype.placeRooms = function(){
+  for (var i = 0; i < this.numRoomTries; i++) {
+      var size = rand(3 + this.increaseRoomSize) * 2 + 1;
+      var rectangularity = rand(1 + Math.floor(size / 2)) * 2;
+      var width = size;
+      var height = size;
+
+      if (Math.random() > 0.5) {
+        width += rectangularity;
+      } else {
+        height += rectangularity;
+      }
+
+      var x = rand(Math.floor((this.width - width) / 2)) * 2 + 1;
+      var y = rand(Math.floor((this.height - height) / 2)) * 2 + 1;
+
+      var room = Rect(x, y, width, height);
+
+      var overlaps = false;
+      for(var i = 0; i < this.rooms.length; i++){
+          if(collision(room, this.rooms[i])){
+            overlaps = true;
+            break;
+          }
+      }
+
+      if (overlaps) continue;
+      this.currentRegion++;
+      this.rooms.push(room);
+
+      var self = this;
+      RectPoints(room).forEach(function(point){
+        self.carve(point);
+      });
+    }
+}
+
+RoomsHallways.prototype.carveHallways = function(){
+  for (var y = 1; y < this.height; y += 2) {
+    for (var x = 1; x < this.width; x += 2) {
+      var pos = {x: x, y: y};
+      if (this.getTile(pos) != this.filled) continue;
+      this.growMaze(pos);
+    }
+  }
+}
+
+RoomsHallways.prototype.connectRoomsAndHalls = function(){
+  while(this.countRegions() > 1){
+    var point;
+    do{
+      var x = rand(this.width);
+      var y = rand(this.height);
+       point = {x: x, y: y};
+    }while(this.getTile(point) != this.filled);
+
+    var surrRegions = new Set();
+    for(var i = 0; i < this.cardinal.length; i++){
+      var r = this.getRegion(Vector.add(point, this.cardinal[i]))
+      if(r != -1) surrRegions.add(r);
+    }
+
+    if(surrRegions.size > 1){
+      this.carve(point);
+      var first = -1
+      var rest = []
+      surrRegions.forEach(function(value) {
+        if(first == -1){
+          first = value;
+        }else{
+          rest.push(value);
+        }
+      });
+      var self = this;
+      rest.forEach(function(region) {
+        self.replaceRegion(region, first);
+      })
+      //console.log(first);
+      this.regions[point.y * this.width + point.x] = first;
+    }
+  }
+
+  // Add extra doors to 1/2 of the rooms
+  var self = this;
+  this.rooms.forEach(function(room){
+    if(Math.random() > 1 - (self.extraConnectorsPercent / 100)) return;
+    var point;
+    do{
+      point = pickAdjacent(room);
+    } while (point.x == 0 || point.y == 0 || point.x >= self.width || point.y >= self.height);
+
+    self.carve(point);
+  });
+}
+
+RoomsHallways.prototype.growMaze = function(start){
+  var cells = [];
+  var lastDir = {x: 0, y: 0};
+
+  this.currentRegion++;
+  this.carve(start);
+
+  cells.push(start);
+  while (cells.length != 0) {
+    var cell = cells[cells.length -  1];
+
+    var openAdjacent = [];
+
+    for(var i = 0; i < this.cardinal.length; i++){
+      if (this.canCarve(cell, this.cardinal[i])) openAdjacent.push(this.cardinal[i]);
+    }
+
+    if (openAdjacent.length != 0) {
+      var dir;
+      if (openAdjacent.indexOf(lastDir) != -1 && (rand(100) + 1) > this.windingPercent) {
+        dir = lastDir;
+      } else {
+        dir = openAdjacent[rand(openAdjacent.length)];
+      }
+
+      var pos = Vector.add(cell, dir);
+      this.carve(pos);
+      pos = Vector.add(pos, dir);
+      this.carve(pos);
+
+      cells.push(pos);
+      lastDir = dir;
+    } else {
+      // No adjacent uncarved cells.
+      cells.pop();
+
+      // This path has ended.
+      lastDir = {x: 0, y: 0};
+    }
+  }
+}
+
+RoomsHallways.prototype.canCarve = function(pos, direction) {
+    var point = Vector.add(pos, Vector.scale(direction, 3));
+    if(point.x >= this.width || point.y >= this.height) return false;
+
+    point = Vector.add(pos, Vector.scale(direction, 2));
+    // Destination must not be open.
+    return this.getTile(point) == this.filled;
+}
+RoomsHallways.prototype.carve = function(pos){
+  this.regions[pos.y * this.width + pos.x] = this.currentRegion;
+  this.map[pos.y * this.width + pos.x] = this.open;
+}
+RoomsHallways.prototype.fill = function(pos){
+  this.regions[pos.y * this.width + pos.x] = -1;
+  this.map[pos.y * this.width + pos.x] = this.filled;
+}
+RoomsHallways.prototype.getTile = function(pos){
+  if(pos.x < 0 || pos.y < 0 || pos.x >= this.width || pos.y >= this.height) return -1;
+  return this.map[pos.y * this.width + pos.x];
+}
+RoomsHallways.prototype.getRegion = function(pos){
+  if(pos.x < 0 || pos.y < 0 || pos.x >= this.width || pos.y >= this.height) return -1;
+  return this.regions[pos.y * this.width + pos.x];
+}
+RoomsHallways.prototype.replaceRegion = function(region, replacement){
+  for(var i = 0; i < this.width * this.height; i++){
+    if(this.regions[i] == region) this.regions[i] = replacement;
+  }
+}
+
+RoomsHallways.prototype.countRegions = function(){
+  var x = new Set(this.regions);
+  return x.size - 1;
+}
+
+
+function RectPoints(rect){
+  var points = [];
+  for(var i = rect.position.x; i < rect.position.x + rect.size.width; i++){
+    for(var j = rect.position.y; j < rect.position.y + rect.size.height; j++){
+      points.push({x: i, y: j});
+    }
+  }
+  return points;
+}
+
+function Rect(x, y, width, height){
+  return {
+    position: {
+      x: x,
+      y: y
+    },
+    size: {
+      width: width,
+      height: height
+    }
+  }
+}
+
+function rand(upper){
+  return Math.floor(Math.random() * upper);
+}
+
+function collision(rect1, rect2){
+  return !(
+    (rect1.position.y + rect1.size.height < rect2.position.y) ||
+    (rect1.position.y > rect2.position.y + rect2.size.height) ||
+    (rect1.position.x > rect2.position.x + rect2.size.width) ||
+    (rect1.position.x + rect1.size.width < rect2.position.x))
+}
+
+function pickAdjacent(room) {
+  var side = rand(4);
+  var y;
+  var x;
+  if(side % 2 == 0){
+    y = (side == 0) ? room.position.y - 1 : room.position.y + room.size.height;
+    x = rand(room.size.width) + room.position.x;
+  }else{
+    x = (side == 1) ? room.position.x - 1 : room.position.x + room.size.width;
+    y = rand(room.size.height) + room.position.y;
+  }
+  return {x: x, y: y};
+}
+
+},{"./../vector":23}],4:[function(require,module,exports){
+"use strict";
+
 window.debug = false;
 
 /* Classes and Libraries */
@@ -34,7 +482,7 @@ window.terminal.log("Terminal successfully loaded");
 
 var gui = new GUI(screenSize);
 
-var tilemap = new Tilemap(screenSize, 64, 64, tileset, {
+var tilemap = new Tilemap(screenSize, 65, 65, tileset, {
   onload: function () {
     masterLoop(performance.now());
   }
@@ -50,13 +498,27 @@ var input = {
   right: false
 }
 
+var backgroundMusic = new Audio('sounds/tempBGMusic.wav');
+backgroundMusic.volume = 0.3;
+backgroundMusic.addEventListener('ended', function(){
+   setNewMusic();
+}, false);
+backgroundMusic.play();
+
+var setNewMusic = function() {
+  var backgroundMusicOnLoop = new Audio('sounds/tempBGMusicLoop.wav');
+  backgroundMusicOnLoop.volume = 0.3;
+  backgroundMusicOnLoop.loop = true;
+  backgroundMusicOnLoop.play();
+}
+
 var turnTimer = 0;
 var defaultTurnDelay = 400;     //Default turn between turns
 var turnDelay = defaultTurnDelay; //current time between turns
 var autoTurn = false;           //If true, reduces time between turns and turns happen automatically
 var resetTimer = true;          //Take turn immediately on movement key press if true
 
-var player = new Player({ x: 0, y: 0 }, tilemap, "Archer");
+var player = new Player({ x: 0, y: 0 }, tilemap, "Mage");
 
 window.player = player;
 
@@ -76,9 +538,7 @@ window.onmousedown = function(event)
             nextLevel(false);
         }
     }
-
 }
-
 
 canvas.onclick = function (event) {
   var node = {
@@ -88,33 +548,15 @@ canvas.onclick = function (event) {
 
   var clickedWorldPos = tilemap.toWorldCoords(node);
   window.entityManager.addEntity(new Click(clickedWorldPos, tilemap, player, function(enemy){
-    turnDelay = defaultTurnDelay / 2;
-    autoTurn = true;
-
     var distance = Vector.distance(player.position, enemy.position);
     if (distance.x <= player.combat.weapon.range && distance.y <= player.combat.weapon.range) {
       turnDelay = defaultTurnDelay;
       autoTurn = false;
       combatController.handleAttack(player.combat, enemy.combat);
       processTurn();
-    } else {
-        var path = pathfinder.findPath(player.position, enemy.position);
-        path = path.splice(0, path.length - player.combat.weapon.range);
-        player.walkPath(path, function () {
-          turnDelay = defaultTurnDelay;
-          autoTurn = false;
-          combatController.handleAttack(player.combat, enemy.combat);
-          processTurn();
-        });
     }
   }));
 }
-/* else {
-    player.walkPath(pathfinder.findPath(player.position, clickedWorldPos), function () {
-      turnDelay = defaultTurnDelay;
-      autoTurn = false;
-    });
-*/
 
 /**
  * @function onkeydown
@@ -318,17 +760,17 @@ function nextLevel(fadeOut){
 
 function fadeToBlack(completion){
   isFadeOut = true;
-  fadeAnimationProgress = new ProgressManager(500, completion);
+  fadeAnimationProgress = new ProgressManager(1000, completion);
   fadeAnimationProgress.isActive = true;
 }
 
 function unfadeFromBlack(){
   isFadeOut = false;
-  fadeAnimationProgress = new ProgressManager(500, function(){});
+  fadeAnimationProgress = new ProgressManager(1000, function(){});
   fadeAnimationProgress.isActive = true;
 }
 
-},{"../tilemaps/tiledef.json":22,"./click":3,"./combat_controller":4,"./entity_manager":7,"./entity_spawner":8,"./game":9,"./gui":10,"./pathfinder.js":13,"./player":14,"./progress_manager":16,"./stairs":17,"./terminal.js":18,"./tilemap":19,"./vector":20}],2:[function(require,module,exports){
+},{"../tilemaps/tiledef.json":25,"./click":6,"./combat_controller":8,"./entity_manager":10,"./entity_spawner":11,"./game":12,"./gui":13,"./pathfinder.js":16,"./player":17,"./progress_manager":19,"./stairs":20,"./terminal.js":21,"./tilemap":22,"./vector":23}],5:[function(require,module,exports){
 "use strict";
 
 module.exports = exports = Armor;
@@ -400,7 +842,7 @@ Armor.prototype.render = function () {
 }
 
 
-},{}],3:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 "use strict";
 
 module.exports = exports = Click;
@@ -449,103 +891,7 @@ Click.prototype.render = function (elapsedTime, ctx) {
   }
 }
 
-},{}],4:[function(require,module,exports){
-"use strict";
-
-module.exports = exports = CombatController;
-
-const CombatStruct = require("./combat_struct");
-const Weapon = require("./weapon");
-const Armor = require("./armor");
-
-function CombatController() {
-
-}
-
-CombatController.prototype.handleAttack = function(aAttackerStruct, aDefenderStruct) {
-    // console.log("attacker health: " + aAttackerStruct.health);
-    // console.log("defender health: " + aDefenderStruct.health);
-
-    var lAttackBase = 0;
-    var lAttackBonus = aAttackerStruct.weapon.hitBonus;
-    var lAttackRoll = rollRandom(1, 21);
-    var lAttackTotal = lAttackBase + lAttackBonus + lAttackRoll;
-
-    var lDefenseBase = aDefenderStruct.armor.defense;
-    var lDefenseBonus = 0;
-    var lDefenseTotal = lDefenseBase + lDefenseBonus;
-
-    var lDamageBase = aAttackerStruct.weapon.level - 1;
-    var lDamageMax = aAttackerStruct.weapon.damageMax;
-    var lDamageMin = aAttackerStruct.weapon.damageMin;
-    var lDamageRoll = rollRandom(lDamageMin, 1 + lDamageMax);
-    var lDamageBonus = 0;
-    var lDamageTotal = lDamageBase + lDamageBonus + lDamageRoll;
-
-    if (lAttackRoll == 1) {
-        var lSelfDamage = rollRandom(1, lDamageMax + 1);
-        aAttackerStruct.health -= lSelfDamage;
-        window.terminal.log("Crit Fail, take " + lSelfDamage + " damage.");
-    } else if (lAttackRoll == 20 || (lAttackRoll == 19 && (aAttackerStruct.attackType == "Ranged" || aAttackerStruct.weapon.type == "Battleaxe"))) {
-        lDamageTotal += lDamageMax;
-        aDefenderStruct.health -= lDamageTotal;
-    } else {
-        if (lAttackTotal > lDefenseTotal) {
-            aDefenderStruct.health -= lDamageTotal;
-            window.terminal.log("Hit, deal " + lDamageTotal + " damage");
-        } else {
-            window.terminal.log("Miss, " + lAttackTotal + " against " + lDefenseTotal);
-        }
-    }
-
-
-    // console.log("attacker health: " + aAttackerStruct.health);
-    // console.log("defender health: " + aDefenderStruct.health);
-    window.terminal.log("\n\n");
-}
-
-function rollRandom(aMinimum, aMaximum) {
-    return Math.floor(Math.random() * (aMaximum - aMinimum) + aMinimum);
-}
-
-CombatController.prototype.randomDrop = function(aPosition) {
-    var lDrop = new Object();
-    var lRand = rollRandom(1, 21); // need to set up weighted rands
-    if (lRand > 17) {                           // spawn armor
-        lDrop.type = "Armor";
-        // TODO > properly implement...
-        lDrop = new Armor("Leather");
-    } else if (lRand >= 1 && lRand < 17) {      // spawn weapon
-        lDrop.type = "Weapon";
-        var playerClass = window.player.class;
-        var level = rollRandom(window.player.level, window.player.level + 3); // need to set up weighted rands
-        switch (lRand % 4) {
-            // this is awful, why is this still here?
-            case 0:
-                lDrop = (playerClass == "Knight") ? new Weapon("Longsword", level) : (playerClass == "Archer") ? new Weapon("Bodkin", level) : new Weapon("Magic Missile", level);
-                break;
-
-            case 1:
-                lDrop = (playerClass == "Knight") ? new Weapon("Morning Star", level) : (playerClass == "Archer") ? new Weapon("Broadhead", level) : new Weapon("Fireball", level);
-                break;
-
-            case 2:
-                lDrop = (playerClass == "Knight") ? new Weapon("Halberd", level) : (playerClass == "Archer") ? new Weapon("Poison-Tipped", level) : new Weapon("Frostbolt", level);
-                break;
-
-            case 3:
-                lDrop = (playerClass == "Knight") ? new Weapon("Battleaxe", level) : (playerClass == "Archer") ? new Weapon("Heavy Bolts", level) : new Weapon("Eldritch Blast", level);
-                break;
-        }
-    } else {                                    // dont spawn anything
-        lDrop.type = "None";
-    }
-    lDrop.position = aPosition;
-    return lDrop;
-}
-
-
-},{"./armor":2,"./combat_struct":5,"./weapon":21}],5:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 "use strict";
 
 const Tilemap = require('./tilemap');
@@ -558,9 +904,10 @@ const Vector = require('./vector');
 const Weapon = require("./weapon");
 const Armor = require("./armor");
 
-module.exports = exports = CombatStruct;
+module.exports = exports = CombatClass;
 
-function CombatStruct(aType) {
+function CombatClass(aType) {
+    this.type = aType;
     switch (aType) {
         case "Knight":
             this.health = 20;
@@ -594,7 +941,7 @@ function CombatStruct(aType) {
             this.health = 10;
             this.stamina = 100;
             this.someOtherPowerup = 50;
-            this.weapon = new Weapon("Longsword", 1);
+            this.weapon = new Weapon("Claw", 1);
             this.armor = new Armor("Flesh");
             this.attackType = "Melee";
             this.senseRange = 10; // This might be too high, what if we keep the camera centered..?
@@ -651,7 +998,7 @@ function CombatStruct(aType) {
             this.health = 25;
             this.stamina = 100;
             this.someOtherPowerup = 50;
-            this.weapon = new Weapon("Longsword", 1);
+            this.weapon = new Weapon("Battleaxe", 1);
             this.armor = new Armor("Chain");
             this.attackType = "Melee";
             this.senseRange = 20;
@@ -704,11 +1051,104 @@ function CombatStruct(aType) {
 }
 
 
-},{"./armor":2,"./tilemap":19,"./vector":20,"./weapon":21}],6:[function(require,module,exports){
+},{"./armor":5,"./tilemap":22,"./vector":23,"./weapon":24}],8:[function(require,module,exports){
+"use strict";
+
+module.exports = exports = CombatController;
+
+const CombatClass = require("./combat_class");
+const Weapon = require("./weapon");
+const Armor = require("./armor");
+
+function CombatController() {
+
+}
+
+CombatController.prototype.handleAttack = function(aAttackerClass, aDefenderClass) {
+    var lAttackBase = 0;
+    var lAttackBonus = aAttackerClass.weapon.hitBonus;
+    var lAttackRoll = rollRandom(1, 21);
+    var lAttackTotal = lAttackBase + lAttackBonus + lAttackRoll;
+
+    var lDefenseBase = aDefenderClass.armor.defense;
+    var lDefenseBonus = 0;
+    var lDefenseTotal = lDefenseBase + lDefenseBonus;
+
+    var lDamageBase = aAttackerClass.weapon.level - 1;
+    var lDamageMax = aAttackerClass.weapon.damageMax;
+    var lDamageMin = aAttackerClass.weapon.damageMin;
+    var lDamageRoll = rollRandom(lDamageMin, 1 + lDamageMax);
+    var lDamageBonus = 0;
+    var lDamageTotal = lDamageBase + lDamageBonus + lDamageRoll;
+
+    if (lAttackRoll == 1) {
+        var lSelfDamage = rollRandom(1, lDamageMax + 1);
+        aAttackerClass.health -= lSelfDamage;
+        window.terminal.log("Crit Fail, take " + lSelfDamage + " damage.");
+        // attacker hit itself, play attacker hit sound
+        // aDefenderClass.type != "Knight"||"Archer"||"Mage"
+    } else if (lAttackRoll == 20 || (lAttackRoll == 19 && (aAttackerClass.attackType == "Ranged" || aAttackerClass.weapon.type == "Battleaxe"))) {
+        lDamageTotal += lDamageMax;
+        aDefenderClass.health -= lDamageTotal;
+        // defender hit, play defender hit sound
+    } else {
+        if (lAttackTotal > lDefenseTotal) {
+            aDefenderClass.health -= lDamageTotal;
+            window.terminal.log("Hit, deal " + lDamageTotal + " damage");
+            // defender hit, play defender hit sound
+        } else {
+            window.terminal.log("Miss, " + lAttackTotal + " against " + lDefenseTotal);
+        }
+    }
+    window.terminal.log("\n\n");
+}
+
+function rollRandom(aMinimum, aMaximum) {
+    return Math.floor(Math.random() * (aMaximum - aMinimum) + aMinimum);
+}
+
+CombatController.prototype.randomDrop = function(aPosition) {
+    var lDrop = new Object();
+    var lRand = rollRandom(1, 21); // need to set up weighted rands
+    if (lRand > 17) {                           // spawn armor
+        lDrop.type = "Armor";
+        // TODO > properly implement...
+        lDrop = new Armor("Leather");
+    } else if (lRand >= 1 && lRand < 17) {      // spawn weapon
+        lDrop.type = "Weapon";
+        var playerClass = window.player.class;
+        var level = rollRandom(window.player.level, window.player.level + 3); // need to set up weighted rands
+        switch (lRand % 4) {
+            // this is awful, why is this still here?
+            case 0:
+                lDrop = (playerClass == "Knight") ? new Weapon("Longsword", level) : (playerClass == "Archer") ? new Weapon("Bodkin", level) : new Weapon("Magic Missile", level);
+                break;
+
+            case 1:
+                lDrop = (playerClass == "Knight") ? new Weapon("Morning Star", level) : (playerClass == "Archer") ? new Weapon("Broadhead", level) : new Weapon("Fireball", level);
+                break;
+
+            case 2:
+                lDrop = (playerClass == "Knight") ? new Weapon("Halberd", level) : (playerClass == "Archer") ? new Weapon("Poison-Tipped", level) : new Weapon("Frostbolt", level);
+                break;
+
+            case 3:
+                lDrop = (playerClass == "Knight") ? new Weapon("Battleaxe", level) : (playerClass == "Archer") ? new Weapon("Heavy Bolts", level) : new Weapon("Eldritch Blast", level);
+                break;
+        }
+    } else {                                    // dont spawn anything
+        lDrop.type = "None";
+    }
+    lDrop.position = aPosition;
+    return lDrop;
+}
+
+
+},{"./armor":5,"./combat_class":7,"./weapon":24}],9:[function(require,module,exports){
 "use strict";
 
 const Tilemap = require('./tilemap');
-const CombatStruct = require("./combat_struct");
+const CombatClass = require("./combat_class");
 
 module.exports = exports = Enemy;
 
@@ -721,32 +1161,32 @@ function Enemy(position, tilemap, combatClass, target, onDeathCB) {
     this.spritesheet.src = "./spritesheets/sprites.png";
     this.type = "Enemy";
     this.class = combatClass;
-    this.combat = new CombatStruct(this.class);
+    this.combat = new CombatClass(this.class);
     this.target = target;
     this.onDeathCB = onDeathCB;
 
     // console.log(this.position.x + " " + this.position.y);
 }
 
-Enemy.prototype.processTurn = function () {
+Enemy.prototype.processTurn = function() {
     if (this.combat.health <= 0) this.state = "dead";
     if (this.state == "dead") return; // shouldnt be necessary
 
     this.combat.turnAI(this);
 }
 
-Enemy.prototype.update = function (time) {
+Enemy.prototype.update = function(time) {
     // if we're dead, we should probably do something
     if (this.combat.health <= 0) {
         this.state = "dead";
     }
 }
 
-Enemy.prototype.collided = function (entity) {
+Enemy.prototype.collided = function(entity) {
 
 }
 
-Enemy.prototype.retain = function () {
+Enemy.prototype.retain = function() {
     if (this.combat.health <= 0) {
         this.onDeathCB(this.position, this.tilemap);
         return false;
@@ -755,7 +1195,7 @@ Enemy.prototype.retain = function () {
     }
 }
 
-Enemy.prototype.render = function (elapsedTime, ctx) {
+Enemy.prototype.render = function(elapsedTime, ctx) {
     if (this.state == "dead") return; // shouldnt be necessary
 
     var position = this.tilemap.toScreenCoords(this.position);
@@ -768,7 +1208,8 @@ Enemy.prototype.render = function (elapsedTime, ctx) {
     );
 }
 
-},{"./combat_struct":5,"./tilemap":19}],7:[function(require,module,exports){
+
+},{"./combat_class":7,"./tilemap":22}],10:[function(require,module,exports){
 "use strict";
 
 /**
@@ -936,7 +1377,7 @@ function collision(entity1, entity2){
 
 }
 
-},{}],8:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 "use strict";
 
 const Enemy = require('./enemy');
@@ -984,7 +1425,7 @@ function spawnDrop(position){
 }
 
 
-},{"./enemy":6,"./powerup":15}],9:[function(require,module,exports){
+},{"./enemy":9,"./powerup":18}],12:[function(require,module,exports){
 "use strict";
 
 /**
@@ -1042,7 +1483,7 @@ Game.prototype.loop = function(newTime) {
   this.frontCtx.drawImage(this.backBuffer, 0, 0);
 }
 
-},{}],10:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 "use strict";
 
 /**
@@ -1333,7 +1774,7 @@ GUI.prototype.render = function (elapsedTime, ctx) {
   }
 }
 
-},{}],11:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 "use strict";
 
 /**
@@ -1451,54 +1892,38 @@ function failWeapon() {
 function failArmor() {
     throw new Error("Item doesn't match type definition for 'Armor'");
 }
-},{}],12:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 "use strict";
 
-module.exports = exports = MapGenerator;
+const CellularAutomata = require('./MapGeneration/cellular_automata_generation');
+const DebugMap = require('./MapGeneration/debug_map_generation');
+const RoomsHallways = require('./MapGeneration/rooms_hallways_generation');
 
+module.exports = exports = MapGenerator;
 
 function MapGenerator(edges, width, height){
   this.map = [];
   this.width = width;
   this.height = height;
-  this.percent = 50;
 
   this.edges = edges;
 
   this.open = 0;
   this.filled = 1;
 
-  this.randomFillMap();
-  this.makeCaverns();
-  this.processEdges();
-
-}
-
-MapGenerator.prototype.randomFillMap = function(){
-
-  var mapMiddle = (this.height / 2);
-
-  this.map = [];
-  for(var i = 0; i < this.width * this.height; i++){
-    this.map.push(this.open);
-  }
-
-  for(var row = 0; row < this.height; row++){
-    for(var column = 0; column < this.width; column++){
-      //column is x, row is y
-
-      // If coordinants lie on the the edge of the map (creates a border)
-      if (column == 0 || row == 0 || column == this.width - 1 || row == this.height - 1){
-        // y * width + x
-        this.map[row * this.width + column] = this.filled;
-      }else if(row == Math.floor(this.height / 2) || column == Math.floor(this.width / 2)){
-        this.map[row * this.width + column] = this.open;
-      }
-      else{
-        if(!window.debug) this.map[row * this.width + column] = this.pickTile();
-      }
+  if(window.debug){
+    this.map = (new DebugMap(width, height, 50, this.open, this.filled)).generate();
+  }else{
+    if(Math.random() > 0.5){
+      this.map = (new RoomsHallways(width, height, 50, this.open, this.filled)).generate();
+    }else{
+      this.map = (new CellularAutomata(width, height, 50, this.open, this.filled)).generate();
     }
+
   }
+
+
+  this.processEdges();
 }
 
 MapGenerator.prototype.processEdges = function(){
@@ -1515,78 +1940,20 @@ MapGenerator.prototype.processEdges = function(){
   }
 }
 
-MapGenerator.prototype.loadFromScore = function(scores) {
-  this.map = []
-  for(var row = 0; row < this.height; row++){
-    for(var column = 0; column < this.width; column++){
-      var val = scores[row * this.width + column];
-      if(val == -1){
-        this.map.push(0);
-        continue;
-      }
-      this.map.push(this.edges[val]);
-    }
-  }
-}
-
 MapGenerator.prototype.toString = function(){
-  var header = "Width: " + this.width + "\tHeight: " + this.height + "\tWalls: " + this.percent + "\n";
+  var header = "Width: " + this.width + "\tHeight: " + this.height + "\n";
   var body = ""
   for(var row = 0; row < this.height; row++){
     for(var column = 0; column < this.width; column++){
       var val =  this.map[row * this.width + column]
       if(val < 10){
-        body += "0";
+        //body += "0";
       }
-      body += val + " "; //(this.map[row * this.width + column] == this.open) ? "." : "#";
+      body += (this.map[row * this.width + column] == this.open) ? "." : "#"; //val + " "; //(this.map[row * this.width + column] == this.open) ? "." : "#";
     }
     body += "\n";
   }
   return header + body;
-}
-
-MapGenerator.prototype.pickTile = function() {
-  if(this.percent >= rand(100) + 1) return this.filled;
-  return this.open;
-}
-
-MapGenerator.prototype.makeCaverns = function(){
-  for(var row = 0; row < this.height; row++){
-    for(var column = 0; column < this.width; column++){
-      this.map[row * this.width + column] = this.pickCavernTile(column, row);
-    }
-  }
-}
-
-MapGenerator.prototype.pickCavernTile = function(x, y){
-  var wallCount = this.countAdjacentWalls(x, y, 1, 1);
-
-  if(this.map[y * this.width + x] == this.filled){
-    if(wallCount >= 4) return this.filled;
-    if(wallCount < 2) return this.open;
-  }
-  else{
-    if(wallCount >= 5) return this.filled;
-  }
-  return this.open;
-}
-
-MapGenerator.prototype.countAdjacentWalls = function(x, y, scopeX, scopeY){
-  var startX = x - scopeX;
-  var startY = y - scopeY;
-  var endX = x + scopeX;
-  var endY = y + scopeY;
-
-  var count = 0;
-
-  for(var iY = startY; iY <= endY; iY++){
-    for(var iX = startX; iX <= endX; iX++){
-      if(iX == x && iY == y) continue;
-      if(this.isWallOrOutOfBounds(iX, iY)) count++;
-    }
-  }
-
-  return count;
 }
 
 MapGenerator.prototype.countScore = function(x, y){
@@ -1625,7 +1992,7 @@ function rand(upper){
   return Math.floor(Math.random() * upper);
 }
 
-},{}],13:[function(require,module,exports){
+},{"./MapGeneration/cellular_automata_generation":1,"./MapGeneration/debug_map_generation":2,"./MapGeneration/rooms_hallways_generation":3}],16:[function(require,module,exports){
 /**
  * @module A pathfinding module providing
  * a visualizaiton of common tree-search
@@ -1866,12 +2233,12 @@ Pathfinder.prototype.step = function() {
   return undefined;
 }
 
-},{}],14:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 "use strict";
 
 const Tilemap = require('./tilemap');
 const Vector = require('./vector');
-const CombatStruct = require("./combat_struct");
+const CombatClass = require("./combat_class");
 const Inventory = require('./inventory.js');
 const Weapon = require('./weapon.js');
 const Armor = require('./armor.js');
@@ -1895,36 +2262,21 @@ function Player(position, tilemap, combatClass) {
     this.spritesheet.src = './spritesheets/sprites.png';
     this.type = "Player";
     this.walk = [];
-    this.class = combatClass;
-    this.combat = new CombatStruct(this.class);
-    this.inventory = new Inventory(this.combat.weapon, this.combat.armor);
+    this.changeClass(combatClass);
     this.level = 0;
     this.shouldProcessTurn = true;
-
-    if(this.class == "Knight")
-    {
-      this.spritesheetPos = {x: 1, y: 5};
-    }
-    else if(this.class == "Mage")
-    {
-      this.spritesheetPos = {x: 9, y: 5};
-    }
-    else if(this.class == "Archer")
-    {
-      this.spritesheetPos = {x: 7, y: 6};
-    }
 }
 
 /**
  * @function updates the player object
  * {DOMHighResTimeStamp} time the elapsed time since the last frame
  */
-Player.prototype.update = function (time) {
+Player.prototype.update = function(time) {
     // if we're dead, we should probably do something
     if (this.combat.health <= 0) this.state = "dead";
 }
 
-Player.prototype.walkPath = function (path, completion) {
+Player.prototype.walkPath = function(path, completion) {
     if (this.state == "dead") return; // shouldnt be necessary
 
     path.shift();
@@ -1937,22 +2289,17 @@ Player.prototype.walkPath = function (path, completion) {
 //Changes the player class, used because right now things
 //rely on player being created before class is actually chosen.
 //Potentially change this
-Player.prototype.changeClass = function(chosenClass)
-{
+Player.prototype.changeClass = function(chosenClass) {
     this.class = chosenClass;
-    this.combat = new CombatStruct(chosenClass);
+    this.combat = new CombatClass(chosenClass);
+    this.inventory = new Inventory(this.combat.weapon, this.combat.armor);
 
-    if(this.class == "Knight")
-    {
-      this.spritesheetPos = {x: 1, y: 5};
-    }
-    else if(this.class == "Mage")
-    {
-      this.spritesheetPos = {x: 9, y: 5};
-    }
-    else if(this.class == "Archer")
-    {
-      this.spritesheetPos = {x: 7, y: 6};
+    if (this.class == "Knight") {
+        this.spritesheetPos = { x: 1, y: 5 };
+    } else if (this.class == "Mage") {
+        this.spritesheetPos = { x: 9, y: 5 };
+    } else if (this.class == "Archer") {
+        this.spritesheetPos = { x: 7, y: 6 };
     }
 };
 
@@ -1960,9 +2307,9 @@ Player.prototype.changeClass = function(chosenClass)
  *@function handles the players turn
  *{input} keyboard input given for this turn
  */
-Player.prototype.processTurn = function (input) {
+Player.prototype.processTurn = function(input) {
 
-    if(!this.shouldProcessTurn) return;
+    if (!this.shouldProcessTurn) return;
 
     if (this.combat.health <= 0) this.state = "dead";
     if (this.state == "dead") return; // shouldnt be necessary
@@ -2012,7 +2359,7 @@ Player.prototype.processTurn = function (input) {
 
 }
 
-Player.prototype.collided = function (entity) {
+Player.prototype.collided = function(entity) {
     if(typeof entity == Weapon) { this.inventory.addWeapon(weapon); }
     if(typeof entity == Armor) { this.inventory.addArmor(armor); }
 
@@ -2021,7 +2368,7 @@ Player.prototype.collided = function (entity) {
     }
 }
 
-Player.prototype.retain = function () {
+Player.prototype.retain = function() {
     return this.combat.health > 0;
 }
 
@@ -2029,7 +2376,7 @@ Player.prototype.retain = function () {
  * @function renders the player into the provided context
  * {CanvasRenderingContext2D} ctx the context to render into
  */
-Player.prototype.render = function (elapsedTime, ctx) {
+Player.prototype.render = function(elapsedTime, ctx) {
     if (this.state == "dead") return; // shouldnt be necessary
 
     var position = this.tilemap.toScreenCoords(this.position);
@@ -2037,18 +2384,18 @@ Player.prototype.render = function (elapsedTime, ctx) {
     ctx.drawImage(
         this.spritesheet,
         96 * this.spritesheetPos.x, 96 * this.spritesheetPos.y,
-        96 , 96,
+        96, 96,
         position.x * this.size.width, position.y * this.size.height,
         96, 96
     );
-
 }
 
 function hasUserInput(input) {
     return input.up || input.down || input.right || input.left;
 }
 
-},{"./armor.js":2,"./combat_struct":5,"./inventory.js":11,"./tilemap":19,"./vector":20,"./weapon.js":21}],15:[function(require,module,exports){
+
+},{"./armor.js":5,"./combat_class":7,"./inventory.js":14,"./tilemap":22,"./vector":23,"./weapon.js":24}],18:[function(require,module,exports){
 "use strict";
 
 const Tilemap = require('./tilemap');
@@ -2140,7 +2487,7 @@ Powerup.prototype.render = function (elapsedTime, ctx) {
     //ctx.drawImage(this.power,0,25,25,25,position.x*this.size.width, position.y*this.size.height,96,96);
     //ctx.drawImage(this.power,25,50,25,25,position.x*this.size.width, position.y*this.size.height,96,96);
 
-},{"./tilemap":19}],16:[function(require,module,exports){
+},{"./tilemap":22}],19:[function(require,module,exports){
 "use strict";
 
 module.exports = exports = ProgressManager;
@@ -2174,7 +2521,7 @@ ProgressManager.prototype.reset = function(){
   this.percent = 0;
 }
 
-},{}],17:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 "use strict";
 
 /**
@@ -2243,7 +2590,7 @@ Stairs.prototype.render = function (elapsedTime, ctx) {
   ctx.drawImage(this.spritesheet, 75 + this.spriteOff, 0, 75, 75, (position.x * this.size.width), (position.y * this.size.height), 96, 96);
 }
 
-},{}],18:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 "use strict";
 
 const MAX_MSG_COUNT = 50;
@@ -2275,7 +2622,7 @@ Terminal.prototype.render = function(elapsedTime, ctx) {
         ctx.fillText(message, self.startPos.x, self.startPos.y - 18*i);
     });
 }
-},{}],19:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 "use strict";
 
 const MapGenerator = require('./map_generator');
@@ -2489,7 +2836,7 @@ Tilemap.prototype.getRandomAdjacent = function (aTile) {
   }
 }
 
-},{"./map_generator":12,"./vector":20}],20:[function(require,module,exports){
+},{"./map_generator":15,"./vector":23}],23:[function(require,module,exports){
 "use strict";
 
 /**
@@ -2504,7 +2851,8 @@ module.exports = exports = {
   dotProduct: dotProduct,
   magnitude: magnitude,
   normalize: normalize,
-  distance: distance
+  distance: distance,
+  equals: equals
 }
 
 
@@ -2591,7 +2939,12 @@ function distance(a, b){
   var distance=this.subtract(a,b);
   return {x: Math.abs(distance.x), y: Math.abs(distance.y)};
 }
-},{}],21:[function(require,module,exports){
+
+function equals(a, b){
+  return a.x == b.x && a.y == b.y;
+}
+
+},{}],24:[function(require,module,exports){
 "use strict";
 
 module.exports = exports = Weapon;
@@ -2639,6 +2992,15 @@ function Weapon(aName, aLevel) {
             this.range = 1;
             this.hitBonus = 1;
             this.properties = "+3 Min Damage, +1 Crit Chance";
+            break;
+
+        case "Claw":
+            this.damageMax = 4
+            this.damageMin = 2;
+            this.damageType = "s";
+            this.range = 1;
+            this.hitBonus = 0;
+            this.properties = "+1 Min Damage";
             break;
 
         // Ranged
@@ -2742,7 +3104,7 @@ Weapon.prototype.render = function () {
 }
 
 
-},{}],22:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 module.exports={
  "tileheight":96,
  "tilewidth":96,
@@ -3010,4 +3372,4 @@ module.exports={
 	}
 }
 
-},{}]},{},[1]);
+},{}]},{},[4]);

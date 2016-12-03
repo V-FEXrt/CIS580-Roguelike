@@ -33,7 +33,7 @@ window.terminal.log("Terminal successfully loaded");
 
 var gui = new GUI(screenSize);
 
-var tilemap = new Tilemap(screenSize, 64, 64, tileset, {
+var tilemap = new Tilemap(screenSize, 65, 65, tileset, {
   onload: function () {
     masterLoop(performance.now());
   }
@@ -47,6 +47,20 @@ var input = {
   down: false,
   left: false,
   right: false
+}
+
+var backgroundMusic = new Audio('sounds/tempBGMusic.wav');
+backgroundMusic.volume = 0.3;
+backgroundMusic.addEventListener('ended', function(){
+   setNewMusic();
+}, false);
+backgroundMusic.play();
+
+var setNewMusic = function() {
+  var backgroundMusicOnLoop = new Audio('sounds/tempBGMusicLoop.wav');
+  backgroundMusicOnLoop.volume = 0.3;
+  backgroundMusicOnLoop.loop = true;
+  backgroundMusicOnLoop.play();
 }
 
 var turnTimer = 0;
@@ -297,12 +311,12 @@ function nextLevel(fadeOut){
 
 function fadeToBlack(completion){
   isFadeOut = true;
-  fadeAnimationProgress = new ProgressManager(500, completion);
+  fadeAnimationProgress = new ProgressManager(1000, completion);
   fadeAnimationProgress.isActive = true;
 }
 
 function unfadeFromBlack(){
   isFadeOut = false;
-  fadeAnimationProgress = new ProgressManager(500, function(){});
+  fadeAnimationProgress = new ProgressManager(1000, function(){});
   fadeAnimationProgress.isActive = true;
 }
