@@ -28,11 +28,11 @@ CombatController.prototype.handleAttack = function(aAttackerClass, aDefenderClas
     var lDamageTotal = lDamageBase + lDamageBonus + lDamageRoll;
 
     if (lAttackRoll == 1) {
-        var lSelfDamage = this.rollRandom(1, lDamageMax + 1);
+        var lSelfDamage = this.rollMultiple(1, 3, aAttackerClass.weapon.level);
         aAttackerClass.health -= lSelfDamage;
         window.terminal.log("Crit Fail, take " + lSelfDamage + " damage.");
         // attacker hit itself, play attacker hit sound
-        // aDefenderClass.type != "Knight"||"Archer"||"Mage"
+        // aAttackerClass.type != "Knight"||"Archer"||"Mage"
     } else if (lAttackRoll == 20 || (lAttackRoll == 19 && (aAttackerClass.attackType == "Ranged" || aAttackerClass.weapon.type == "Battleaxe"))) {
         lDamageTotal += lDamageMax;
         aDefenderClass.health -= lDamageTotal;

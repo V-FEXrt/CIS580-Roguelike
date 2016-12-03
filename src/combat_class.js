@@ -78,7 +78,7 @@ function CombatClass(aType) {
             this.weapon = new Weapon("Broadhead", 1);
             this.armor = new Armor("Hide");
             this.attackType = "Ranged";
-            this.senseRange = 15;
+            this.senseRange = 10;
 
             this.turnAI = function(aEnemy) {
                 var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
@@ -102,7 +102,7 @@ function CombatClass(aType) {
             this.weapon = new Weapon("Battleaxe", 1);
             this.armor = new Armor("Chain");
             this.attackType = "Melee";
-            this.senseRange = 20;
+            this.senseRange = 15;
 
             this.turnAI = function(aEnemy) {
                 var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
