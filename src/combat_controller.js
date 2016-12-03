@@ -13,7 +13,7 @@ function CombatController() {
 CombatController.prototype.handleAttack = function(aAttackerClass, aDefenderClass) {
     var lAttackBase = Math.floor(aAttackerClass.attackBonus);
     var lAttackBonus = aAttackerClass.weapon.hitBonus;
-    var lAttackRoll = rollRandom(1, 21);
+    var lAttackRoll = this.rollRandom(1, 21);
     var lAttackTotal = lAttackBase + lAttackBonus + lAttackRoll;
 
     var lDefenseBase = aDefenderClass.armor.defense;
@@ -23,12 +23,12 @@ CombatController.prototype.handleAttack = function(aAttackerClass, aDefenderClas
     var lDamageBase = aAttackerClass.weapon.level - 1;
     var lDamageMax = aAttackerClass.weapon.damageMax;
     var lDamageMin = aAttackerClass.weapon.damageMin;
-    var lDamageRoll = rollRandom(lDamageMin, 1 + lDamageMax);
+    var lDamageRoll = this.rollRandom(lDamageMin, 1 + lDamageMax);
     var lDamageBonus = Math.floor(aAttackerClass.damageBonus);
     var lDamageTotal = lDamageBase + lDamageBonus + lDamageRoll;
 
     if (lAttackRoll == 1) {
-        var lSelfDamage = rollRandom(1, lDamageMax + 1);
+        var lSelfDamage = this.rollRandom(1, lDamageMax + 1);
         aAttackerClass.health -= lSelfDamage;
         window.terminal.log("Crit Fail, take " + lSelfDamage + " damage.");
         // attacker hit itself, play attacker hit sound
@@ -54,7 +54,7 @@ CombatController.prototype.rollRandom = function(aMinimum, aMaximum) {
 
 CombatController.prototype.randomDrop = function(aPosition) {
     var lDrop = new Object();
-    var lRand = rollRandom(1, 21); // need to set up weighted rands
+    var lRand = this.rollRandom(1, 21); // need to set up weighted rands
     if (lRand > 17) {                           // spawn armor
         lDrop.type = "Armor";
         // TODO > properly implement...
@@ -62,7 +62,7 @@ CombatController.prototype.randomDrop = function(aPosition) {
     } else if (lRand >= 1 && lRand < 17) {      // spawn weapon
         lDrop.type = "Weapon";
         var playerClass = window.player.class;
-        var level = rollRandom(window.player.level, window.player.level + 3); // need to set up weighted rands
+        var level = this.rollRandom(window.player.level, window.player.level + 3); // need to set up weighted rands
         switch (lRand % 4) {
             // this is awful, why is this still here?
             case 0:

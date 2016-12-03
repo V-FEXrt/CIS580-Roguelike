@@ -1,6 +1,6 @@
 "use strict";
 
-window.debug = false;
+window.debug = true;
 
 /* Classes and Libraries */
 const Game = require('./game');

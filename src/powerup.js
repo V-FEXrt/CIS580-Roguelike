@@ -49,23 +49,26 @@ Powerup.prototype.collided = function (entity) {
             case 1:
                 entity.combat.damageBonus += 0.2;
                 window.terminal.log("The crystal radiates a bright blue and you feel its energy course through you.");
+                if (window.debug) console.log(entity.combat.damageBonus);
                 this.used = true;
                 break;
             case 2:
                 var potionValue = window.combatController.rollRandom(2, 8) + 2;
                 entity.combat.health += potionValue;
                 window.terminal.log("You quaff the large crimson potion and feel rejuvenated.");
-                if (window.debug) console.log("+" + potionValue + " health\n");
+                if (window.debug) console.log("+" + potionValue + " health = " + entity.combat.health);
                 this.used = true;
                 break;
             case 3:
                 entity.combat.defenseBonus += 0.2;
                 window.terminal.log("As you finish the potion a faint ward forms around you.");
+                if (window.debug) console.log(entity.combat.defenseBonus);
                 this.used = true;
                 break;
             case 4:
                 entity.combat.attackBonus += 0.2;
                 window.terminal.log("The very smell of the verdant green potion awakens you and you feel more agile.");
+                if (window.debug) console.log(entity.combat.attackBonus);
                 this.used = true;
                 break;
         }
