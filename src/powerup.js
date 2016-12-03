@@ -1,6 +1,7 @@
 "use strict";
 
 const Tilemap = require('./tilemap');
+const RNG = require("./rng");
 
 /**
  * @module exports the Powerup class
@@ -22,7 +23,7 @@ function Powerup(position, tilemap) {
   this.animation = true;
   this.currY = 0;
   this.movingUp = true;
-  this.currPower = window.combatController.rollRandom(1, 5);
+  this.currPower = RNG.rollRandom(1, 5);
   this.used = false;
 }
 
@@ -53,7 +54,7 @@ Powerup.prototype.collided = function (entity) {
         this.used = true;
         break;
       case 2:
-        var potionValue = window.combatController.rollMultiple(3, 6, entity.level);
+        var potionValue = RNG.rollMultiple(3, 6, entity.level);
         entity.combat.health += potionValue;
         window.terminal.log("You quaff the large crimson potion and feel rejuvenated.");
         if (window.debug) console.log("+" + potionValue + " health = " + entity.combat.health);
