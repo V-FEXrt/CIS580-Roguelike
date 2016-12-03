@@ -11,20 +11,20 @@ function CombatController() {
 }
 
 CombatController.prototype.handleAttack = function(aAttackerClass, aDefenderClass) {
-    var lAttackBase = 0;
+    var lAttackBase = Math.floor(aAttackerClass.attackBonus);
     var lAttackBonus = aAttackerClass.weapon.hitBonus;
     var lAttackRoll = rollRandom(1, 21);
     var lAttackTotal = lAttackBase + lAttackBonus + lAttackRoll;
 
     var lDefenseBase = aDefenderClass.armor.defense;
-    var lDefenseBonus = 0;
+    var lDefenseBonus = Math.floor(aDefenderClass.defenseBonus);
     var lDefenseTotal = lDefenseBase + lDefenseBonus;
 
     var lDamageBase = aAttackerClass.weapon.level - 1;
     var lDamageMax = aAttackerClass.weapon.damageMax;
     var lDamageMin = aAttackerClass.weapon.damageMin;
     var lDamageRoll = rollRandom(lDamageMin, 1 + lDamageMax);
-    var lDamageBonus = 0;
+    var lDamageBonus = Math.floor(aAttackerClass.damageBonus);
     var lDamageTotal = lDamageBase + lDamageBonus + lDamageRoll;
 
     if (lAttackRoll == 1) {
@@ -46,10 +46,9 @@ CombatController.prototype.handleAttack = function(aAttackerClass, aDefenderClas
             window.terminal.log("Miss, " + lAttackTotal + " against " + lDefenseTotal);
         }
     }
-    window.terminal.log("\n\n");
 }
 
-function rollRandom(aMinimum, aMaximum) {
+CombatController.prototype.rollRandom = function(aMinimum, aMaximum) {
     return Math.floor(Math.random() * (aMaximum - aMinimum) + aMinimum);
 }
 

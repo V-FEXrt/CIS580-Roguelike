@@ -22,7 +22,7 @@ function Powerup(position, tilemap) {
     this.animation = true;
     this.currY = 0;
     this.movingUp = true;
-    this.currPower = Math.floor((Math.random() * 3) + 1);
+    this.currPower = window.combatController.rollRandom(1, 5);
     this.used = false;
 }
 
@@ -47,15 +47,25 @@ Powerup.prototype.collided = function (entity) {
         //Update player's health/strength/item
         switch (this.currPower) {
             case 1:
-                entity.combat.health += 5;
+                entity.combat.damageBonus += 0.2;
+                window.terminal.log("The crystal radiates a bright blue and you feel its energy course through you.");
                 this.used = true;
                 break;
             case 2:
-                entity.combat.stamina += 20;
+                var potionValue = window.combatController.rollRandom(2, 8) + 2;
+                entity.combat.health += potionValue;
+                window.terminal.log("You quaff the large crimson potion and feel rejuvenated.");
+                if (window.debug) console.log("+" + potionValue + " health\n");
                 this.used = true;
                 break;
             case 3:
-                entity.combat.someOtherPowerup += 10;
+                entity.combat.defenseBonus += 0.2;
+                window.terminal.log("As you finish the potion a faint ward forms around you.");
+                this.used = true;
+                break;
+            case 4:
+                entity.combat.attackBonus += 0.2;
+                window.terminal.log("The very smell of the verdant green potion awakens you and you feel more agile.");
                 this.used = true;
                 break;
         }
@@ -77,10 +87,13 @@ Powerup.prototype.render = function (elapsedTime, ctx) {
             ctx.drawImage(this.spritesheet, 0, 150, 75, 75, (position.x * this.size.width), (position.y * this.size.height) + this.currY, 96, 96);
             break;
         case 2:
-            ctx.drawImage(this.spritesheet, 150, 150, 75, 75, (position.x * this.size.width), (position.y * this.size.height) + this.currY, 96, 96);
+            ctx.drawImage(this.spritesheet, 75, 150, 75, 75, (position.x * this.size.width), (position.y * this.size.height) + this.currY, 96, 96);
             break;
         case 3:
-            ctx.drawImage(this.spritesheet, 75, 150, 75, 75, (position.x * this.size.width), (position.y * this.size.height) + this.currY, 96, 96);
+            ctx.drawImage(this.spritesheet, 150, 150, 75, 75, (position.x * this.size.width), (position.y * this.size.height) + this.currY, 96, 96);
+            break;
+        case 4:
+            ctx.drawImage(this.spritesheet, 225, 150, 75, 75, (position.x * this.size.width), (position.y * this.size.height) + this.currY, 96, 96);
             break;
     }
 }
