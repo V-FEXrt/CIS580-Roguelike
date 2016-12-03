@@ -1,48 +1,34 @@
 "use strict";
 
-module.exports = exports = MapGenerator;
+const CellularAutomata = require('./MapGeneration/cellular_automata_generation');
+const DebugMap = require('./MapGeneration/debug_map_generation');
+const RoomsHallways = require('./MapGeneration/rooms_hallways_generation');
 
+module.exports = exports = MapGenerator;
 
 function MapGenerator(edges, width, height){
   this.map = [];
   this.width = width;
   this.height = height;
-  this.percent = 40;
 
   this.edges = edges;
 
   this.open = 0;
   this.filled = 1;
 
-  this.randomFillMap();
-  this.makeCaverns();
-  this.processEdges();
-
-}
-
-MapGenerator.prototype.randomFillMap = function(){
-
-  var mapMiddle = (this.height / 2);
-
-  this.map = [];
-  for(var i = 0; i < this.width * this.height; i++){
-    this.map.push(this.open);
-  }
-
-  for(var row = 0; row < this.height; row++){
-    for(var column = 0; column < this.width; column++){
-      //column is x, row is y
-
-      // If coordinants lie on the the edge of the map (creates a border)
-      if (column == 0 || row == 0 || column == this.width - 1 || row == this.height - 1){
-        // y * width + x
-        this.map[row * this.width + column] = this.filled;
-      }
-      else{
-        if(!window.debug) this.map[row * this.width + column] = this.pickTile();
-      }
+  if(window.debug){
+    this.map = (new DebugMap(width, height, 50, this.open, this.filled)).generate();
+  }else{
+    if(Math.random() > 0.5){
+      this.map = (new RoomsHallways(width, height, 50, this.open, this.filled)).generate();
+    }else{
+      this.map = (new CellularAutomata(width, height, 50, this.open, this.filled)).generate();
     }
+
   }
+
+
+  this.processEdges();
 }
 
 MapGenerator.prototype.processEdges = function(){
@@ -59,78 +45,20 @@ MapGenerator.prototype.processEdges = function(){
   }
 }
 
-MapGenerator.prototype.loadFromScore = function(scores) {
-  this.map = []
-  for(var row = 0; row < this.height; row++){
-    for(var column = 0; column < this.width; column++){
-      var val = scores[row * this.width + column];
-      if(val == -1){
-        this.map.push(0);
-        continue;
-      }
-      this.map.push(this.edges[val]);
-    }
-  }
-}
-
 MapGenerator.prototype.toString = function(){
-  var header = "Width: " + this.width + "\tHeight: " + this.height + "\tWalls: " + this.percent + "\n";
+  var header = "Width: " + this.width + "\tHeight: " + this.height + "\n";
   var body = ""
   for(var row = 0; row < this.height; row++){
     for(var column = 0; column < this.width; column++){
       var val =  this.map[row * this.width + column]
       if(val < 10){
-        body += "0";
+        //body += "0";
       }
-      body += val + " "; //(this.map[row * this.width + column] == this.open) ? "." : "#";
+      body += (this.map[row * this.width + column] == this.open) ? "." : "#"; //val + " "; //(this.map[row * this.width + column] == this.open) ? "." : "#";
     }
     body += "\n";
   }
   return header + body;
-}
-
-MapGenerator.prototype.pickTile = function() {
-  if(this.percent >= rand(100) + 1) return this.filled;
-  return this.open;
-}
-
-MapGenerator.prototype.makeCaverns = function(){
-  for(var row = 0; row < this.height; row++){
-    for(var column = 0; column < this.width; column++){
-      this.map[row * this.width + column] = this.pickCavernTile(column, row);
-    }
-  }
-}
-
-MapGenerator.prototype.pickCavernTile = function(x, y){
-  var wallCount = this.countAdjacentWalls(x, y, 1, 1);
-
-  if(this.map[y * this.width + x] == this.filled){
-    if(wallCount >= 4) return this.filled;
-    if(wallCount < 2) return this.open;
-  }
-  else{
-    if(wallCount >= 5) return this.filled;
-  }
-  return this.open;
-}
-
-MapGenerator.prototype.countAdjacentWalls = function(x, y, scopeX, scopeY){
-  var startX = x - scopeX;
-  var startY = y - scopeY;
-  var endX = x + scopeX;
-  var endY = y + scopeY;
-
-  var count = 0;
-
-  for(var iY = startY; iY <= endY; iY++){
-    for(var iX = startX; iX <= endX; iX++){
-      if(iX == x && iY == y) continue;
-      if(this.isWallOrOutOfBounds(iX, iY)) count++;
-    }
-  }
-
-  return count;
 }
 
 MapGenerator.prototype.countScore = function(x, y){

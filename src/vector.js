@@ -11,7 +11,9 @@ module.exports = exports = {
   rotate: rotate,
   dotProduct: dotProduct,
   magnitude: magnitude,
-  normalize: normalize
+  normalize: normalize,
+  distance: distance,
+  equals: equals
 }
 
 
@@ -92,4 +94,13 @@ function magnitude(a) {
 function normalize(a) {
   var mag = magnitude(a);
   return {x: a.x / mag, y: a.y / mag};
+}
+
+function distance(a, b){
+  var distance=this.subtract(a,b);
+  return {x: Math.abs(distance.x), y: Math.abs(distance.y)};
+}
+
+function equals(a, b){
+  return a.x == b.x && a.y == b.y;
 }
