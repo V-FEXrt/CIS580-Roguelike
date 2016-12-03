@@ -52,6 +52,29 @@ CombatController.prototype.rollRandom = function(aMinimum, aMaximum) {
     return Math.floor(Math.random() * (aMaximum - aMinimum) + aMinimum);
 }
 
+CombatController.prototype.rollMultiple = function(aMinimum, aMaximum, aNumber) {
+    var total = 0;
+    for (var i = 0; i < aNumber; i++) {
+        total += this.rollRandom(aMinimum, aMaximum);
+    }
+    return total;
+}
+
+CombatController.prototype.rollWeighted = function() {
+    var argLength = arguments.length;
+    if (argLength < 1) throw new Error("At least one argument required.");
+    var weightSum = 0;
+    for (var i = 0; i < argLength; i++) {
+        weightSum += arguments[i];
+    }
+    var roll = this.rollRandom(0, weightSum + 1);
+    weightSum = 0;
+    for (var i = 0; i < argLength; i++) {
+        weightSum += arguments[i];
+        if (roll <= weightSum) return i;
+    }
+}
+
 CombatController.prototype.randomDrop = function(aPosition) {
     var lDrop = new Object();
     var lRand = this.rollRandom(1, 21); // need to set up weighted rands
