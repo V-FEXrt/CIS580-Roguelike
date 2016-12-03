@@ -10,52 +10,103 @@ function CombatController() {
 
 }
 
-CombatController.prototype.handleAttack = function(aAttackerClass, aDefenderClass) {
-    var lAttackBase = 0;
+CombatController.prototype.handleAttack = function (aAttackerClass, aDefenderClass) {
+    var lAttackBase = Math.floor(aAttackerClass.attackBonus);
     var lAttackBonus = aAttackerClass.weapon.hitBonus;
-    var lAttackRoll = rollRandom(1, 21);
+    var lAttackRoll = this.rollRandom(1, 21);
     var lAttackTotal = lAttackBase + lAttackBonus + lAttackRoll;
 
     var lDefenseBase = aDefenderClass.armor.defense;
-    var lDefenseBonus = 0;
+    var lDefenseBonus = Math.floor(aDefenderClass.defenseBonus);
     var lDefenseTotal = lDefenseBase + lDefenseBonus;
 
     var lDamageBase = aAttackerClass.weapon.level - 1;
     var lDamageMax = aAttackerClass.weapon.damageMax;
     var lDamageMin = aAttackerClass.weapon.damageMin;
-    var lDamageRoll = rollRandom(lDamageMin, 1 + lDamageMax);
-    var lDamageBonus = 0;
+    var lDamageRoll = this.rollRandom(lDamageMin, 1 + lDamageMax);
+    var lDamageBonus = Math.floor(aAttackerClass.damageBonus);
     var lDamageTotal = lDamageBase + lDamageBonus + lDamageRoll;
 
+    var message;
+    var attacker = aAttackerClass.type;
+    var defender = aDefenderClass.type;
+    var playerAttacker = (attacker == "Knight" || attacker == "Archer" || attacker == "Mage");
     if (lAttackRoll == 1) {
-        var lSelfDamage = rollRandom(1, lDamageMax + 1);
+        var lSelfDamage = this.rollMultiple(1, 3, aAttackerClass.weapon.level);
         aAttackerClass.health -= lSelfDamage;
-        window.terminal.log("Crit Fail, take " + lSelfDamage + " damage.");
         // attacker hit itself, play attacker hit sound
-        // aDefenderClass.type != "Knight"||"Archer"||"Mage"
+
+        // If attacker is player
+        if (playerAttacker) {
+            message = `You critically fail your attack and hurt yourself for ${lSelfDamage} damage.`;
+        } else { // attacker is enemy
+            message = `The ${attacker} critically fails its attack and takes ${lSelfDamage} damage.`;
+        }
     } else if (lAttackRoll == 20 || (lAttackRoll == 19 && (aAttackerClass.attackType == "Ranged" || aAttackerClass.weapon.type == "Battleaxe"))) {
         lDamageTotal += lDamageMax;
         aDefenderClass.health -= lDamageTotal;
         // defender hit, play defender hit sound
+
+        // If attacker is player
+        if (playerAttacker) {
+            message = `Your attack is perfect, striking the ${defender} for ${lDamageTotal} damage.`;
+        } else { // attacker is enemy
+            message = `The ${attacker}'s attack is perfect striking you for ${lDamageTotal} damage.`;
+        }
     } else {
         if (lAttackTotal > lDefenseTotal) {
             aDefenderClass.health -= lDamageTotal;
-            window.terminal.log("Hit, deal " + lDamageTotal + " damage");
             // defender hit, play defender hit sound
+
+            // If attacker is player
+            if (playerAttacker) {
+                message = `Your attack strikes the ${defender} for ${lDamageTotal} damage.`;
+            } else { // attacker is enemy
+                message = `The ${attacker}'s attack strikes you for ${lDamageTotal} damage.`;
+            }
         } else {
-            window.terminal.log("Miss, " + lAttackTotal + " against " + lDefenseTotal);
+            // If attacker is player
+            if (playerAttacker) {
+                message = `Your attack misses the ${defender}.`;
+            } else { // attacker is enemy
+                message = `The ${attacker}'s attack misses you.`;
+            }
         }
     }
-    window.terminal.log("\n\n");
+
+    window.terminal.log(message + "\n");
 }
 
-function rollRandom(aMinimum, aMaximum) {
+CombatController.prototype.rollRandom = function (aMinimum, aMaximum) {
     return Math.floor(Math.random() * (aMaximum - aMinimum) + aMinimum);
 }
 
-CombatController.prototype.randomDrop = function(aPosition) {
+CombatController.prototype.rollMultiple = function (aMinimum, aMaximum, aNumber) {
+    var total = 0;
+    for (var i = 0; i < aNumber; i++) {
+        total += this.rollRandom(aMinimum, aMaximum);
+    }
+    return total;
+}
+
+CombatController.prototype.rollWeighted = function () {
+    var argLength = arguments.length;
+    if (argLength < 1) throw new Error("At least one argument required.");
+    var weightSum = 0;
+    for (var i = 0; i < argLength; i++) {
+        weightSum += arguments[i];
+    }
+    var roll = this.rollRandom(0, weightSum + 1);
+    weightSum = 0;
+    for (var i = 0; i < argLength; i++) {
+        weightSum += arguments[i];
+        if (roll <= weightSum) return i;
+    }
+}
+
+CombatController.prototype.randomDrop = function (aPosition) {
     var lDrop = new Object();
-    var lRand = rollRandom(1, 21); // need to set up weighted rands
+    var lRand = this.rollRandom(1, 21); // need to set up weighted rands
     if (lRand > 17) {                           // spawn armor
         lDrop.type = "Armor";
         // TODO > properly implement...
@@ -63,7 +114,7 @@ CombatController.prototype.randomDrop = function(aPosition) {
     } else if (lRand >= 1 && lRand < 17) {      // spawn weapon
         lDrop.type = "Weapon";
         var playerClass = window.player.class;
-        var level = rollRandom(window.player.level, window.player.level + 3); // need to set up weighted rands
+        var level = this.rollRandom(window.player.level, window.player.level + 3); // need to set up weighted rands
         switch (lRand % 4) {
             // this is awful, why is this still here?
             case 0:

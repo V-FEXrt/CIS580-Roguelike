@@ -126,8 +126,8 @@ function Weapon(aName, aLevel) {
             this.damageMin = 1;
             this.damageType = "m";
             this.range = 255;
-            this.hitBonus = -1;
-            this.properties = "-1 to Hit";
+            this.hitBonus = -2;
+            this.properties = "-2 to Hit";
             break;
     }
 
