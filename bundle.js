@@ -50,13 +50,27 @@ var input = {
   right: false
 }
 
+var backgroundMusic = new Audio('sounds/tempBGMusic.wav');
+backgroundMusic.volume = 0.3;
+backgroundMusic.addEventListener('ended', function(){
+   setNewMusic();
+}, false);
+backgroundMusic.play();
+
+var setNewMusic = function() {
+  var backgroundMusicOnLoop = new Audio('sounds/tempBGMusicLoop.wav');
+  backgroundMusicOnLoop.volume = 0.3;
+  backgroundMusicOnLoop.loop = true;
+  backgroundMusicOnLoop.play();
+}
+
 var turnTimer = 0;
 var defaultTurnDelay = 400;     //Default turn between turns
 var turnDelay = defaultTurnDelay; //current time between turns
 var autoTurn = false;           //If true, reduces time between turns and turns happen automatically
 var resetTimer = true;          //Take turn immediately on movement key press if true
 
-var player = new Player({ x: 0, y: 0 }, tilemap, "Archer");
+var player = new Player({ x: 0, y: 0 }, tilemap, "Mage");
 
 window.player = player;
 
@@ -76,9 +90,7 @@ window.onmousedown = function(event)
             nextLevel(false);
         }
     }
-
 }
-
 
 canvas.onclick = function (event) {
   var node = {
@@ -88,33 +100,15 @@ canvas.onclick = function (event) {
 
   var clickedWorldPos = tilemap.toWorldCoords(node);
   window.entityManager.addEntity(new Click(clickedWorldPos, tilemap, player, function(enemy){
-    turnDelay = defaultTurnDelay / 2;
-    autoTurn = true;
-
     var distance = Vector.distance(player.position, enemy.position);
     if (distance.x <= player.combat.weapon.range && distance.y <= player.combat.weapon.range) {
       turnDelay = defaultTurnDelay;
       autoTurn = false;
       combatController.handleAttack(player.combat, enemy.combat);
       processTurn();
-    } else {
-        var path = pathfinder.findPath(player.position, enemy.position);
-        path = path.splice(0, path.length - player.combat.weapon.range);
-        player.walkPath(path, function () {
-          turnDelay = defaultTurnDelay;
-          autoTurn = false;
-          combatController.handleAttack(player.combat, enemy.combat);
-          processTurn();
-        });
     }
   }));
 }
-/* else {
-    player.walkPath(pathfinder.findPath(player.position, clickedWorldPos), function () {
-      turnDelay = defaultTurnDelay;
-      autoTurn = false;
-    });
-*/
 
 /**
  * @function onkeydown
@@ -328,7 +322,7 @@ function unfadeFromBlack(){
   fadeAnimationProgress.isActive = true;
 }
 
-},{"../tilemaps/tiledef.json":22,"./click":3,"./combat_controller":4,"./entity_manager":7,"./entity_spawner":8,"./game":9,"./gui":10,"./pathfinder.js":13,"./player":14,"./progress_manager":16,"./stairs":17,"./terminal.js":18,"./tilemap":19,"./vector":20}],2:[function(require,module,exports){
+},{"../tilemaps/tiledef.json":22,"./click":3,"./combat_controller":5,"./entity_manager":7,"./entity_spawner":8,"./game":9,"./gui":10,"./pathfinder.js":13,"./player":14,"./progress_manager":16,"./stairs":17,"./terminal.js":18,"./tilemap":19,"./vector":20}],2:[function(require,module,exports){
 "use strict";
 
 module.exports = exports = Armor;
@@ -452,102 +446,6 @@ Click.prototype.render = function (elapsedTime, ctx) {
 },{}],4:[function(require,module,exports){
 "use strict";
 
-module.exports = exports = CombatController;
-
-const CombatStruct = require("./combat_struct");
-const Weapon = require("./weapon");
-const Armor = require("./armor");
-
-function CombatController() {
-
-}
-
-CombatController.prototype.handleAttack = function(aAttackerStruct, aDefenderStruct) {
-    // console.log("attacker health: " + aAttackerStruct.health);
-    // console.log("defender health: " + aDefenderStruct.health);
-
-    var lAttackBase = 0;
-    var lAttackBonus = aAttackerStruct.weapon.hitBonus;
-    var lAttackRoll = rollRandom(1, 21);
-    var lAttackTotal = lAttackBase + lAttackBonus + lAttackRoll;
-
-    var lDefenseBase = aDefenderStruct.armor.defense;
-    var lDefenseBonus = 0;
-    var lDefenseTotal = lDefenseBase + lDefenseBonus;
-
-    var lDamageBase = aAttackerStruct.weapon.level - 1;
-    var lDamageMax = aAttackerStruct.weapon.damageMax;
-    var lDamageMin = aAttackerStruct.weapon.damageMin;
-    var lDamageRoll = rollRandom(lDamageMin, 1 + lDamageMax);
-    var lDamageBonus = 0;
-    var lDamageTotal = lDamageBase + lDamageBonus + lDamageRoll;
-
-    if (lAttackRoll == 1) {
-        var lSelfDamage = rollRandom(1, lDamageMax + 1);
-        aAttackerStruct.health -= lSelfDamage;
-        window.terminal.log("Crit Fail, take " + lSelfDamage + " damage.");
-    } else if (lAttackRoll == 20 || (lAttackRoll == 19 && (aAttackerStruct.attackType == "Ranged" || aAttackerStruct.weapon.type == "Battleaxe"))) {
-        lDamageTotal += lDamageMax;
-        aDefenderStruct.health -= lDamageTotal;
-    } else {
-        if (lAttackTotal > lDefenseTotal) {
-            aDefenderStruct.health -= lDamageTotal;
-            window.terminal.log("Hit, deal " + lDamageTotal + " damage");
-        } else {
-            window.terminal.log("Miss, " + lAttackTotal + " against " + lDefenseTotal);
-        }
-    }
-
-
-    // console.log("attacker health: " + aAttackerStruct.health);
-    // console.log("defender health: " + aDefenderStruct.health);
-    window.terminal.log("\n\n");
-}
-
-function rollRandom(aMinimum, aMaximum) {
-    return Math.floor(Math.random() * (aMaximum - aMinimum) + aMinimum);
-}
-
-CombatController.prototype.randomDrop = function(aPosition) {
-    var lDrop = new Object();
-    var lRand = rollRandom(1, 21); // need to set up weighted rands
-    if (lRand > 17) {                           // spawn armor
-        lDrop.type = "Armor";
-        // TODO > properly implement...
-        lDrop = new Armor("Leather");
-    } else if (lRand >= 1 && lRand < 17) {      // spawn weapon
-        lDrop.type = "Weapon";
-        var playerClass = window.player.class;
-        var level = rollRandom(window.player.level, window.player.level + 3); // need to set up weighted rands
-        switch (lRand % 4) {
-            // this is awful, why is this still here?
-            case 0:
-                lDrop = (playerClass == "Knight") ? new Weapon("Longsword", level) : (playerClass == "Archer") ? new Weapon("Bodkin", level) : new Weapon("Magic Missile", level);
-                break;
-
-            case 1:
-                lDrop = (playerClass == "Knight") ? new Weapon("Morning Star", level) : (playerClass == "Archer") ? new Weapon("Broadhead", level) : new Weapon("Fireball", level);
-                break;
-
-            case 2:
-                lDrop = (playerClass == "Knight") ? new Weapon("Halberd", level) : (playerClass == "Archer") ? new Weapon("Poison-Tipped", level) : new Weapon("Frostbolt", level);
-                break;
-
-            case 3:
-                lDrop = (playerClass == "Knight") ? new Weapon("Battleaxe", level) : (playerClass == "Archer") ? new Weapon("Heavy Bolts", level) : new Weapon("Eldritch Blast", level);
-                break;
-        }
-    } else {                                    // dont spawn anything
-        lDrop.type = "None";
-    }
-    lDrop.position = aPosition;
-    return lDrop;
-}
-
-
-},{"./armor":2,"./combat_struct":5,"./weapon":21}],5:[function(require,module,exports){
-"use strict";
-
 const Tilemap = require('./tilemap');
 const Vector = require('./vector');
 
@@ -558,9 +456,10 @@ const Vector = require('./vector');
 const Weapon = require("./weapon");
 const Armor = require("./armor");
 
-module.exports = exports = CombatStruct;
+module.exports = exports = CombatClass;
 
-function CombatStruct(aType) {
+function CombatClass(aType) {
+    this.type = aType;
     switch (aType) {
         case "Knight":
             this.health = 20;
@@ -594,7 +493,7 @@ function CombatStruct(aType) {
             this.health = 10;
             this.stamina = 100;
             this.someOtherPowerup = 50;
-            this.weapon = new Weapon("Longsword", 1);
+            this.weapon = new Weapon("Claw", 1);
             this.armor = new Armor("Flesh");
             this.attackType = "Melee";
             this.senseRange = 10; // This might be too high, what if we keep the camera centered..?
@@ -651,7 +550,7 @@ function CombatStruct(aType) {
             this.health = 25;
             this.stamina = 100;
             this.someOtherPowerup = 50;
-            this.weapon = new Weapon("Longsword", 1);
+            this.weapon = new Weapon("Battleaxe", 1);
             this.armor = new Armor("Chain");
             this.attackType = "Melee";
             this.senseRange = 20;
@@ -704,11 +603,104 @@ function CombatStruct(aType) {
 }
 
 
-},{"./armor":2,"./tilemap":19,"./vector":20,"./weapon":21}],6:[function(require,module,exports){
+},{"./armor":2,"./tilemap":19,"./vector":20,"./weapon":21}],5:[function(require,module,exports){
+"use strict";
+
+module.exports = exports = CombatController;
+
+const CombatClass = require("./combat_class");
+const Weapon = require("./weapon");
+const Armor = require("./armor");
+
+function CombatController() {
+
+}
+
+CombatController.prototype.handleAttack = function(aAttackerClass, aDefenderClass) {
+    var lAttackBase = 0;
+    var lAttackBonus = aAttackerClass.weapon.hitBonus;
+    var lAttackRoll = rollRandom(1, 21);
+    var lAttackTotal = lAttackBase + lAttackBonus + lAttackRoll;
+
+    var lDefenseBase = aDefenderClass.armor.defense;
+    var lDefenseBonus = 0;
+    var lDefenseTotal = lDefenseBase + lDefenseBonus;
+
+    var lDamageBase = aAttackerClass.weapon.level - 1;
+    var lDamageMax = aAttackerClass.weapon.damageMax;
+    var lDamageMin = aAttackerClass.weapon.damageMin;
+    var lDamageRoll = rollRandom(lDamageMin, 1 + lDamageMax);
+    var lDamageBonus = 0;
+    var lDamageTotal = lDamageBase + lDamageBonus + lDamageRoll;
+
+    if (lAttackRoll == 1) {
+        var lSelfDamage = rollRandom(1, lDamageMax + 1);
+        aAttackerClass.health -= lSelfDamage;
+        window.terminal.log("Crit Fail, take " + lSelfDamage + " damage.");
+        // attacker hit itself, play attacker hit sound
+        // aDefenderClass.type != "Knight"||"Archer"||"Mage"
+    } else if (lAttackRoll == 20 || (lAttackRoll == 19 && (aAttackerClass.attackType == "Ranged" || aAttackerClass.weapon.type == "Battleaxe"))) {
+        lDamageTotal += lDamageMax;
+        aDefenderClass.health -= lDamageTotal;
+        // defender hit, play defender hit sound
+    } else {
+        if (lAttackTotal > lDefenseTotal) {
+            aDefenderClass.health -= lDamageTotal;
+            window.terminal.log("Hit, deal " + lDamageTotal + " damage");
+            // defender hit, play defender hit sound
+        } else {
+            window.terminal.log("Miss, " + lAttackTotal + " against " + lDefenseTotal);
+        }
+    }
+    window.terminal.log("\n\n");
+}
+
+function rollRandom(aMinimum, aMaximum) {
+    return Math.floor(Math.random() * (aMaximum - aMinimum) + aMinimum);
+}
+
+CombatController.prototype.randomDrop = function(aPosition) {
+    var lDrop = new Object();
+    var lRand = rollRandom(1, 21); // need to set up weighted rands
+    if (lRand > 17) {                           // spawn armor
+        lDrop.type = "Armor";
+        // TODO > properly implement...
+        lDrop = new Armor("Leather");
+    } else if (lRand >= 1 && lRand < 17) {      // spawn weapon
+        lDrop.type = "Weapon";
+        var playerClass = window.player.class;
+        var level = rollRandom(window.player.level, window.player.level + 3); // need to set up weighted rands
+        switch (lRand % 4) {
+            // this is awful, why is this still here?
+            case 0:
+                lDrop = (playerClass == "Knight") ? new Weapon("Longsword", level) : (playerClass == "Archer") ? new Weapon("Bodkin", level) : new Weapon("Magic Missile", level);
+                break;
+
+            case 1:
+                lDrop = (playerClass == "Knight") ? new Weapon("Morning Star", level) : (playerClass == "Archer") ? new Weapon("Broadhead", level) : new Weapon("Fireball", level);
+                break;
+
+            case 2:
+                lDrop = (playerClass == "Knight") ? new Weapon("Halberd", level) : (playerClass == "Archer") ? new Weapon("Poison-Tipped", level) : new Weapon("Frostbolt", level);
+                break;
+
+            case 3:
+                lDrop = (playerClass == "Knight") ? new Weapon("Battleaxe", level) : (playerClass == "Archer") ? new Weapon("Heavy Bolts", level) : new Weapon("Eldritch Blast", level);
+                break;
+        }
+    } else {                                    // dont spawn anything
+        lDrop.type = "None";
+    }
+    lDrop.position = aPosition;
+    return lDrop;
+}
+
+
+},{"./armor":2,"./combat_class":4,"./weapon":21}],6:[function(require,module,exports){
 "use strict";
 
 const Tilemap = require('./tilemap');
-const CombatStruct = require("./combat_struct");
+const CombatClass = require("./combat_class");
 
 module.exports = exports = Enemy;
 
@@ -721,32 +713,32 @@ function Enemy(position, tilemap, combatClass, target, onDeathCB) {
     this.spritesheet.src = "./spritesheets/sprites.png";
     this.type = "Enemy";
     this.class = combatClass;
-    this.combat = new CombatStruct(this.class);
+    this.combat = new CombatClass(this.class);
     this.target = target;
     this.onDeathCB = onDeathCB;
 
     // console.log(this.position.x + " " + this.position.y);
 }
 
-Enemy.prototype.processTurn = function () {
+Enemy.prototype.processTurn = function() {
     if (this.combat.health <= 0) this.state = "dead";
     if (this.state == "dead") return; // shouldnt be necessary
 
     this.combat.turnAI(this);
 }
 
-Enemy.prototype.update = function (time) {
+Enemy.prototype.update = function(time) {
     // if we're dead, we should probably do something
     if (this.combat.health <= 0) {
         this.state = "dead";
     }
 }
 
-Enemy.prototype.collided = function (entity) {
+Enemy.prototype.collided = function(entity) {
 
 }
 
-Enemy.prototype.retain = function () {
+Enemy.prototype.retain = function() {
     if (this.combat.health <= 0) {
         this.onDeathCB(this.position, this.tilemap);
         return false;
@@ -755,7 +747,7 @@ Enemy.prototype.retain = function () {
     }
 }
 
-Enemy.prototype.render = function (elapsedTime, ctx) {
+Enemy.prototype.render = function(elapsedTime, ctx) {
     if (this.state == "dead") return; // shouldnt be necessary
 
     var position = this.tilemap.toScreenCoords(this.position);
@@ -768,7 +760,8 @@ Enemy.prototype.render = function (elapsedTime, ctx) {
     );
 }
 
-},{"./combat_struct":5,"./tilemap":19}],7:[function(require,module,exports){
+
+},{"./combat_class":4,"./tilemap":19}],7:[function(require,module,exports){
 "use strict";
 
 /**
@@ -1871,7 +1864,7 @@ Pathfinder.prototype.step = function() {
 
 const Tilemap = require('./tilemap');
 const Vector = require('./vector');
-const CombatStruct = require("./combat_struct");
+const CombatClass = require("./combat_class");
 const Inventory = require('./inventory.js');
 const Weapon = require('./weapon.js');
 const Armor = require('./armor.js');
@@ -1895,36 +1888,21 @@ function Player(position, tilemap, combatClass) {
     this.spritesheet.src = './spritesheets/sprites.png';
     this.type = "Player";
     this.walk = [];
-    this.class = combatClass;
-    this.combat = new CombatStruct(this.class);
-    this.inventory = new Inventory(this.combat.weapon, this.combat.armor);
+    this.changeClass(combatClass);
     this.level = 0;
     this.shouldProcessTurn = true;
-
-    if(this.class == "Knight")
-    {
-      this.spritesheetPos = {x: 1, y: 5};
-    }
-    else if(this.class == "Mage")
-    {
-      this.spritesheetPos = {x: 9, y: 5};
-    }
-    else if(this.class == "Archer")
-    {
-      this.spritesheetPos = {x: 7, y: 6};
-    }
 }
 
 /**
  * @function updates the player object
  * {DOMHighResTimeStamp} time the elapsed time since the last frame
  */
-Player.prototype.update = function (time) {
+Player.prototype.update = function(time) {
     // if we're dead, we should probably do something
     if (this.combat.health <= 0) this.state = "dead";
 }
 
-Player.prototype.walkPath = function (path, completion) {
+Player.prototype.walkPath = function(path, completion) {
     if (this.state == "dead") return; // shouldnt be necessary
 
     path.shift();
@@ -1937,22 +1915,17 @@ Player.prototype.walkPath = function (path, completion) {
 //Changes the player class, used because right now things
 //rely on player being created before class is actually chosen.
 //Potentially change this
-Player.prototype.changeClass = function(chosenClass)
-{
+Player.prototype.changeClass = function(chosenClass) {
     this.class = chosenClass;
-    this.combat = new CombatStruct(chosenClass);
+    this.combat = new CombatClass(chosenClass);
+    this.inventory = new Inventory(this.combat.weapon, this.combat.armor);
 
-    if(this.class == "Knight")
-    {
-      this.spritesheetPos = {x: 1, y: 5};
-    }
-    else if(this.class == "Mage")
-    {
-      this.spritesheetPos = {x: 9, y: 5};
-    }
-    else if(this.class == "Archer")
-    {
-      this.spritesheetPos = {x: 7, y: 6};
+    if (this.class == "Knight") {
+        this.spritesheetPos = { x: 1, y: 5 };
+    } else if (this.class == "Mage") {
+        this.spritesheetPos = { x: 9, y: 5 };
+    } else if (this.class == "Archer") {
+        this.spritesheetPos = { x: 7, y: 6 };
     }
 };
 
@@ -1960,9 +1933,9 @@ Player.prototype.changeClass = function(chosenClass)
  *@function handles the players turn
  *{input} keyboard input given for this turn
  */
-Player.prototype.processTurn = function (input) {
+Player.prototype.processTurn = function(input) {
 
-    if(!this.shouldProcessTurn) return;
+    if (!this.shouldProcessTurn) return;
 
     if (this.combat.health <= 0) this.state = "dead";
     if (this.state == "dead") return; // shouldnt be necessary
@@ -2012,7 +1985,7 @@ Player.prototype.processTurn = function (input) {
 
 }
 
-Player.prototype.collided = function (entity) {
+Player.prototype.collided = function(entity) {
     if(typeof entity == Weapon) { this.inventory.addWeapon(weapon); }
     if(typeof entity == Armor) { this.inventory.addArmor(armor); }
 
@@ -2021,7 +1994,7 @@ Player.prototype.collided = function (entity) {
     }
 }
 
-Player.prototype.retain = function () {
+Player.prototype.retain = function() {
     return this.combat.health > 0;
 }
 
@@ -2029,7 +2002,7 @@ Player.prototype.retain = function () {
  * @function renders the player into the provided context
  * {CanvasRenderingContext2D} ctx the context to render into
  */
-Player.prototype.render = function (elapsedTime, ctx) {
+Player.prototype.render = function(elapsedTime, ctx) {
     if (this.state == "dead") return; // shouldnt be necessary
 
     var position = this.tilemap.toScreenCoords(this.position);
@@ -2037,18 +2010,18 @@ Player.prototype.render = function (elapsedTime, ctx) {
     ctx.drawImage(
         this.spritesheet,
         96 * this.spritesheetPos.x, 96 * this.spritesheetPos.y,
-        96 , 96,
+        96, 96,
         position.x * this.size.width, position.y * this.size.height,
         96, 96
     );
-
 }
 
 function hasUserInput(input) {
     return input.up || input.down || input.right || input.left;
 }
 
-},{"./armor.js":2,"./combat_struct":5,"./inventory.js":11,"./tilemap":19,"./vector":20,"./weapon.js":21}],15:[function(require,module,exports){
+
+},{"./armor.js":2,"./combat_class":4,"./inventory.js":11,"./tilemap":19,"./vector":20,"./weapon.js":21}],15:[function(require,module,exports){
 "use strict";
 
 const Tilemap = require('./tilemap');
@@ -2639,6 +2612,15 @@ function Weapon(aName, aLevel) {
             this.range = 1;
             this.hitBonus = 1;
             this.properties = "+3 Min Damage, +1 Crit Chance";
+            break;
+
+        case "Claw":
+            this.damageMax = 4
+            this.damageMin = 2;
+            this.damageType = "s";
+            this.range = 1;
+            this.hitBonus = 0;
+            this.properties = "+1 Min Damage";
             break;
 
         // Ranged
