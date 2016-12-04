@@ -29,7 +29,8 @@ var screenSize = {width: 1056, height: 672};
 window.combatController = new CombatController();
 
 window.terminal = new Terminal();
-window.terminal.log("Terminal successfully loaded");
+window.terminal.log("Welcome to Roguelike");
+window.terminal.log("Good luck!");
 
 var gui = new GUI(screenSize);
 
@@ -259,6 +260,10 @@ function processTurn() {
 function nextLevel(fadeOut){
   player.level++;
   var init = function(){
+    // clear terminal
+    window.terminal.clear();
+    window.terminal.log("   ---===| LEVEL " + player.level + " |===---");
+
     // reset entities
     window.entityManager.reset();
 
