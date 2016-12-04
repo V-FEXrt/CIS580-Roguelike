@@ -18,6 +18,8 @@ function Tilemap(canvas, width, height, tileset, options){
   this.draw = {};
   this.draw.origin = {x: 0, y: 0};
 
+  this.idx = 0;
+
   // We add one so that we go slightly beyond the canvas
   this.draw.size = {
     width: Math.floor(canvas.width / this.tileWidth),
@@ -53,6 +55,15 @@ function Tilemap(canvas, width, height, tileset, options){
 
 }
 
+Tilemap.prototype.changeTileset = function(){
+  this.idx++;
+  this.idx %= this.tileset.images.length;
+  var tset = new Image();
+  tset.src = this.tileset.images[this.idx];
+  this.tiles.forEach(function(tile){
+    tile.image = tset;
+  })
+}
 Tilemap.prototype.generateMap = function(){
   var map = new MapGenerator(this.tileset.edges, this.mapWidth, this.mapHeight);
 
@@ -187,7 +198,7 @@ Tilemap.prototype.findOpenSpace = function()
   {
     throw new Error("Could not find free space. Check map generation algorithms and definition of empty spaces.")
   }
-  
+
 	return {x: tile % this.mapWidth, y: Math.floor(tile / this.mapWidth)};
 }
 

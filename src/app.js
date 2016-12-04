@@ -269,6 +269,7 @@ function nextLevel(fadeOut){
       regen = false;
 
       //gen new map
+      tilemap.changeTileset();
       tilemap.generateMap();
 
       //move player to valid location
