@@ -2,8 +2,10 @@
 
 module.exports = exports = Armor;
 
-function Armor(aType) {
-    this.type = aType;
+function Armor(aName) {
+    this.type = "Armor";
+    this.name = aName;
+    this.level = 0;
     this.shouldRetain = true;
 
     switch (aType) {
@@ -19,25 +21,25 @@ function Armor(aType) {
             this.weakType = "";
             break;
 
-        case "Hide":
+        case "Hide Armor":
             this.defense = 6;
             this.strongType = "b";
             this.weakType = "s";
             break;
 
-        case "Leather":
+        case "Leather Armor":
             this.defense = 10;
             this.strongType = "s";
             this.weakType = "b";
             break;
 
-        case "Chain":
+        case "Chainmail":
             this.defense = 14;
             this.strongType = "s";
             this.weakType = "p";
             break;
 
-        case "Plate":
+        case "Plate Armor":
             this.defense = 18;
             this.strongType = "p";
             this.weakType = "b";
@@ -55,10 +57,10 @@ function Armor(aType) {
 }
 
 Armor.prototype.collided = function (aEntity) {
-  if(aEntity.type == "Player"){
-    aEntity.inventory.addArmor(this);
-    this.shouldRetain = false;
-  }
+    if (aEntity.type == "Player") {
+        aEntity.inventory.addArmor(this);
+        this.shouldRetain = false;
+    }
 }
 
 Armor.prototype.processTurn = function () {
@@ -70,14 +72,14 @@ Armor.prototype.retain = function () {
 }
 
 Armor.prototype.update = function () {
-  if (this.currY >= 5) this.movingUp = false;
-  else if (this.currY <= -5) this.movingUp = true;
-  if (this.movingUp) this.currY += .2;
-  else this.currY -= .2;
+    if (this.currY >= 5) this.movingUp = false;
+    else if (this.currY <= -5) this.movingUp = true;
+    if (this.movingUp) this.currY += .2;
+    else this.currY -= .2;
 }
 
 Armor.prototype.render = function (time, ctx) {
-  var position = window.tilemap.toScreenCoords(this.position);
-  ctx.drawImage(this.spritesheet, 305, 225, 75, 75, (position.x * this.size.width), (position.y * this.size.height) + this.currY, 96, 96);
+    var position = window.tilemap.toScreenCoords(this.position);
+    ctx.drawImage(this.spritesheet, 305, 225, 75, 75, (position.x * this.size.width), (position.y * this.size.height) + this.currY, 96, 96);
 
 }

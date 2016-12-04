@@ -21,6 +21,7 @@ function Inventory(weapon, armor) {
  */
 Inventory.prototype.addWeapon = function (weapon) {
     checkWeapon(weapon);
+    window.terminal.log(`Picked up a level ${weapon.level} ${weapon.name} with damage range ${weapon.damageMin}-${weapon.damageMax}, with ${weapon.properties}.`);
     var weaponToDrop = this.inventory[0];
     this.inventory[0] = weapon;
     window.player.combat.weapon = weapon;
@@ -46,6 +47,13 @@ Inventory.prototype.addWeapon = function (weapon) {
  */
 Inventory.prototype.addArmor = function (armor) {
     checkArmor(armor);
+    window.terminal.log(`Picked up level ${armor.level} ${armor.name}.`);
+    var armorToDrop = this.inventory[1];
+    this.inventory[1] = armor;
+    window.player.combat.armor = armor;
+    armorToDrop.position = window.player.tilemap.getRandomAdjacent(armor.position);
+    armorToDrop.shouldRetain = true;
+    window.entityManager.addEntity(armorToDrop);
 
 
     // Commented out until we figure out what to do...

@@ -111,7 +111,7 @@ function Weapon(aName, aLevel) {
             this.range = 255;
             this.hitBonus = 255;
             this.attackEffect = "";
-            this.properties = "Never Misses";
+            this.properties = "Unerring Accuracy";
             break;
 
         case "Fireball":
@@ -121,7 +121,7 @@ function Weapon(aName, aLevel) {
             this.range = 255;
             this.hitBonus = 0;
             this.attackEffect = "Burned";
-            this.properties = "Explodes on Contact, 50% Burn Chance";
+            this.properties = "50% Burn Chance, Explodes on Contact";
             break;
 
         case "Frostbolt":
