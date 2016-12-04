@@ -78,9 +78,9 @@ CombatController.prototype.handleAttack = function (aAttackerClass, aDefenderCla
     window.terminal.log(message + "\n");
 }
 
-CombatController.prototype.handleStatus(aCombatClass){
-    switch(aCombatClass.statusEffect){
-        
+CombatController.prototype.handleStatus = function (aCombatClass) {
+    switch (aCombatClass.statusEffect) {
+
     }
 }
 
