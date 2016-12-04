@@ -35,6 +35,10 @@ CombatController.prototype.handleAttack = function (aAttackerClass, aDefenderCla
     if (lAttackRoll == 1) {
         var lSelfDamage = RNG.rollMultiple(1, 3, aAttackerClass.weapon.level);
         aAttackerClass.health -= lSelfDamage;
+        if (aAttackerClass.health <= 0) { // Crit fail cant kill an entity
+            lSelfDamage - (1 - aAttackerClass.health);
+            aAttackerClass.health = 1;
+        }
         // attacker hit itself, play attacker hit sound
 
         // If attacker is player
@@ -74,7 +78,7 @@ CombatController.prototype.handleAttack = function (aAttackerClass, aDefenderCla
             }
         }
     }
-
+    if (aDefenderClass.health <= 0) message = message.replace(".", ", killing it.");
     window.terminal.log(message + "\n");
 }
 
