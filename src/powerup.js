@@ -23,7 +23,7 @@ function Powerup(position, tilemap) {
   this.animation = true;
   this.currY = 0;
   this.movingUp = true;
-  this.currPower = RNG.rollRandom(1, 5);
+  this.currPower = RNG.rollRandom(1, 4);
   this.used = false;
 }
 
