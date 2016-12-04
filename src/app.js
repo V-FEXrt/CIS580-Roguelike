@@ -34,7 +34,7 @@ window.terminal.log("Good luck!");
 
 var gui = new GUI(screenSize);
 
-var tilemap = new Tilemap(screenSize, 64, 64, tileset, {
+var tilemap = new Tilemap(screenSize, 65, 65, tileset, {
   onload: function () {
     masterLoop(performance.now());
   }
@@ -50,13 +50,27 @@ var input = {
   right: false
 }
 
+var backgroundMusic = new Audio('sounds/tempBGMusic.wav');
+backgroundMusic.volume = 0.3;
+backgroundMusic.addEventListener('ended', function(){
+   setNewMusic();
+}, false);
+backgroundMusic.play();
+
+var setNewMusic = function() {
+  var backgroundMusicOnLoop = new Audio('sounds/tempBGMusicLoop.wav');
+  backgroundMusicOnLoop.volume = 0.3;
+  backgroundMusicOnLoop.loop = true;
+  backgroundMusicOnLoop.play();
+}
+
 var turnTimer = 0;
 var defaultTurnDelay = 400;     //Default turn between turns
 var turnDelay = defaultTurnDelay; //current time between turns
 var autoTurn = false;           //If true, reduces time between turns and turns happen automatically
 var resetTimer = true;          //Take turn immediately on movement key press if true
 
-var player = new Player({ x: 0, y: 0 }, tilemap, "Archer");
+var player = new Player({ x: 0, y: 0 }, tilemap, "Mage");
 
 window.player = player;
 
@@ -68,7 +82,7 @@ window.onmousedown = function(event)
 {
     // Init the level when class is chosen
     if(gui.state == "start" || gui.state == "choose class")
-    { 
+    {
         gui.onmousedown(event);
         if(gui.chosenClass != "")
         {
@@ -76,9 +90,7 @@ window.onmousedown = function(event)
             nextLevel(false);
         }
     }
-	
 }
-
 
 canvas.onclick = function (event) {
   var node = {
@@ -88,33 +100,15 @@ canvas.onclick = function (event) {
 
   var clickedWorldPos = tilemap.toWorldCoords(node);
   window.entityManager.addEntity(new Click(clickedWorldPos, tilemap, player, function(enemy){
-    turnDelay = defaultTurnDelay / 2;
-    autoTurn = true;
-
     var distance = Vector.distance(player.position, enemy.position);
     if (distance.x <= player.combat.weapon.range && distance.y <= player.combat.weapon.range) {
       turnDelay = defaultTurnDelay;
       autoTurn = false;
       combatController.handleAttack(player.combat, enemy.combat);
       processTurn();
-    } else {
-        var path = pathfinder.findPath(player.position, enemy.position);
-        path = path.splice(0, path.length - player.combat.weapon.range);
-        player.walkPath(path, function () {
-          turnDelay = defaultTurnDelay;
-          autoTurn = false;
-          combatController.handleAttack(player.combat, enemy.combat);
-          processTurn();
-        });
     }
   }));
 }
-/* else {
-    player.walkPath(pathfinder.findPath(player.position, clickedWorldPos), function () {
-      turnDelay = defaultTurnDelay;
-      autoTurn = false;
-    });
-*/
 
 /**
  * @function onkeydown
@@ -273,30 +267,46 @@ function nextLevel(fadeOut){
     // reset entities
     window.entityManager.reset();
 
-    //gen new map
-    tilemap.generateMap();
+    var regen = false;
 
-    //place new entities
-    EntitySpawner.spawn(player, tilemap, 30, 25);
+    do{
+      //reset the regen flag
+      regen = false;
 
-    //move player to valid location
-    var pos = tilemap.findOpenSpace();
-    player.position = {x: pos.x, y: pos.y};
-    tilemap.moveTo({ x: pos.x - 5, y: pos.y - 3 });
+      //gen new map
+      tilemap.changeTileset();
+      tilemap.generateMap();
 
-    // allow player to move
-    player.shouldProcessTurn = true;
+      //move player to valid location
+      var pos = tilemap.findOpenSpace();
+      player.position = {x: pos.x, y: pos.y};
+      tilemap.moveTo({ x: pos.x - 5, y: pos.y - 3 });
+
+      // allow player to move
+      player.shouldProcessTurn = true;
+
+      // Find stairs location that is at least 5 away.
+      var pos;
+      var dist;
+      var iterations = 0;
+      do {
+        pos = tilemap.findOpenSpace();
+        dist = pathfinder.findPath(player.position, pos).length
+        iterations++;
+        if(iterations > 20) {
+          regen = true;
+          break;
+        }
+      } while(dist == 0 && dist < 8);
+
+    } while(regen);
 
     // add player
     window.entityManager.addEntity(player);
-
-    // add new Stairs.
-    var pos = tilemap.findOpenSpace();
-    while(pathfinder.findPath(player.position, pos).length == 0){
-      pos = tilemap.findOpenSpace();
-    }
-    console.log(pos);
+    // add stairs
     window.entityManager.addEntity(new Stairs(pos, tilemap, function(){nextLevel(true)}));
+    //place new entities
+    EntitySpawner.spawn(player, tilemap, 30, 25);
 
     unfadeFromBlack();
 
@@ -307,12 +317,12 @@ function nextLevel(fadeOut){
 
 function fadeToBlack(completion){
   isFadeOut = true;
-  fadeAnimationProgress = new ProgressManager(500, completion);
+  fadeAnimationProgress = new ProgressManager(1000, completion);
   fadeAnimationProgress.isActive = true;
 }
 
 function unfadeFromBlack(){
   isFadeOut = false;
-  fadeAnimationProgress = new ProgressManager(500, function(){});
+  fadeAnimationProgress = new ProgressManager(1000, function(){});
   fadeAnimationProgress.isActive = true;
 }

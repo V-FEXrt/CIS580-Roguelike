@@ -2,7 +2,10 @@
 
 const Tilemap = require('./tilemap');
 const Vector = require('./vector');
-const CombatStruct = require("./combat_struct");
+const CombatClass = require("./combat_class");
+const Inventory = require('./inventory.js');
+const Weapon = require('./weapon.js');
+const Armor = require('./armor.js');
 
 /**
  * @module exports the Player class
@@ -23,35 +26,21 @@ function Player(position, tilemap, combatClass) {
     this.spritesheet.src = './spritesheets/sprites.png';
     this.type = "Player";
     this.walk = [];
-    this.class = combatClass;
-    this.combat = new CombatStruct(this.class);
+    this.changeClass(combatClass);
     this.level = 0;
     this.shouldProcessTurn = true;
-
-    if(this.class == "Knight")
-    {
-      this.spritesheetPos = {x: 1, y: 5};
-    }
-    else if(this.class == "Mage")
-    {
-      this.spritesheetPos = {x: 9, y: 5};
-    }
-    else if(this.class == "Archer")
-    {
-      this.spritesheetPos = {x: 7, y: 6};
-    }
 }
 
 /**
  * @function updates the player object
  * {DOMHighResTimeStamp} time the elapsed time since the last frame
  */
-Player.prototype.update = function (time) {
+Player.prototype.update = function(time) {
     // if we're dead, we should probably do something
     if (this.combat.health <= 0) this.state = "dead";
 }
 
-Player.prototype.walkPath = function (path, completion) {
+Player.prototype.walkPath = function(path, completion) {
     if (this.state == "dead") return; // shouldnt be necessary
 
     path.shift();
@@ -64,22 +53,17 @@ Player.prototype.walkPath = function (path, completion) {
 //Changes the player class, used because right now things
 //rely on player being created before class is actually chosen.
 //Potentially change this
-Player.prototype.changeClass = function(chosenClass)
-{
+Player.prototype.changeClass = function(chosenClass) {
     this.class = chosenClass;
-    this.combat = new CombatStruct(chosenClass);
-    
-    if(this.class == "Knight")
-    {
-      this.spritesheetPos = {x: 1, y: 5};
-    }
-    else if(this.class == "Mage")
-    {
-      this.spritesheetPos = {x: 9, y: 5};
-    }
-    else if(this.class == "Archer")
-    {
-      this.spritesheetPos = {x: 7, y: 6};
+    this.combat = new CombatClass(chosenClass);
+    this.inventory = new Inventory(this.combat.weapon, this.combat.armor);
+
+    if (this.class == "Knight") {
+        this.spritesheetPos = { x: 1, y: 5 };
+    } else if (this.class == "Mage") {
+        this.spritesheetPos = { x: 9, y: 5 };
+    } else if (this.class == "Archer") {
+        this.spritesheetPos = { x: 7, y: 6 };
     }
 };
 
@@ -87,13 +71,11 @@ Player.prototype.changeClass = function(chosenClass)
  *@function handles the players turn
  *{input} keyboard input given for this turn
  */
-Player.prototype.processTurn = function (input) {
-
-    if(!this.shouldProcessTurn) return;
-
+Player.prototype.processTurn = function(input) {
+    if (!this.shouldProcessTurn) return;
+    if (this.combat.status.effect != "None") window.combatController.handleStatus(this.combat);
     if (this.combat.health <= 0) this.state = "dead";
-    if (this.state == "dead") return; // shouldnt be necessary
-
+    if (this.state == "dead" || this.combat.status.effect == "Frozen") return;
 
     if (hasUserInput(input)) {
         // Cancel walk
@@ -136,16 +118,18 @@ Player.prototype.processTurn = function (input) {
     if (screenCoor.x + 5 >= this.tilemap.draw.size.width) {
         this.tilemap.moveBy({ x: 1, y: 0 });
     }
-
 }
 
-Player.prototype.collided = function (entity) {
-  if(entity.type == "Stairs"){
-    this.shouldProcessTurn = false;
-  }
+Player.prototype.collided = function(entity) {
+    if (typeof entity == Weapon) { this.inventory.addWeapon(weapon); }
+    if (typeof entity == Armor) { this.inventory.addArmor(armor); }
+
+    if (entity.type == "Stairs") {
+        this.shouldProcessTurn = false;
+    }
 }
 
-Player.prototype.retain = function () {
+Player.prototype.retain = function() {
     return this.combat.health > 0;
 }
 
@@ -153,7 +137,7 @@ Player.prototype.retain = function () {
  * @function renders the player into the provided context
  * {CanvasRenderingContext2D} ctx the context to render into
  */
-Player.prototype.render = function (elapsedTime, ctx) {
+Player.prototype.render = function(elapsedTime, ctx) {
     if (this.state == "dead") return; // shouldnt be necessary
 
     var position = this.tilemap.toScreenCoords(this.position);
@@ -161,13 +145,13 @@ Player.prototype.render = function (elapsedTime, ctx) {
     ctx.drawImage(
         this.spritesheet,
         96 * this.spritesheetPos.x, 96 * this.spritesheetPos.y,
-        96 , 96,
+        96, 96,
         position.x * this.size.width, position.y * this.size.height,
         96, 96
     );
-
 }
 
 function hasUserInput(input) {
     return input.up || input.down || input.right || input.left;
 }
+

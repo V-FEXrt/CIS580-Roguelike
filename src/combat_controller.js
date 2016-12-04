@@ -2,63 +2,139 @@
 
 module.exports = exports = CombatController;
 
-const CombatStruct = require("./combat_struct");
+const CombatClass = require("./combat_class");
 const Weapon = require("./weapon");
 const Armor = require("./armor");
+const RNG = require("./rng");
 
 function CombatController() {
 
 }
 
-CombatController.prototype.handleAttack = function(aAttackerStruct, aDefenderStruct) {
-    // console.log("attacker health: " + aAttackerStruct.health);
-    // console.log("defender health: " + aDefenderStruct.health);
-
-    var lAttackBase = 0;
-    var lAttackBonus = aAttackerStruct.weapon.hitBonus;
-    var lAttackRoll = rollRandom(1, 21);
+CombatController.prototype.handleAttack = function (aAttackerClass, aDefenderClass) {
+    var lAttackBase = Math.floor(aAttackerClass.attackBonus);
+    var lAttackBonus = aAttackerClass.weapon.hitBonus;
+    var lAttackRoll = RNG.rollRandom(1, 20);
     var lAttackTotal = lAttackBase + lAttackBonus + lAttackRoll;
+    var lAttackEffect = aAttackerClass.weapon.attackEffect;
 
-    var lDefenseBase = aDefenderStruct.armor.defense;
-    var lDefenseBonus = 0;
+    var lDefenseBase = aDefenderClass.armor.defense;
+    var lDefenseBonus = Math.floor(aDefenderClass.defenseBonus);
     var lDefenseTotal = lDefenseBase + lDefenseBonus;
 
-    var lDamageBase = aAttackerStruct.weapon.level - 1;
-    var lDamageMax = aAttackerStruct.weapon.damageMax;
-    var lDamageMin = aAttackerStruct.weapon.damageMin;
-    var lDamageRoll = rollRandom(lDamageMin, 1 + lDamageMax);
-    var lDamageBonus = 0;
+    var lDamageBase = aAttackerClass.weapon.level - 1;
+    var lDamageMax = aAttackerClass.weapon.damageMax;
+    var lDamageMin = aAttackerClass.weapon.damageMin;
+    var lDamageRoll = RNG.rollRandom(lDamageMin, lDamageMax);
+    var lDamageBonus = Math.floor(aAttackerClass.damageBonus);
     var lDamageTotal = lDamageBase + lDamageBonus + lDamageRoll;
 
+    var lApplyEffect = false;
+
+    var message;
+    var attacker = aAttackerClass.type;
+    var defender = aDefenderClass.type;
+    var playerAttacker = (attacker == "Knight" || attacker == "Archer" || attacker == "Mage");
+
     if (lAttackRoll == 1) {
-        var lSelfDamage = rollRandom(1, lDamageMax + 1);
-        aAttackerStruct.health -= lSelfDamage;
-        window.terminal.log("Crit Fail, take " + lSelfDamage + " damage.");
-    } else if (lAttackRoll == 20 || (lAttackRoll == 19 && (aAttackerStruct.attackType == "Ranged" || aAttackerStruct.weapon.type == "Battleaxe"))) {
+        var lSelfDamage = RNG.rollMultiple(1, 3, aAttackerClass.weapon.level);
+        aAttackerClass.health -= lSelfDamage;
+        if (aAttackerClass.health <= 0) { // Crit fail cant kill an entity
+            lSelfDamage - (1 - aAttackerClass.health);
+            aAttackerClass.health = 1;
+        }
+        // attacker hit itself, play attacker hit sound
+
+        // If attacker is player
+        if (playerAttacker) {
+            message = `You critically fail your attack and hurt yourself for ${lSelfDamage} damage.`;
+        } else { // attacker is enemy
+            message = `The ${attacker} critically fails its attack and takes ${lSelfDamage} damage.`;
+        }
+    } else if (lAttackRoll == 20 || (lAttackRoll == 19 && (aAttackerClass.attackType == "Ranged" || aAttackerClass.weapon.name == "Battleaxe"))) {
         lDamageTotal += lDamageMax;
-        aDefenderStruct.health -= lDamageTotal;
+        aDefenderClass.health -= lDamageTotal;
+        // defender hit, play defender hit sound
+
+        if (lAttackEffect != "") lApplyEffect = RNG.rollWeighted(25, 75);
+
+        // If attacker is player
+        if (playerAttacker) {
+            message = `Your attack is perfect, striking the ${defender} for ${lDamageTotal} damage.`;
+        } else { // attacker is enemy
+            message = `The ${attacker}'s attack is perfect, striking you for ${lDamageTotal} damage.`;
+        }
     } else {
-        if (lAttackTotal > lDefenseTotal) {
-            aDefenderStruct.health -= lDamageTotal;
-            window.terminal.log("Hit, deal " + lDamageTotal + " damage");
+        if (lAttackTotal > lDefenseTotal || aAttackerClass.weapon.name == "Magic Missile") {
+            aDefenderClass.health -= lDamageTotal;
+            // defender hit, play defender hit sound
+
+            if (lAttackEffect != "") lApplyEffect = RNG.rollWeighted(50, 50);
+
+            // If attacker is player
+            if (playerAttacker) {
+                message = `Your attack strikes the ${defender} for ${lDamageTotal} damage.`;
+            } else { // attacker is enemy
+                message = `The ${attacker}'s attack strikes you for ${lDamageTotal} damage.`;
+            }
         } else {
-            window.terminal.log("Miss, " + lAttackTotal + " against " + lDefenseTotal);
+            // If attacker is player
+            if (playerAttacker) {
+                message = `Your attack misses the ${defender}.`;
+            } else { // attacker is enemy
+                message = `The ${attacker}'s attack misses you.`;
+            }
         }
     }
 
-
-    // console.log("attacker health: " + aAttackerStruct.health);
-    // console.log("defender health: " + aDefenderStruct.health);
-    window.terminal.log("\n\n");
+    if (aDefenderClass.health <= 0) message = message.replace(".", ", killing it.");
+    window.terminal.log(message);
+    if (lApplyEffect) {
+        aDefenderClass.status.effect = lAttackEffect;
+        aDefenderClass.status.timer = 2;
+        window.terminal.log(`The ${defender} is now ${lAttackEffect}.`);
+    }
 }
 
-function rollRandom(aMinimum, aMaximum) {
-    return Math.floor(Math.random() * (aMaximum - aMinimum) + aMinimum);
+CombatController.prototype.handleStatus = function (aCombatClass) {
+    switch (aCombatClass.status.effect) {
+        case "Burned":
+        case "Poisoned":
+            if (aCombatClass.status.timer > 0) {
+                aCombatClass.status.timer--;
+                var damage = RNG.rollMultiple(1, 5, window.player.level);
+                aCombatClass.health -= damage;
+                window.terminal.log(`${damage} Poison damage.`);
+            } else {
+                aCombatClass.status.effect == "None";
+            }
+            break;
+
+        case "Frozen":
+            switch (aCombatClass.status.timer) {
+                case 2:
+                    aCombatClass.status.timer--;
+                    window.terminal.log("Frozen");
+                    return;
+
+                case 1:
+                    if (RNG.rollWeighted(50, 50)) aCombatClass.status.timer--;
+                    else window.terminal.log("Frozen");
+
+                case 0:
+                    aCombatClass.status.effect = "None";
+                    break;
+            }
+            break;
+
+        default:
+            return;
+    }
 }
 
-CombatController.prototype.randomDrop = function(aPosition) {
+CombatController.prototype.randomDrop = function (aPosition) {
     var lDrop = new Object();
-    var lRand = rollRandom(1, 21); // need to set up weighted rands
+    var lRand = RNG.rollRandom(1, 20); // need to set up weighted rands
     if (lRand > 17) {                           // spawn armor
         lDrop.type = "Armor";
         // TODO > properly implement...
@@ -66,7 +142,7 @@ CombatController.prototype.randomDrop = function(aPosition) {
     } else if (lRand >= 1 && lRand < 17) {      // spawn weapon
         lDrop.type = "Weapon";
         var playerClass = window.player.class;
-        var level = rollRandom(window.player.level, window.player.level + 3); // need to set up weighted rands
+        var level = RNG.rollRandom(window.player.level, window.player.level + 2); // need to set up weighted rands
         switch (lRand % 4) {
             // this is awful, why is this still here?
             case 0:

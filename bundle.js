@@ -1,6 +1,454 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 "use strict";
 
+module.exports = exports = CellularAutomata;
+
+
+function CellularAutomata(width, height, percent, open, filled){
+  this.map = [];
+  this.width = width;
+  this.height = height;
+  this.percent = percent;
+
+  this.open = 0;
+  this.filled = 1;
+}
+
+CellularAutomata.prototype.generate = function(){
+  this.randomFillMap();
+  this.makeCaverns();
+  return this.map
+}
+
+CellularAutomata.prototype.randomFillMap = function(){
+  var mapMiddleX = Math.floor(this.height / 2);
+  var mapMiddleY = Math.floor(this.width / 2);
+
+  this.map = [];
+  for(var i = 0; i < this.width * this.height; i++){
+    this.map.push(this.open);
+  }
+
+  for(var row = 0; row < this.height; row++){
+    for(var column = 0; column < this.width; column++){
+      //column is x, row is y
+
+      // If coordinants lie on the the edge of the map (creates a border)
+      if (column == 0 || row == 0 || column == this.width - 1 || row == this.height - 1){
+        // y * width + x
+        this.map[row * this.width + column] = this.filled;
+      }else if(row == mapMiddleX || column == mapMiddleY){
+        this.map[row * this.width + column] = this.open;
+      }
+      else{
+        this.map[row * this.width + column] = this.pickTile();
+      }
+    }
+  }
+}
+
+CellularAutomata.prototype.pickTile = function() {
+  if(this.percent >= rand(100) + 1) return this.filled;
+  return this.open;
+}
+
+CellularAutomata.prototype.makeCaverns = function(){
+  for(var row = 0; row < this.height; row++){
+    for(var column = 0; column < this.width; column++){
+      this.map[row * this.width + column] = this.pickCavernTile(column, row);
+    }
+  }
+}
+
+CellularAutomata.prototype.pickCavernTile = function(x, y){
+  var wallCount = this.countAdjacentWalls(x, y, 1, 1);
+
+  if(this.map[y * this.width + x] == this.filled){
+    if(wallCount >= 4) return this.filled;
+    if(wallCount < 2) return this.open;
+  }
+  else{
+    if(wallCount >= 5) return this.filled;
+  }
+  return this.open;
+}
+
+CellularAutomata.prototype.countAdjacentWalls = function(x, y, scopeX, scopeY){
+  var startX = x - scopeX;
+  var startY = y - scopeY;
+  var endX = x + scopeX;
+  var endY = y + scopeY;
+
+  var count = 0;
+
+  for(var iY = startY; iY <= endY; iY++){
+    for(var iX = startX; iX <= endX; iX++){
+      if(iX == x && iY == y) continue;
+      if(this.isWallOrOutOfBounds(iX, iY)) count++;
+    }
+  }
+
+  return count;
+}
+
+CellularAutomata.prototype.isWallOrOutOfBounds = function(x, y){
+  return (this.isOutOfBounds(x, y) || this.isWall(x, y));
+}
+
+CellularAutomata.prototype.isWall = function(x, y){
+  return (this.map[y * this.width + x] != this.open);
+}
+
+CellularAutomata.prototype.isOutOfBounds = function(x, y){
+  return (x < 0 || y < 0 || x > this.width - 1 || y > this.height - 1);
+}
+
+function rand(upper){
+  return Math.floor(Math.random() * upper);
+}
+
+},{}],2:[function(require,module,exports){
+"use strict";
+
+module.exports = exports = DebugMap;
+
+
+function DebugMap(width, height, percent, open, filled){
+  this.map = [];
+  this.width = width;
+  this.height = height;
+  this.percent = percent;
+
+  this.open = 0;
+  this.filled = 1;
+}
+
+DebugMap.prototype.generate = function(){
+  this.fillMap()
+  return this.map
+}
+
+DebugMap.prototype.fillMap = function(){
+  this.map = [];
+  for(var i = 0; i < this.width * this.height; i++){
+    this.map.push(this.open);
+  }
+
+  for(var row = 0; row < this.height; row++){
+    for(var column = 0; column < this.width; column++){
+      //column is x, row is y
+
+      // If coordinants lie on the the edge of the map (creates a border)
+      if (column == 0 || row == 0 || column == this.width - 1 || row == this.height - 1){
+        // y * width + x
+        this.map[row * this.width + column] = this.filled;
+      }else{
+        this.map[row * this.width + column] = this.open;
+      }
+    }
+  }
+}
+
+},{}],3:[function(require,module,exports){
+"use strict";
+
+const Vector = require('./../vector');
+
+module.exports = exports = RoomsHallways;
+
+function RoomsHallways(width, height, percent, open, filled){
+  this.map = [];
+  this.width = width;
+  this.height = height;
+
+  this.numRoomTries = 50;
+  this.increaseRoomSize = 0;
+  this.windingPercent = 15;
+  this.extraConnectorsPercent = 30;
+
+  if(width % 2 == 0 || height % 2 == 0){
+    throw new Error("Map must have odd demensions");
+  }
+
+  this.open = 0;
+  this.filled = 1;
+
+  this.rooms = [];
+  this.regions = [];
+  this.currentRegion = -1;
+
+  this.cardinal = [
+    {x: 0, y: -1},
+    {x: 0, y: 1},
+    {x: -1, y: 0},
+    {x: 1, y: 0}
+  ];
+}
+
+RoomsHallways.prototype.generate = function(){
+  this.fillMap();
+  this.placeRooms();
+  this.carveHallways();
+  this.connectRoomsAndHalls();
+  this.removeDeadEnds();
+  return this.map;
+}
+
+RoomsHallways.prototype.removeDeadEnds = function(){
+  var done = false;
+  while (done == false) {
+    done = true;
+    for(var y = 0; y < this.height; y++){
+      for(var x = 0; x < this.width; x++){
+        var point = {x: x, y: y};
+        if(this.getTile(point) == this.filled) continue;
+        var exits = 0;
+        for(var i = 0; i < this.cardinal.length; i++){
+          var pos = Vector.add(point, this.cardinal[i])
+          if (this.getTile(pos) == this.open) exits++;
+        }
+        if (exits != 1) continue;
+
+        done = false;
+        this.fill(point);
+      }
+    }
+  }
+}
+
+RoomsHallways.prototype.fillMap = function(){
+  this.map = [];
+  for(var i = 0; i < this.width * this.height; i++){
+    this.map.push(this.filled);
+    this.regions.push(-1);
+  }
+}
+
+RoomsHallways.prototype.placeRooms = function(){
+  for (var i = 0; i < this.numRoomTries; i++) {
+      var size = rand(3 + this.increaseRoomSize) * 2 + 1;
+      var rectangularity = rand(1 + Math.floor(size / 2)) * 2;
+      var width = size;
+      var height = size;
+
+      if (Math.random() > 0.5) {
+        width += rectangularity;
+      } else {
+        height += rectangularity;
+      }
+
+      var x = rand(Math.floor((this.width - width) / 2)) * 2 + 1;
+      var y = rand(Math.floor((this.height - height) / 2)) * 2 + 1;
+
+      var room = Rect(x, y, width, height);
+
+      var overlaps = false;
+      for(var i = 0; i < this.rooms.length; i++){
+          if(collision(room, this.rooms[i])){
+            overlaps = true;
+            break;
+          }
+      }
+
+      if (overlaps) continue;
+      this.currentRegion++;
+      this.rooms.push(room);
+
+      var self = this;
+      RectPoints(room).forEach(function(point){
+        self.carve(point);
+      });
+    }
+}
+
+RoomsHallways.prototype.carveHallways = function(){
+  for (var y = 1; y < this.height; y += 2) {
+    for (var x = 1; x < this.width; x += 2) {
+      var pos = {x: x, y: y};
+      if (this.getTile(pos) != this.filled) continue;
+      this.growMaze(pos);
+    }
+  }
+}
+
+RoomsHallways.prototype.connectRoomsAndHalls = function(){
+  while(this.countRegions() > 1){
+    var point;
+    do{
+      var x = rand(this.width);
+      var y = rand(this.height);
+       point = {x: x, y: y};
+    }while(this.getTile(point) != this.filled);
+
+    var surrRegions = new Set();
+    for(var i = 0; i < this.cardinal.length; i++){
+      var r = this.getRegion(Vector.add(point, this.cardinal[i]))
+      if(r != -1) surrRegions.add(r);
+    }
+
+    if(surrRegions.size > 1){
+      this.carve(point);
+      var first = -1
+      var rest = []
+      surrRegions.forEach(function(value) {
+        if(first == -1){
+          first = value;
+        }else{
+          rest.push(value);
+        }
+      });
+      var self = this;
+      rest.forEach(function(region) {
+        self.replaceRegion(region, first);
+      })
+      //console.log(first);
+      this.regions[point.y * this.width + point.x] = first;
+    }
+  }
+
+  // Add extra doors to 1/2 of the rooms
+  var self = this;
+  this.rooms.forEach(function(room){
+    if(Math.random() > 1 - (self.extraConnectorsPercent / 100)) return;
+    var point;
+    do{
+      point = pickAdjacent(room);
+    } while (point.x == 0 || point.y == 0 || point.x >= self.width || point.y >= self.height);
+
+    self.carve(point);
+  });
+}
+
+RoomsHallways.prototype.growMaze = function(start){
+  var cells = [];
+  var lastDir = {x: 0, y: 0};
+
+  this.currentRegion++;
+  this.carve(start);
+
+  cells.push(start);
+  while (cells.length != 0) {
+    var cell = cells[cells.length -  1];
+
+    var openAdjacent = [];
+
+    for(var i = 0; i < this.cardinal.length; i++){
+      if (this.canCarve(cell, this.cardinal[i])) openAdjacent.push(this.cardinal[i]);
+    }
+
+    if (openAdjacent.length != 0) {
+      var dir;
+      if (openAdjacent.indexOf(lastDir) != -1 && (rand(100) + 1) > this.windingPercent) {
+        dir = lastDir;
+      } else {
+        dir = openAdjacent[rand(openAdjacent.length)];
+      }
+
+      var pos = Vector.add(cell, dir);
+      this.carve(pos);
+      pos = Vector.add(pos, dir);
+      this.carve(pos);
+
+      cells.push(pos);
+      lastDir = dir;
+    } else {
+      // No adjacent uncarved cells.
+      cells.pop();
+
+      // This path has ended.
+      lastDir = {x: 0, y: 0};
+    }
+  }
+}
+
+RoomsHallways.prototype.canCarve = function(pos, direction) {
+    var point = Vector.add(pos, Vector.scale(direction, 3));
+    if(point.x >= this.width || point.y >= this.height) return false;
+
+    point = Vector.add(pos, Vector.scale(direction, 2));
+    // Destination must not be open.
+    return this.getTile(point) == this.filled;
+}
+RoomsHallways.prototype.carve = function(pos){
+  this.regions[pos.y * this.width + pos.x] = this.currentRegion;
+  this.map[pos.y * this.width + pos.x] = this.open;
+}
+RoomsHallways.prototype.fill = function(pos){
+  this.regions[pos.y * this.width + pos.x] = -1;
+  this.map[pos.y * this.width + pos.x] = this.filled;
+}
+RoomsHallways.prototype.getTile = function(pos){
+  if(pos.x < 0 || pos.y < 0 || pos.x >= this.width || pos.y >= this.height) return -1;
+  return this.map[pos.y * this.width + pos.x];
+}
+RoomsHallways.prototype.getRegion = function(pos){
+  if(pos.x < 0 || pos.y < 0 || pos.x >= this.width || pos.y >= this.height) return -1;
+  return this.regions[pos.y * this.width + pos.x];
+}
+RoomsHallways.prototype.replaceRegion = function(region, replacement){
+  for(var i = 0; i < this.width * this.height; i++){
+    if(this.regions[i] == region) this.regions[i] = replacement;
+  }
+}
+
+RoomsHallways.prototype.countRegions = function(){
+  var x = new Set(this.regions);
+  return x.size - 1;
+}
+
+
+function RectPoints(rect){
+  var points = [];
+  for(var i = rect.position.x; i < rect.position.x + rect.size.width; i++){
+    for(var j = rect.position.y; j < rect.position.y + rect.size.height; j++){
+      points.push({x: i, y: j});
+    }
+  }
+  return points;
+}
+
+function Rect(x, y, width, height){
+  return {
+    position: {
+      x: x,
+      y: y
+    },
+    size: {
+      width: width,
+      height: height
+    }
+  }
+}
+
+function rand(upper){
+  return Math.floor(Math.random() * upper);
+}
+
+function collision(rect1, rect2){
+  return !(
+    (rect1.position.y + rect1.size.height < rect2.position.y) ||
+    (rect1.position.y > rect2.position.y + rect2.size.height) ||
+    (rect1.position.x > rect2.position.x + rect2.size.width) ||
+    (rect1.position.x + rect1.size.width < rect2.position.x))
+}
+
+function pickAdjacent(room) {
+  var side = rand(4);
+  var y;
+  var x;
+  if(side % 2 == 0){
+    y = (side == 0) ? room.position.y - 1 : room.position.y + room.size.height;
+    x = rand(room.size.width) + room.position.x;
+  }else{
+    x = (side == 1) ? room.position.x - 1 : room.position.x + room.size.width;
+    y = rand(room.size.height) + room.position.y;
+  }
+  return {x: x, y: y};
+}
+
+},{"./../vector":24}],4:[function(require,module,exports){
+"use strict";
+
 window.debug = false;
 
 /* Classes and Libraries */
@@ -35,7 +483,7 @@ window.terminal.log("Good luck!");
 
 var gui = new GUI(screenSize);
 
-var tilemap = new Tilemap(screenSize, 64, 64, tileset, {
+var tilemap = new Tilemap(screenSize, 65, 65, tileset, {
   onload: function () {
     masterLoop(performance.now());
   }
@@ -51,13 +499,27 @@ var input = {
   right: false
 }
 
+var backgroundMusic = new Audio('sounds/tempBGMusic.wav');
+backgroundMusic.volume = 0.3;
+backgroundMusic.addEventListener('ended', function(){
+   setNewMusic();
+}, false);
+backgroundMusic.play();
+
+var setNewMusic = function() {
+  var backgroundMusicOnLoop = new Audio('sounds/tempBGMusicLoop.wav');
+  backgroundMusicOnLoop.volume = 0.3;
+  backgroundMusicOnLoop.loop = true;
+  backgroundMusicOnLoop.play();
+}
+
 var turnTimer = 0;
 var defaultTurnDelay = 400;     //Default turn between turns
 var turnDelay = defaultTurnDelay; //current time between turns
 var autoTurn = false;           //If true, reduces time between turns and turns happen automatically
 var resetTimer = true;          //Take turn immediately on movement key press if true
 
-var player = new Player({ x: 0, y: 0 }, tilemap, "Archer");
+var player = new Player({ x: 0, y: 0 }, tilemap, "Mage");
 
 window.player = player;
 
@@ -69,7 +531,7 @@ window.onmousedown = function(event)
 {
     // Init the level when class is chosen
     if(gui.state == "start" || gui.state == "choose class")
-    { 
+    {
         gui.onmousedown(event);
         if(gui.chosenClass != "")
         {
@@ -77,9 +539,7 @@ window.onmousedown = function(event)
             nextLevel(false);
         }
     }
-	
 }
-
 
 canvas.onclick = function (event) {
   var node = {
@@ -89,33 +549,15 @@ canvas.onclick = function (event) {
 
   var clickedWorldPos = tilemap.toWorldCoords(node);
   window.entityManager.addEntity(new Click(clickedWorldPos, tilemap, player, function(enemy){
-    turnDelay = defaultTurnDelay / 2;
-    autoTurn = true;
-
     var distance = Vector.distance(player.position, enemy.position);
     if (distance.x <= player.combat.weapon.range && distance.y <= player.combat.weapon.range) {
       turnDelay = defaultTurnDelay;
       autoTurn = false;
       combatController.handleAttack(player.combat, enemy.combat);
       processTurn();
-    } else {
-        var path = pathfinder.findPath(player.position, enemy.position);
-        path = path.splice(0, path.length - player.combat.weapon.range);
-        player.walkPath(path, function () {
-          turnDelay = defaultTurnDelay;
-          autoTurn = false;
-          combatController.handleAttack(player.combat, enemy.combat);
-          processTurn();
-        });
     }
   }));
 }
-/* else {
-    player.walkPath(pathfinder.findPath(player.position, clickedWorldPos), function () {
-      turnDelay = defaultTurnDelay;
-      autoTurn = false;
-    });
-*/
 
 /**
  * @function onkeydown
@@ -274,30 +716,46 @@ function nextLevel(fadeOut){
     // reset entities
     window.entityManager.reset();
 
-    //gen new map
-    tilemap.generateMap();
+    var regen = false;
 
-    //place new entities
-    EntitySpawner.spawn(player, tilemap, 30, 25);
+    do{
+      //reset the regen flag
+      regen = false;
 
-    //move player to valid location
-    var pos = tilemap.findOpenSpace();
-    player.position = {x: pos.x, y: pos.y};
-    tilemap.moveTo({ x: pos.x - 5, y: pos.y - 3 });
+      //gen new map
+      tilemap.changeTileset();
+      tilemap.generateMap();
 
-    // allow player to move
-    player.shouldProcessTurn = true;
+      //move player to valid location
+      var pos = tilemap.findOpenSpace();
+      player.position = {x: pos.x, y: pos.y};
+      tilemap.moveTo({ x: pos.x - 5, y: pos.y - 3 });
+
+      // allow player to move
+      player.shouldProcessTurn = true;
+
+      // Find stairs location that is at least 5 away.
+      var pos;
+      var dist;
+      var iterations = 0;
+      do {
+        pos = tilemap.findOpenSpace();
+        dist = pathfinder.findPath(player.position, pos).length
+        iterations++;
+        if(iterations > 20) {
+          regen = true;
+          break;
+        }
+      } while(dist == 0 && dist < 8);
+
+    } while(regen);
 
     // add player
     window.entityManager.addEntity(player);
-
-    // add new Stairs.
-    var pos = tilemap.findOpenSpace();
-    while(pathfinder.findPath(player.position, pos).length == 0){
-      pos = tilemap.findOpenSpace();
-    }
-    console.log(pos);
+    // add stairs
     window.entityManager.addEntity(new Stairs(pos, tilemap, function(){nextLevel(true)}));
+    //place new entities
+    EntitySpawner.spawn(player, tilemap, 30, 25);
 
     unfadeFromBlack();
 
@@ -308,17 +766,17 @@ function nextLevel(fadeOut){
 
 function fadeToBlack(completion){
   isFadeOut = true;
-  fadeAnimationProgress = new ProgressManager(500, completion);
+  fadeAnimationProgress = new ProgressManager(1000, completion);
   fadeAnimationProgress.isActive = true;
 }
 
 function unfadeFromBlack(){
   isFadeOut = false;
-  fadeAnimationProgress = new ProgressManager(500, function(){});
+  fadeAnimationProgress = new ProgressManager(1000, function(){});
   fadeAnimationProgress.isActive = true;
 }
 
-},{"../tilemaps/tiledef.json":21,"./click":3,"./combat_controller":4,"./entity_manager":7,"./entity_spawner":8,"./game":9,"./gui":10,"./pathfinder.js":12,"./player":13,"./progress_manager":15,"./stairs":16,"./terminal.js":17,"./tilemap":18,"./vector":19}],2:[function(require,module,exports){
+},{"../tilemaps/tiledef.json":26,"./click":6,"./combat_controller":8,"./entity_manager":10,"./entity_spawner":11,"./game":12,"./gui":13,"./pathfinder.js":16,"./player":17,"./progress_manager":19,"./stairs":21,"./terminal.js":22,"./tilemap":23,"./vector":24}],5:[function(require,module,exports){
 "use strict";
 
 module.exports = exports = Armor;
@@ -390,7 +848,7 @@ Armor.prototype.render = function () {
 }
 
 
-},{}],3:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 "use strict";
 
 module.exports = exports = Click;
@@ -439,68 +897,238 @@ Click.prototype.render = function (elapsedTime, ctx) {
   }
 }
 
-},{}],4:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
+"use strict";
+
+const Tilemap = require('./tilemap');
+const Vector = require('./vector');
+
+// weapon/armor shouldnt be done here...
+// they can still be stored here if necessary, but 
+// I think it might make more sense to have them 
+// directly on the player/enemy?
+const Weapon = require("./weapon");
+const Armor = require("./armor");
+
+module.exports = exports = CombatClass;
+
+function CombatClass(aType) {
+    this.type = aType;
+    switch (aType) {
+        case "Knight":
+            this.health = 20;
+            this.attackBonus = 0;
+            this.damageBonus = 0;
+            this.defenseBonus = 0;
+            this.weapon = new Weapon("Longsword", 1);
+            this.armor = new Armor("Hide"); // No restrictions on Armor types
+            this.attackType = "Melee";
+            break;
+
+        case "Archer":
+            this.health = 10;
+            this.attackBonus = 0;
+            this.damageBonus = 0;
+            this.defenseBonus = 0;
+            this.weapon = new Weapon("Broadhead", 1);
+            this.armor = new Armor("Hide"); // Can't wear Chain or Plate
+            this.attackType = "Ranged";
+            break;
+
+        case "Mage":
+            this.health = 10;
+            this.attackBonus = 0;
+            this.damageBonus = 0;
+            this.defenseBonus = 0;
+            this.weapon = new Weapon("Eldritch Blast", 1);
+            this.armor = new Armor("Robes"); // Can only wear Robes, nothing else
+            this.attackType = "Magic";
+            break;
+
+
+        case "Zombie":
+            this.health = 10;
+            this.attackBonus = 0;
+            this.damageBonus = 0;
+            this.defenseBonus = 0;
+            this.weapon = new Weapon("Claw", 1);
+            this.armor = new Armor("Flesh");
+            this.attackType = "Melee";
+            this.senseRange = 5;
+
+            this.turnAI = function(aEnemy) {
+                var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
+                if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
+                    combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
+                } else if (distance.x <= aEnemy.combat.senseRange && distance.y <= aEnemy.combat.senseRange) {
+                    var path = pathfinder.findPath(aEnemy.position, aEnemy.target.position);
+                    if (path.length > 1) aEnemy.position = { x: path[1].x, y: path[1].y };
+                } else {
+                    var nextTile = aEnemy.tilemap.getRandomAdjacent(aEnemy.position);
+                    aEnemy.position = { x: nextTile.x, y: nextTile.y };
+                }
+            }
+            break;
+
+        case "EnemyRanged":
+            this.health = 10;
+            this.attackBonus = 0;
+            this.damageBonus = 0;
+            this.defenseBonus = 0;
+            this.weapon = new Weapon("Broadhead", 1);
+            this.armor = new Armor("Hide");
+            this.attackType = "Ranged";
+            this.senseRange = 10;
+
+            this.turnAI = function(aEnemy) {
+                var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
+                if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
+                    combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
+                } else if (distance.x <= aEnemy.combat.senseRange && distance.y <= aEnemy.combat.senseRange) {
+                    var path = pathfinder.findPath(aEnemy.position, aEnemy.target.position);
+                    if (path.length > 1) aEnemy.position = { x: path[1].x, y: path[1].y };
+                } else {
+                    var nextTile = aEnemy.tilemap.getRandomAdjacent(aEnemy.position);
+                    aEnemy.position = { x: nextTile.x, y: nextTile.y };
+                }
+            }
+            break;
+
+        case "Captain":
+            this.health = 25;
+            this.attackBonus = 0;
+            this.damageBonus = 0;
+            this.defenseBonus = 0;
+            this.weapon = new Weapon("Battleaxe", 1);
+            this.armor = new Armor("Chain");
+            this.attackType = "Melee";
+            this.senseRange = 15;
+
+            this.turnAI = function(aEnemy) {
+                var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
+                if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
+                    combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
+                } else if (distance.x <= aEnemy.combat.senseRange && distance.y <= aEnemy.combat.senseRange) {
+                    var path = pathfinder.findPath(aEnemy.position, aEnemy.target.position);
+                    if (path.length > 1) aEnemy.position = { x: path[1].x, y: path[1].y };
+                } else {
+                    var nextTile = aEnemy.tilemap.getRandomAdjacent(aEnemy.position);
+                    aEnemy.position = { x: nextTile.x, y: nextTile.y };
+                }
+            }
+            break;
+
+        case "Shaman":
+            this.health = 10;
+            this.attackBonus = 0;
+            this.damageBonus = 0;
+            this.defenseBonus = 0;
+            this.weapon = new Weapon("Eldritch Blast", 1);
+            this.armor = new Armor("Robes");
+            this.attackType = "Magic";
+            this.senseRange = 10;
+
+            this.turnAI = function(aEnemy) {
+                var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
+                if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
+                    combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
+                } else if (distance.x <= aEnemy.combat.senseRange && distance.y <= aEnemy.combat.senseRange) {
+                    var path = pathfinder.findPath(aEnemy.position, aEnemy.target.position);
+                    if (path.length > 1) aEnemy.position = { x: path[1].x, y: path[1].y };
+                } else {
+                    var nextTile = aEnemy.tilemap.getRandomAdjacent(aEnemy.position);
+                    aEnemy.position = { x: nextTile.x, y: nextTile.y };
+                }
+            }
+            break;
+    }
+}
+
+
+},{"./armor":5,"./tilemap":23,"./vector":24,"./weapon":25}],8:[function(require,module,exports){
 "use strict";
 
 module.exports = exports = CombatController;
 
-const CombatStruct = require("./combat_struct");
+const CombatClass = require("./combat_class");
 const Weapon = require("./weapon");
 const Armor = require("./armor");
+const RNG = require("./rng");
 
 function CombatController() {
 
 }
 
-CombatController.prototype.handleAttack = function(aAttackerStruct, aDefenderStruct) {
-    // console.log("attacker health: " + aAttackerStruct.health);
-    // console.log("defender health: " + aDefenderStruct.health);
-
-    var lAttackBase = 0;
-    var lAttackBonus = aAttackerStruct.weapon.hitBonus;
-    var lAttackRoll = rollRandom(1, 21);
+CombatController.prototype.handleAttack = function (aAttackerClass, aDefenderClass) {
+    var lAttackBase = Math.floor(aAttackerClass.attackBonus);
+    var lAttackBonus = aAttackerClass.weapon.hitBonus;
+    var lAttackRoll = RNG.rollRandom(1, 20);
     var lAttackTotal = lAttackBase + lAttackBonus + lAttackRoll;
 
-    var lDefenseBase = aDefenderStruct.armor.defense;
-    var lDefenseBonus = 0;
+    var lDefenseBase = aDefenderClass.armor.defense;
+    var lDefenseBonus = Math.floor(aDefenderClass.defenseBonus);
     var lDefenseTotal = lDefenseBase + lDefenseBonus;
 
-    var lDamageBase = aAttackerStruct.weapon.level - 1;
-    var lDamageMax = aAttackerStruct.weapon.damageMax;
-    var lDamageMin = aAttackerStruct.weapon.damageMin;
-    var lDamageRoll = rollRandom(lDamageMin, 1 + lDamageMax);
-    var lDamageBonus = 0;
+    var lDamageBase = aAttackerClass.weapon.level - 1;
+    var lDamageMax = aAttackerClass.weapon.damageMax;
+    var lDamageMin = aAttackerClass.weapon.damageMin;
+    var lDamageRoll = RNG.rollRandom(lDamageMin, lDamageMax);
+    var lDamageBonus = Math.floor(aAttackerClass.damageBonus);
     var lDamageTotal = lDamageBase + lDamageBonus + lDamageRoll;
 
+    var message;
+    var attacker = aAttackerClass.type;
+    var defender = aDefenderClass.type;
+    var playerAttacker = (attacker == "Knight" || attacker == "Archer" || attacker == "Mage");
     if (lAttackRoll == 1) {
-        var lSelfDamage = rollRandom(1, lDamageMax + 1);
-        aAttackerStruct.health -= lSelfDamage;
-        window.terminal.log("Crit Fail, take " + lSelfDamage + " damage.");
-    } else if (lAttackRoll == 20 || (lAttackRoll == 19 && (aAttackerStruct.attackType == "Ranged" || aAttackerStruct.weapon.type == "Battleaxe"))) {
+        var lSelfDamage = RNG.rollMultiple(1, 3, aAttackerClass.weapon.level);
+        aAttackerClass.health -= lSelfDamage;
+        // attacker hit itself, play attacker hit sound
+
+        // If attacker is player
+        if (playerAttacker) {
+            message = `You critically fail your attack and hurt yourself for ${lSelfDamage} damage.`;
+        } else { // attacker is enemy
+            message = `The ${attacker} critically fails its attack and takes ${lSelfDamage} damage.`;
+        }
+    } else if (lAttackRoll == 20 || (lAttackRoll == 19 && (aAttackerClass.attackType == "Ranged" || aAttackerClass.weapon.type == "Battleaxe"))) {
         lDamageTotal += lDamageMax;
-        aDefenderStruct.health -= lDamageTotal;
+        aDefenderClass.health -= lDamageTotal;
+        // defender hit, play defender hit sound
+
+        // If attacker is player
+        if (playerAttacker) {
+            message = `Your attack is perfect, striking the ${defender} for ${lDamageTotal} damage.`;
+        } else { // attacker is enemy
+            message = `The ${attacker}'s attack is perfect striking you for ${lDamageTotal} damage.`;
+        }
     } else {
         if (lAttackTotal > lDefenseTotal) {
-            aDefenderStruct.health -= lDamageTotal;
-            window.terminal.log("Hit, deal " + lDamageTotal + " damage");
+            aDefenderClass.health -= lDamageTotal;
+            // defender hit, play defender hit sound
+
+            // If attacker is player
+            if (playerAttacker) {
+                message = `Your attack strikes the ${defender} for ${lDamageTotal} damage.`;
+            } else { // attacker is enemy
+                message = `The ${attacker}'s attack strikes you for ${lDamageTotal} damage.`;
+            }
         } else {
-            window.terminal.log("Miss, " + lAttackTotal + " against " + lDefenseTotal);
+            // If attacker is player
+            if (playerAttacker) {
+                message = `Your attack misses the ${defender}.`;
+            } else { // attacker is enemy
+                message = `The ${attacker}'s attack misses you.`;
+            }
         }
     }
 
-
-    // console.log("attacker health: " + aAttackerStruct.health);
-    // console.log("defender health: " + aDefenderStruct.health);
-    window.terminal.log("\n\n");
+    window.terminal.log(message + "\n");
 }
 
-function rollRandom(aMinimum, aMaximum) {
-    return Math.floor(Math.random() * (aMaximum - aMinimum) + aMinimum);
-}
-
-CombatController.prototype.randomDrop = function(aPosition) {
+CombatController.prototype.randomDrop = function (aPosition) {
     var lDrop = new Object();
-    var lRand = rollRandom(1, 21); // need to set up weighted rands
+    var lRand = RNG.rollRandom(1, 20); // need to set up weighted rands
     if (lRand > 17) {                           // spawn armor
         lDrop.type = "Armor";
         // TODO > properly implement...
@@ -508,7 +1136,7 @@ CombatController.prototype.randomDrop = function(aPosition) {
     } else if (lRand >= 1 && lRand < 17) {      // spawn weapon
         lDrop.type = "Weapon";
         var playerClass = window.player.class;
-        var level = rollRandom(window.player.level, window.player.level + 3); // need to set up weighted rands
+        var level = RNG.rollRandom(window.player.level, window.player.level + 2); // need to set up weighted rands
         switch (lRand % 4) {
             // this is awful, why is this still here?
             case 0:
@@ -535,170 +1163,11 @@ CombatController.prototype.randomDrop = function(aPosition) {
 }
 
 
-},{"./armor":2,"./combat_struct":5,"./weapon":20}],5:[function(require,module,exports){
+},{"./armor":5,"./combat_class":7,"./rng":20,"./weapon":25}],9:[function(require,module,exports){
 "use strict";
 
 const Tilemap = require('./tilemap');
-const Vector = require('./vector');
-
-// weapon/armor shouldnt be done here...
-// they can still be stored here if necessary, but 
-// I think it might make more sense to have them 
-// directly on the player/enemy?
-const Weapon = require("./weapon");
-const Armor = require("./armor");
-
-module.exports = exports = CombatStruct;
-
-function CombatStruct(aType) {
-    switch (aType) {
-        case "Knight":
-            this.health = 20;
-            this.stamina = 100;
-            this.someOtherPowerup = 50;
-            this.weapon = new Weapon("Longsword", 1);
-            this.armor = new Armor("Hide"); // No restrictions on Armor types
-            this.attackType = "Melee";
-            break;
-
-        case "Archer":
-            this.health = 10;
-            this.stamina = 100;
-            this.someOtherPowerup = 50;
-            this.weapon = new Weapon("Broadhead", 1);
-            this.armor = new Armor("Hide"); // Can't wear Chain or Plate
-            this.attackType = "Ranged";
-            break;
-
-        case "Mage":
-            this.health = 10;
-            this.stamina = 100;
-            this.someOtherPowerup = 50;
-            this.weapon = new Weapon("Eldritch Blast", 1);
-            this.armor = new Armor("Robes"); // Can only wear Robes, nothing else
-            this.attackType = "Magic";
-            break;
-
-
-        case "Zombie":
-            this.health = 10;
-            this.stamina = 100;
-            this.someOtherPowerup = 50;
-            this.weapon = new Weapon("Longsword", 1);
-            this.armor = new Armor("Flesh");
-            this.attackType = "Melee";
-            this.senseRange = 10; // This might be too high, what if we keep the camera centered..?
-
-            this.turnAI = function (aEnemy) {
-                // console.log("\nenemy turn");
-                // console.log(aEnemy.position.x + " " + aEnemy.position.y);
-                var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
-                if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
-                    console.log("player within attack range");
-                    combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
-                } else if (distance.x <= aEnemy.combat.senseRange && distance.y <= aEnemy.combat.senseRange) {
-                    console.log("player within sense range");
-                    var path = pathfinder.findPath(aEnemy.position, aEnemy.target.position);
-                    if (path.length > 1) aEnemy.position = { x: path[1].x, y: path[1].y };
-                    else console.log("path less than 1 - no path to target");
-                } else {
-                    console.log("moving randomly");
-                    var nextTile = aEnemy.tilemap.getRandomAdjacent(aEnemy.position);
-                    aEnemy.position = { x: nextTile.x, y: nextTile.y };
-                }
-                // console.log(aEnemy.position.x + " " + aEnemy.position.y);
-            }
-            break;
-
-        case "EnemyRanged":
-            this.health = 10;
-            this.stamina = 100;
-            this.someOtherPowerup = 50;
-            this.weapon = new Weapon("Broadhead", 1);
-            this.armor = new Armor("Hide");
-            this.attackType = "Ranged";
-            this.senseRange = 15;
-
-            this.turnAI = function (aEnemy) {
-                var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
-                if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
-                    console.log("player within attack range");
-                    combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
-                } else if (distance.x <= aEnemy.combat.senseRange && distance.y <= aEnemy.combat.senseRange) {
-                    console.log("player within sense range");
-                    var path = pathfinder.findPath(aEnemy.position, aEnemy.target.position);
-                    if (path.length > 1) aEnemy.position = { x: path[1].x, y: path[1].y };
-                    else console.log("path less than 1 - no path to target");
-                } else {
-                    console.log("moving randomly");
-                    var nextTile = aEnemy.tilemap.getRandomAdjacent(aEnemy.position);
-                    aEnemy.position = { x: nextTile.x, y: nextTile.y };
-                }
-            }
-            break;
-
-        case "Captain":
-            this.health = 25;
-            this.stamina = 100;
-            this.someOtherPowerup = 50;
-            this.weapon = new Weapon("Longsword", 1);
-            this.armor = new Armor("Chain");
-            this.attackType = "Melee";
-            this.senseRange = 20;
-
-            this.turnAI = function (aEnemy) {
-                var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
-                if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
-                    console.log("player within attack range");
-                    combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
-                } else if (distance.x <= aEnemy.combat.senseRange && distance.y <= aEnemy.combat.senseRange) {
-                    console.log("player within sense range");
-                    var path = pathfinder.findPath(aEnemy.position, aEnemy.target.position);
-                    if (path.length > 1) aEnemy.position = { x: path[1].x, y: path[1].y };
-                    else console.log("path less than 1 - no path to target");
-                } else {
-                    console.log("moving randomly");
-                    var nextTile = aEnemy.tilemap.getRandomAdjacent(aEnemy.position);
-                    aEnemy.position = { x: nextTile.x, y: nextTile.y };
-                }
-            }
-            break;
-
-        case "Shaman":
-            this.health = 10;
-            this.stamina = 100;
-            this.someOtherPowerup = 50;
-            this.weapon = new Weapon("Eldritch Blast", 1);
-            this.armor = new Armor("Robes");
-            this.attackType = "Magic";
-            this.senseRange = 10;
-
-            this.turnAI = function (aEnemy) {
-                var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
-                if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
-                    console.log("player within attack range");
-                    combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
-                } else if (distance.x <= aEnemy.combat.senseRange && distance.y <= aEnemy.combat.senseRange) {
-                    console.log("player within sense range");
-                    var path = pathfinder.findPath(aEnemy.position, aEnemy.target.position);
-                    if (path.length > 1) aEnemy.position = { x: path[1].x, y: path[1].y };
-                    else console.log("path less than 1 - no path to target");
-                } else {
-                    console.log("moving randomly");
-                    var nextTile = aEnemy.tilemap.getRandomAdjacent(aEnemy.position);
-                    aEnemy.position = { x: nextTile.x, y: nextTile.y };
-                }
-            }
-            break;
-    }
-}
-
-
-},{"./armor":2,"./tilemap":18,"./vector":19,"./weapon":20}],6:[function(require,module,exports){
-"use strict";
-
-const Tilemap = require('./tilemap');
-const CombatStruct = require("./combat_struct");
+const CombatClass = require("./combat_class");
 
 module.exports = exports = Enemy;
 
@@ -711,32 +1180,32 @@ function Enemy(position, tilemap, combatClass, target, onDeathCB) {
     this.spritesheet.src = "./spritesheets/sprites.png";
     this.type = "Enemy";
     this.class = combatClass;
-    this.combat = new CombatStruct(this.class);
+    this.combat = new CombatClass(this.class);
     this.target = target;
     this.onDeathCB = onDeathCB;
 
     // console.log(this.position.x + " " + this.position.y);
 }
 
-Enemy.prototype.processTurn = function () {
+Enemy.prototype.processTurn = function() {
     if (this.combat.health <= 0) this.state = "dead";
     if (this.state == "dead") return; // shouldnt be necessary
 
     this.combat.turnAI(this);
 }
 
-Enemy.prototype.update = function (time) {
+Enemy.prototype.update = function(time) {
     // if we're dead, we should probably do something
     if (this.combat.health <= 0) {
         this.state = "dead";
     }
 }
 
-Enemy.prototype.collided = function (entity) {
+Enemy.prototype.collided = function(entity) {
 
 }
 
-Enemy.prototype.retain = function () {
+Enemy.prototype.retain = function() {
     if (this.combat.health <= 0) {
         this.onDeathCB(this.position, this.tilemap);
         return false;
@@ -745,7 +1214,7 @@ Enemy.prototype.retain = function () {
     }
 }
 
-Enemy.prototype.render = function (elapsedTime, ctx) {
+Enemy.prototype.render = function(elapsedTime, ctx) {
     if (this.state == "dead") return; // shouldnt be necessary
 
     var position = this.tilemap.toScreenCoords(this.position);
@@ -758,7 +1227,8 @@ Enemy.prototype.render = function (elapsedTime, ctx) {
     );
 }
 
-},{"./combat_struct":5,"./tilemap":18}],7:[function(require,module,exports){
+
+},{"./combat_class":7,"./tilemap":23}],10:[function(require,module,exports){
 "use strict";
 
 /**
@@ -926,7 +1396,7 @@ function collision(entity1, entity2){
 
 }
 
-},{}],8:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 "use strict";
 
 const Enemy = require('./enemy');
@@ -974,7 +1444,7 @@ function spawnDrop(position){
 }
 
 
-},{"./enemy":6,"./powerup":14}],9:[function(require,module,exports){
+},{"./enemy":9,"./powerup":18}],12:[function(require,module,exports){
 "use strict";
 
 /**
@@ -1032,7 +1502,7 @@ Game.prototype.loop = function(newTime) {
   this.frontCtx.drawImage(this.backBuffer, 0, 0);
 }
 
-},{}],10:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 "use strict";
 
 /**
@@ -1323,52 +1793,156 @@ GUI.prototype.render = function (elapsedTime, ctx) {
   }
 }
 
-},{}],11:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 "use strict";
 
-module.exports = exports = MapGenerator;
+/**
+ * @module exports the Inventory class
+ */
+module.exports = exports = Inventory;
 
+/**
+ * @constructor Inventory
+ * Creates a new inventory
+ */
+function Inventory(weapon, armor) {
+	this.inventory = [];
+    this.inventory.push(weapon);
+    this.inventory.push(armor);
+}
+
+/**
+ * @function processes a new weapon item
+ * 
+ */
+Inventory.prototype.addWeapon = function(weapon) {
+    checkWeapon(weapon);
+    if(this.inventory.length >= 17) { /* Tell GUI that inventory is full */ }
+    if(weapon.type.damageMax > this.inventory[0].type.damageMax) { // This needs to be changed to prompting the user, I'll wait until there's a working GUI class to do that
+        this.push(this.inventory[0]);
+        this.inventory[0] = weapon;
+    }
+    else {
+        this.push(weapon);
+    }
+}
+
+/**
+ * @function processes a new armor item
+ * 
+ */
+Inventory.prototype.addArmor = function(armor) {
+    checkArmor(armor);
+    if(this.inventory.length >= 17) { /* Tell GUI that inventory is full */ }
+    if(armor.type.defense > this.inventory[1].type.defense) { // See line 25
+        this.push(this.inventory[0]);
+        this.inventory[0] = armor;
+    }
+    else {
+        this.push(armor);
+    }
+}
+
+/**
+ * @function power up the equipped weapon
+ * 
+ */
+Inventory.prototype.powerupWeapon = function(damage) {
+    this.inventory[0].type.damageMax += damage;
+}
+
+/**
+ * @function power up the equipped armor
+ * 
+ */
+Inventory.prototype.powerupArmor = function(defense) {
+    this.inventory[1].type.defense += defense;
+}
+
+/**
+ * @function add item to inventory
+ * 
+ */
+Inventory.prototype.addItem = function(item) {
+    if(this.inventory.length >= 17) { /* Tell GUI inventory is full */ }
+    this.inventory.push(item);
+}
+
+/**
+ * @function remove item from inventory
+ * 
+ */
+Inventory.prototype.removeItem = function(item) {
+    this.inventory.remove(this.inventory.indexOf(item));
+}
+
+/**
+ * @function makes sure item is a weapon
+ * 
+ */
+function checkWeapon(item) {
+    if(typeof item == 'undefined') failWeapon();
+    if(typeof item.type == 'undefined') failWeapon();
+    if(typeof item.level == "undefined") failWeapon();
+    if(typeof item.type.damageMax == "undefined") failWeapon();
+    if(typeof item.type.damageMin == "undefined") failWeapon();
+    if(typeof item.type.damageType == "undefined") failWeapon();
+    if(typeof item.type.range == "undefined") failWeapon();
+    if(typeof item.type.hitBonus == "undefined") failWeapon();
+    if(typeof item.type.properties == "undefined") failWeapon();
+}
+
+/**
+ * @function makes sure item is armor
+ * 
+ */
+function checkArmor(item) {
+    if(typeof item == 'undefined') failArmor();
+    if(typeof item.type == 'undefined') failArmor();
+    if(typeof item.type.defense == "undefined") failArmor();
+    if(typeof item.type.strongType == "undefined") failArmor();
+    if(typeof item.type.weakType == "undefined") failArmor();
+}
+
+function failWeapon() {
+    throw new Error("Item doesn't match type definition for 'Weapon'");
+}
+
+function failArmor() {
+    throw new Error("Item doesn't match type definition for 'Armor'");
+}
+},{}],15:[function(require,module,exports){
+"use strict";
+
+const CellularAutomata = require('./MapGeneration/cellular_automata_generation');
+const DebugMap = require('./MapGeneration/debug_map_generation');
+const RoomsHallways = require('./MapGeneration/rooms_hallways_generation');
+
+module.exports = exports = MapGenerator;
 
 function MapGenerator(edges, width, height){
   this.map = [];
   this.width = width;
   this.height = height;
-  this.percent = 50;
 
   this.edges = edges;
 
   this.open = 0;
   this.filled = 1;
 
-  this.randomFillMap();
-  this.makeCaverns();
-  this.processEdges();
-
-}
-
-MapGenerator.prototype.randomFillMap = function(){
-
-  var mapMiddle = (this.height / 2);
-
-  this.map = [];
-  for(var i = 0; i < this.width * this.height; i++){
-    this.map.push(this.open);
-  }
-
-  for(var row = 0; row < this.height; row++){
-    for(var column = 0; column < this.width; column++){
-      //column is x, row is y
-
-      // If coordinants lie on the the edge of the map (creates a border)
-      if (column == 0 || row == 0 || column == this.width - 1 || row == this.height - 1){
-        // y * width + x
-        this.map[row * this.width + column] = this.filled;
-      }
-      else{
-        if(!window.debug) this.map[row * this.width + column] = this.pickTile();
-      }
+  if(window.debug){
+    this.map = (new DebugMap(width, height, 50, this.open, this.filled)).generate();
+  }else{
+    if(Math.random() > 0.5){
+      this.map = (new RoomsHallways(width, height, 50, this.open, this.filled)).generate();
+    }else{
+      this.map = (new CellularAutomata(width, height, 50, this.open, this.filled)).generate();
     }
+
   }
+
+
+  this.processEdges();
 }
 
 MapGenerator.prototype.processEdges = function(){
@@ -1385,78 +1959,20 @@ MapGenerator.prototype.processEdges = function(){
   }
 }
 
-MapGenerator.prototype.loadFromScore = function(scores) {
-  this.map = []
-  for(var row = 0; row < this.height; row++){
-    for(var column = 0; column < this.width; column++){
-      var val = scores[row * this.width + column];
-      if(val == -1){
-        this.map.push(0);
-        continue;
-      }
-      this.map.push(this.edges[val]);
-    }
-  }
-}
-
 MapGenerator.prototype.toString = function(){
-  var header = "Width: " + this.width + "\tHeight: " + this.height + "\tWalls: " + this.percent + "\n";
+  var header = "Width: " + this.width + "\tHeight: " + this.height + "\n";
   var body = ""
   for(var row = 0; row < this.height; row++){
     for(var column = 0; column < this.width; column++){
       var val =  this.map[row * this.width + column]
       if(val < 10){
-        body += "0";
+        //body += "0";
       }
-      body += val + " "; //(this.map[row * this.width + column] == this.open) ? "." : "#";
+      body += (this.map[row * this.width + column] == this.open) ? "." : "#"; //val + " "; //(this.map[row * this.width + column] == this.open) ? "." : "#";
     }
     body += "\n";
   }
   return header + body;
-}
-
-MapGenerator.prototype.pickTile = function() {
-  if(this.percent >= rand(100) + 1) return this.filled;
-  return this.open;
-}
-
-MapGenerator.prototype.makeCaverns = function(){
-  for(var row = 0; row < this.height; row++){
-    for(var column = 0; column < this.width; column++){
-      this.map[row * this.width + column] = this.pickCavernTile(column, row);
-    }
-  }
-}
-
-MapGenerator.prototype.pickCavernTile = function(x, y){
-  var wallCount = this.countAdjacentWalls(x, y, 1, 1);
-
-  if(this.map[y * this.width + x] == this.filled){
-    if(wallCount >= 4) return this.filled;
-    if(wallCount < 2) return this.open;
-  }
-  else{
-    if(wallCount >= 5) return this.filled;
-  }
-  return this.open;
-}
-
-MapGenerator.prototype.countAdjacentWalls = function(x, y, scopeX, scopeY){
-  var startX = x - scopeX;
-  var startY = y - scopeY;
-  var endX = x + scopeX;
-  var endY = y + scopeY;
-
-  var count = 0;
-
-  for(var iY = startY; iY <= endY; iY++){
-    for(var iX = startX; iX <= endX; iX++){
-      if(iX == x && iY == y) continue;
-      if(this.isWallOrOutOfBounds(iX, iY)) count++;
-    }
-  }
-
-  return count;
 }
 
 MapGenerator.prototype.countScore = function(x, y){
@@ -1495,7 +2011,7 @@ function rand(upper){
   return Math.floor(Math.random() * upper);
 }
 
-},{}],12:[function(require,module,exports){
+},{"./MapGeneration/cellular_automata_generation":1,"./MapGeneration/debug_map_generation":2,"./MapGeneration/rooms_hallways_generation":3}],16:[function(require,module,exports){
 /**
  * @module A pathfinding module providing
  * a visualizaiton of common tree-search
@@ -1736,12 +2252,15 @@ Pathfinder.prototype.step = function() {
   return undefined;
 }
 
-},{}],13:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 "use strict";
 
 const Tilemap = require('./tilemap');
 const Vector = require('./vector');
-const CombatStruct = require("./combat_struct");
+const CombatClass = require("./combat_class");
+const Inventory = require('./inventory.js');
+const Weapon = require('./weapon.js');
+const Armor = require('./armor.js');
 
 /**
  * @module exports the Player class
@@ -1762,35 +2281,21 @@ function Player(position, tilemap, combatClass) {
     this.spritesheet.src = './spritesheets/sprites.png';
     this.type = "Player";
     this.walk = [];
-    this.class = combatClass;
-    this.combat = new CombatStruct(this.class);
+    this.changeClass(combatClass);
     this.level = 0;
     this.shouldProcessTurn = true;
-
-    if(this.class == "Knight")
-    {
-      this.spritesheetPos = {x: 1, y: 5};
-    }
-    else if(this.class == "Mage")
-    {
-      this.spritesheetPos = {x: 9, y: 5};
-    }
-    else if(this.class == "Archer")
-    {
-      this.spritesheetPos = {x: 7, y: 6};
-    }
 }
 
 /**
  * @function updates the player object
  * {DOMHighResTimeStamp} time the elapsed time since the last frame
  */
-Player.prototype.update = function (time) {
+Player.prototype.update = function(time) {
     // if we're dead, we should probably do something
     if (this.combat.health <= 0) this.state = "dead";
 }
 
-Player.prototype.walkPath = function (path, completion) {
+Player.prototype.walkPath = function(path, completion) {
     if (this.state == "dead") return; // shouldnt be necessary
 
     path.shift();
@@ -1803,22 +2308,17 @@ Player.prototype.walkPath = function (path, completion) {
 //Changes the player class, used because right now things
 //rely on player being created before class is actually chosen.
 //Potentially change this
-Player.prototype.changeClass = function(chosenClass)
-{
+Player.prototype.changeClass = function(chosenClass) {
     this.class = chosenClass;
-    this.combat = new CombatStruct(chosenClass);
-    
-    if(this.class == "Knight")
-    {
-      this.spritesheetPos = {x: 1, y: 5};
-    }
-    else if(this.class == "Mage")
-    {
-      this.spritesheetPos = {x: 9, y: 5};
-    }
-    else if(this.class == "Archer")
-    {
-      this.spritesheetPos = {x: 7, y: 6};
+    this.combat = new CombatClass(chosenClass);
+    this.inventory = new Inventory(this.combat.weapon, this.combat.armor);
+
+    if (this.class == "Knight") {
+        this.spritesheetPos = { x: 1, y: 5 };
+    } else if (this.class == "Mage") {
+        this.spritesheetPos = { x: 9, y: 5 };
+    } else if (this.class == "Archer") {
+        this.spritesheetPos = { x: 7, y: 6 };
     }
 };
 
@@ -1826,9 +2326,9 @@ Player.prototype.changeClass = function(chosenClass)
  *@function handles the players turn
  *{input} keyboard input given for this turn
  */
-Player.prototype.processTurn = function (input) {
+Player.prototype.processTurn = function(input) {
 
-    if(!this.shouldProcessTurn) return;
+    if (!this.shouldProcessTurn) return;
 
     if (this.combat.health <= 0) this.state = "dead";
     if (this.state == "dead") return; // shouldnt be necessary
@@ -1878,13 +2378,16 @@ Player.prototype.processTurn = function (input) {
 
 }
 
-Player.prototype.collided = function (entity) {
-  if(entity.type == "Stairs"){
-    this.shouldProcessTurn = false;
-  }
+Player.prototype.collided = function(entity) {
+    if(typeof entity == Weapon) { this.inventory.addWeapon(weapon); }
+    if(typeof entity == Armor) { this.inventory.addArmor(armor); }
+
+    if(entity.type == "Stairs"){
+      this.shouldProcessTurn = false;
+    }
 }
 
-Player.prototype.retain = function () {
+Player.prototype.retain = function() {
     return this.combat.health > 0;
 }
 
@@ -1892,7 +2395,7 @@ Player.prototype.retain = function () {
  * @function renders the player into the provided context
  * {CanvasRenderingContext2D} ctx the context to render into
  */
-Player.prototype.render = function (elapsedTime, ctx) {
+Player.prototype.render = function(elapsedTime, ctx) {
     if (this.state == "dead") return; // shouldnt be necessary
 
     var position = this.tilemap.toScreenCoords(this.position);
@@ -1900,21 +2403,22 @@ Player.prototype.render = function (elapsedTime, ctx) {
     ctx.drawImage(
         this.spritesheet,
         96 * this.spritesheetPos.x, 96 * this.spritesheetPos.y,
-        96 , 96,
+        96, 96,
         position.x * this.size.width, position.y * this.size.height,
         96, 96
     );
-
 }
 
 function hasUserInput(input) {
     return input.up || input.down || input.right || input.left;
 }
 
-},{"./combat_struct":5,"./tilemap":18,"./vector":19}],14:[function(require,module,exports){
+
+},{"./armor.js":5,"./combat_class":7,"./inventory.js":14,"./tilemap":23,"./vector":24,"./weapon.js":25}],18:[function(require,module,exports){
 "use strict";
 
 const Tilemap = require('./tilemap');
+const RNG = require("./rng");
 
 /**
  * @module exports the Powerup class
@@ -1927,17 +2431,17 @@ module.exports = exports = Powerup;
  * @param {postition} position object specifying an x and y
  */
 function Powerup(position, tilemap) {
-    this.position = { x: position.x, y: position.y };
-    this.size = { width: 96, height: 96 };
-    this.spritesheet = new Image();
-    this.tilemap = tilemap;
-    this.spritesheet.src = './spritesheets/powerup.png';
-    this.type = "Powerup";
-    this.animation = true;
-    this.currY = 0;
-    this.movingUp = true;
-    this.currPower = Math.floor((Math.random() * 3) + 1);
-    this.used = false;
+  this.position = { x: position.x, y: position.y };
+  this.size = { width: 96, height: 96 };
+  this.spritesheet = new Image();
+  this.tilemap = tilemap;
+  this.spritesheet.src = './spritesheets/powerup.png';
+  this.type = "Powerup";
+  this.animation = true;
+  this.currY = 0;
+  this.movingUp = true;
+  this.currPower = RNG.rollRandom(1, 4);
+  this.used = false;
 }
 
 /**
@@ -1945,10 +2449,10 @@ function Powerup(position, tilemap) {
  * {DOMHighResTimeStamp} time the elapsed time since the last frame
  */
 Powerup.prototype.update = function (time) {
-    if (this.currY >= 5) this.movingUp = false;
-    else if (this.currY <= -5) this.movingUp = true;
-    if (this.movingUp) this.currY += .2;
-    else this.currY -= .2;
+  if (this.currY >= 5) this.movingUp = false;
+  else if (this.currY <= -5) this.movingUp = true;
+  if (this.movingUp) this.currY += .2;
+  else this.currY -= .2;
 }
 
 Powerup.prototype.processTurn = function (input) {
@@ -1956,28 +2460,41 @@ Powerup.prototype.processTurn = function (input) {
 }
 
 Powerup.prototype.collided = function (entity) {
-    if (this.used) return;
-    if (entity.type == "Player") {
-        //Update player's health/strength/item
-        switch (this.currPower) {
-            case 1:
-                entity.combat.health += 5;
-                this.used = true;
-                break;
-            case 2:
-                entity.combat.stamina += 20;
-                this.used = true;
-                break;
-            case 3:
-                entity.combat.someOtherPowerup += 10;
-                this.used = true;
-                break;
-        }
+  if (this.used) return;
+  if (entity.type == "Player") {
+    //Update player's health/strength/item
+    switch (this.currPower) {
+      case 1:
+        entity.combat.damageBonus += 0.2;
+        window.terminal.log("The crystal radiates a bright blue and you feel its energy course through you.");
+        if (window.debug) console.log(entity.combat.damageBonus);
+        this.used = true;
+        break;
+      case 2:
+        var potionValue = RNG.rollMultiple(3, 6, entity.level);
+        entity.combat.health += potionValue;
+        window.terminal.log("You quaff the large crimson potion and feel rejuvenated.");
+        if (window.debug) console.log("+" + potionValue + " health = " + entity.combat.health);
+        this.used = true;
+        break;
+      case 3:
+        entity.combat.defenseBonus += 0.2;
+        window.terminal.log("As you finish the potion a faint ward forms around you.");
+        if (window.debug) console.log(entity.combat.defenseBonus);
+        this.used = true;
+        break;
+      case 4:
+        entity.combat.attackBonus += 0.2;
+        window.terminal.log("The very smell of the verdant green potion awakens you and you feel more agile.");
+        if (window.debug) console.log(entity.combat.attackBonus);
+        this.used = true;
+        break;
     }
+  }
 }
 
 Powerup.prototype.retain = function () {
-    return !this.used;
+  return !this.used;
 }
 
 /**
@@ -1985,25 +2502,28 @@ Powerup.prototype.retain = function () {
  * {CanvasRenderingContext2D} ctx the context to render into
  */
 Powerup.prototype.render = function (elapsedTime, ctx) {
-    var position = this.tilemap.toScreenCoords(this.position);
-    switch (this.currPower) {
-        case 1:
-            ctx.drawImage(this.spritesheet, 0, 150, 75, 75, (position.x * this.size.width), (position.y * this.size.height) + this.currY, 96, 96);
-            break;
-        case 2:
-            ctx.drawImage(this.spritesheet, 150, 150, 75, 75, (position.x * this.size.width), (position.y * this.size.height) + this.currY, 96, 96);
-            break;
-        case 3:
-            ctx.drawImage(this.spritesheet, 75, 150, 75, 75, (position.x * this.size.width), (position.y * this.size.height) + this.currY, 96, 96);
-            break;
-    }
+  var position = this.tilemap.toScreenCoords(this.position);
+  switch (this.currPower) {
+    case 1:
+      ctx.drawImage(this.spritesheet, 0, 150, 75, 75, (position.x * this.size.width), (position.y * this.size.height) + this.currY, 96, 96);
+      break;
+    case 2:
+      ctx.drawImage(this.spritesheet, 75, 150, 75, 75, (position.x * this.size.width), (position.y * this.size.height) + this.currY, 96, 96);
+      break;
+    case 3:
+      ctx.drawImage(this.spritesheet, 150, 150, 75, 75, (position.x * this.size.width), (position.y * this.size.height) + this.currY, 96, 96);
+      break;
+    case 4:
+      ctx.drawImage(this.spritesheet, 225, 150, 75, 75, (position.x * this.size.width), (position.y * this.size.height) + this.currY, 96, 96);
+      break;
+  }
 }
 
     //Other potential powerups
     //ctx.drawImage(this.power,0,25,25,25,position.x*this.size.width, position.y*this.size.height,96,96);
     //ctx.drawImage(this.power,25,50,25,25,position.x*this.size.width, position.y*this.size.height,96,96);
 
-},{"./tilemap":18}],15:[function(require,module,exports){
+},{"./rng":20,"./tilemap":23}],19:[function(require,module,exports){
 "use strict";
 
 module.exports = exports = ProgressManager;
@@ -2037,7 +2557,64 @@ ProgressManager.prototype.reset = function(){
   this.percent = 0;
 }
 
-},{}],16:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
+"use strict";
+
+module.exports = exports = {
+    rollRandom: rollRandom,
+    rollMultiple: rollMultiple,
+    rollWeighted: rollWeighted
+}
+
+/**
+ * @function rollRandom
+ * Generates a random number using given bounds.
+ * @param {Integer} aMinimum - inclusive lower bound
+ * @param {Integer} aMaximum - inclusive upper bound
+ */
+function rollRandom(aMinimum, aMaximum) {
+    return Math.floor(Math.random() * (aMaximum + 1 - aMinimum) + aMinimum);
+}
+
+/**
+ * @function rollMultiple
+ * Generates a sum of random numbers using gives bounds.
+ * @param {Integer} aMinimum - inclusive lower bound
+ * @param {Integer} aMaximum - inclusive upper bound
+ * @param {Integer} aNumber - number of times to generate a random number
+ */
+function rollMultiple(aMinimum, aMaximum, aNumber) {
+    var total = 0;
+    for (var i = 0; i < aNumber; i++) {
+        total += this.rollRandom(aMinimum, aMaximum);
+    }
+    return total;
+}
+
+/**
+ * @function rollWeighted
+ * Generates a weighted random number corresponding to the index of the weight given.
+ * Accepts any number of arguments greater than 0.
+ * Example: rollWeighted(10,50,20) might return 1 which corresponds to the weight of 50.
+ * Note: weights are not necessarily percentages; they can add up to any amount.
+ */
+function rollWeighted() {
+    var argLength = arguments.length;
+    if (argLength < 1) throw new Error("At least one argument required.");
+    var weightSum = 0;
+    for (var i = 0; i < argLength; i++) {
+        weightSum += arguments[i];
+    }
+    var roll = this.rollRandom(0, weightSum);
+    weightSum = 0;
+    for (var i = 0; i < argLength; i++) {
+        weightSum += arguments[i];
+        if (roll <= weightSum) return i;
+    }
+}
+
+
+},{}],21:[function(require,module,exports){
 "use strict";
 
 /**
@@ -2106,7 +2683,7 @@ Stairs.prototype.render = function (elapsedTime, ctx) {
   ctx.drawImage(this.spritesheet, 75 + this.spriteOff, 0, 75, 75, (position.x * this.size.width), (position.y * this.size.height), 96, 96);
 }
 
-},{}],17:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 "use strict";
 
 const MAX_MSG_COUNT = 50;
@@ -2154,7 +2731,7 @@ function splitMessage(message, messages) {
     }
 
 }
-},{}],18:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 "use strict";
 
 const MapGenerator = require('./map_generator');
@@ -2174,6 +2751,8 @@ function Tilemap(canvas, width, height, tileset, options){
 
   this.draw = {};
   this.draw.origin = {x: 0, y: 0};
+
+  this.idx = 0;
 
   // We add one so that we go slightly beyond the canvas
   this.draw.size = {
@@ -2210,6 +2789,15 @@ function Tilemap(canvas, width, height, tileset, options){
 
 }
 
+Tilemap.prototype.changeTileset = function(){
+  this.idx++;
+  this.idx %= this.tileset.images.length;
+  var tset = new Image();
+  tset.src = this.tileset.images[this.idx];
+  this.tiles.forEach(function(tile){
+    tile.image = tset;
+  })
+}
 Tilemap.prototype.generateMap = function(){
   var map = new MapGenerator(this.tileset.edges, this.mapWidth, this.mapHeight);
 
@@ -2344,7 +2932,7 @@ Tilemap.prototype.findOpenSpace = function()
   {
     throw new Error("Could not find free space. Check map generation algorithms and definition of empty spaces.")
   }
-  
+
 	return {x: tile % this.mapWidth, y: Math.floor(tile / this.mapWidth)};
 }
 
@@ -2368,7 +2956,7 @@ Tilemap.prototype.getRandomAdjacent = function (aTile) {
   }
 }
 
-},{"./map_generator":11,"./vector":19}],19:[function(require,module,exports){
+},{"./map_generator":15,"./vector":24}],24:[function(require,module,exports){
 "use strict";
 
 /**
@@ -2383,7 +2971,8 @@ module.exports = exports = {
   dotProduct: dotProduct,
   magnitude: magnitude,
   normalize: normalize,
-  distance: distance
+  distance: distance,
+  equals: equals
 }
 
 
@@ -2470,7 +3059,12 @@ function distance(a, b){
   var distance=this.subtract(a,b);
   return {x: Math.abs(distance.x), y: Math.abs(distance.y)};
 }
-},{}],20:[function(require,module,exports){
+
+function equals(a, b){
+  return a.x == b.x && a.y == b.y;
+}
+
+},{}],25:[function(require,module,exports){
 "use strict";
 
 module.exports = exports = Weapon;
@@ -2518,6 +3112,15 @@ function Weapon(aName, aLevel) {
             this.range = 1;
             this.hitBonus = 1;
             this.properties = "+3 Min Damage, +1 Crit Chance";
+            break;
+
+        case "Claw":
+            this.damageMax = 4
+            this.damageMin = 2;
+            this.damageType = "s";
+            this.range = 1;
+            this.hitBonus = 0;
+            this.properties = "+1 Min Damage";
             break;
 
         // Ranged
@@ -2590,8 +3193,8 @@ function Weapon(aName, aLevel) {
             this.damageMin = 1;
             this.damageType = "m";
             this.range = 255;
-            this.hitBonus = -1;
-            this.properties = "-1 to Hit";
+            this.hitBonus = -2;
+            this.properties = "-2 to Hit";
             break;
     }
 
@@ -2621,11 +3224,12 @@ Weapon.prototype.render = function () {
 }
 
 
-},{}],21:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 module.exports={
  "tileheight":96,
  "tilewidth":96,
- "image":".\/tilesets\/tset.png",
+ "image":".\/tilesets\/grass.png",
+ "images": [".\/tilesets\/grass.png", ".\/tilesets\/tset.png"],
  "imageheight":672,
  "imagewidth":768,
  "edges":{
@@ -2889,4 +3493,4 @@ module.exports={
 	}
 }
 
-},{}]},{},[1]);
+},{}]},{},[4]);
