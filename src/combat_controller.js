@@ -5,6 +5,7 @@ module.exports = exports = CombatController;
 const CombatClass = require("./combat_class");
 const Weapon = require("./weapon");
 const Armor = require("./armor");
+const RNG = require("./rng");
 
 function CombatController() {
 
@@ -13,7 +14,7 @@ function CombatController() {
 CombatController.prototype.handleAttack = function (aAttackerClass, aDefenderClass) {
     var lAttackBase = Math.floor(aAttackerClass.attackBonus);
     var lAttackBonus = aAttackerClass.weapon.hitBonus;
-    var lAttackRoll = this.rollRandom(1, 21);
+    var lAttackRoll = RNG.rollRandom(1, 20);
     var lAttackTotal = lAttackBase + lAttackBonus + lAttackRoll;
 
     var lDefenseBase = aDefenderClass.armor.defense;
@@ -23,7 +24,7 @@ CombatController.prototype.handleAttack = function (aAttackerClass, aDefenderCla
     var lDamageBase = aAttackerClass.weapon.level - 1;
     var lDamageMax = aAttackerClass.weapon.damageMax;
     var lDamageMin = aAttackerClass.weapon.damageMin;
-    var lDamageRoll = this.rollRandom(lDamageMin, 1 + lDamageMax);
+    var lDamageRoll = RNG.rollRandom(lDamageMin, lDamageMax);
     var lDamageBonus = Math.floor(aAttackerClass.damageBonus);
     var lDamageTotal = lDamageBase + lDamageBonus + lDamageRoll;
 
@@ -32,7 +33,7 @@ CombatController.prototype.handleAttack = function (aAttackerClass, aDefenderCla
     var defender = aDefenderClass.type;
     var playerAttacker = (attacker == "Knight" || attacker == "Archer" || attacker == "Mage");
     if (lAttackRoll == 1) {
-        var lSelfDamage = this.rollMultiple(1, 3, aAttackerClass.weapon.level);
+        var lSelfDamage = RNG.rollMultiple(1, 3, aAttackerClass.weapon.level);
         aAttackerClass.health -= lSelfDamage;
         // attacker hit itself, play attacker hit sound
 
@@ -77,36 +78,9 @@ CombatController.prototype.handleAttack = function (aAttackerClass, aDefenderCla
     window.terminal.log(message + "\n");
 }
 
-CombatController.prototype.rollRandom = function (aMinimum, aMaximum) {
-    return Math.floor(Math.random() * (aMaximum - aMinimum) + aMinimum);
-}
-
-CombatController.prototype.rollMultiple = function (aMinimum, aMaximum, aNumber) {
-    var total = 0;
-    for (var i = 0; i < aNumber; i++) {
-        total += this.rollRandom(aMinimum, aMaximum);
-    }
-    return total;
-}
-
-CombatController.prototype.rollWeighted = function () {
-    var argLength = arguments.length;
-    if (argLength < 1) throw new Error("At least one argument required.");
-    var weightSum = 0;
-    for (var i = 0; i < argLength; i++) {
-        weightSum += arguments[i];
-    }
-    var roll = this.rollRandom(0, weightSum + 1);
-    weightSum = 0;
-    for (var i = 0; i < argLength; i++) {
-        weightSum += arguments[i];
-        if (roll <= weightSum) return i;
-    }
-}
-
 CombatController.prototype.randomDrop = function (aPosition) {
     var lDrop = new Object();
-    var lRand = this.rollRandom(1, 21); // need to set up weighted rands
+    var lRand = RNG.rollRandom(1, 20); // need to set up weighted rands
     if (lRand > 17) {                           // spawn armor
         lDrop.type = "Armor";
         // TODO > properly implement...
@@ -114,7 +88,7 @@ CombatController.prototype.randomDrop = function (aPosition) {
     } else if (lRand >= 1 && lRand < 17) {      // spawn weapon
         lDrop.type = "Weapon";
         var playerClass = window.player.class;
-        var level = this.rollRandom(window.player.level, window.player.level + 3); // need to set up weighted rands
+        var level = RNG.rollRandom(window.player.level, window.player.level + 2); // need to set up weighted rands
         switch (lRand % 4) {
             // this is awful, why is this still here?
             case 0:
