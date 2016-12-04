@@ -79,8 +79,34 @@ CombatController.prototype.handleAttack = function (aAttackerClass, aDefenderCla
 }
 
 CombatController.prototype.handleStatus = function (aCombatClass) {
-    switch (aCombatClass.statusEffect) {
+    switch (aCombatClass.status.effect) {
+        case "Burned":
+        case "Poisoned":
+            if (aCombatClass.status.timer > 0) {
+                aCombatClass.status.timer--;
+                aCombatClass.health -= RNG.rollMultiple(1, 5, window.player.level);
+            } else {
+                aCombatClass.status.effect == "None";
+            }
+            break;
 
+        case "Frozen":
+            switch (aCombatClass.status.timer) {
+                case 2:
+                    aCombatClass.status.timer--;
+                    return;
+
+                case 1:
+                    if (RNG.rollWeighted(50, 50)) aCombatClass.status.timer--;
+
+                case 0:
+                    aCombatClass.status.effect = "None";
+                    break;
+            }
+            break;
+
+        default:
+            return;
     }
 }
 
