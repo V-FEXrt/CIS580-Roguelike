@@ -43,7 +43,7 @@ Inventory.prototype.addArmor = function(armor) {
         this.inventory[1] = armor;
     }
     else {
-        this.push(armor);
+        this.inventory.push(armor);
     }
 }
 
