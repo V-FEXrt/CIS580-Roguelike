@@ -18,6 +18,10 @@ Terminal.prototype.log = function(message) {
     if(window.debug) console.log(message);
 }
 
+Terminal.prototype.clear = function() {
+    this.messages = [];
+}
+
 Terminal.prototype.update = function(time) {
 
 }
