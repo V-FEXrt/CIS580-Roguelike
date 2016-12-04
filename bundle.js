@@ -2766,8 +2766,9 @@ function Terminal() {
     this.startPos = {x: 1063, y: 667};
 }
 
-Terminal.prototype.log = function(message) {
-    splitMessage(message, this.messages);
+Terminal.prototype.log = function(message, color) {
+    if(typeof color == 'undefined') color = 'white';
+    splitMessage(message, this.messages, color);
     if(this.messages.length > MAX_MSG_COUNT) {
         this.messages.pop();
     }
@@ -2783,24 +2784,25 @@ Terminal.prototype.update = function(time) {
 }
 
 Terminal.prototype.render = function(elapsedTime, ctx) {
-    ctx.fillStyle = 'white';
     ctx.font = "15px Courier New";
     var self = this;
     this.messages.forEach(function(message, i) {
-        ctx.fillText(message, self.startPos.x, self.startPos.y - 18*i);
+        ctx.fillStyle = message.color;
+        ctx.fillText(message.text, self.startPos.x, self.startPos.y - 18*i);
     });
 }
 
-function splitMessage(message, messages) {
+function splitMessage(message, messages, color) {
     if(message.length < 29) {
-        messages.unshift(message);
+        messages.unshift({text: message, color: color});
     }
     else {
-        messages.unshift(message.slice(0,MAX_MSG_LENGTH));
-        splitMessage(message.slice(MAX_MSG_LENGTH,message.length), messages);
+        messages.unshift({text: message.slice(0,MAX_MSG_LENGTH), color: color});
+        splitMessage(message.slice(MAX_MSG_LENGTH,message.length), messages, color);
     }
 
 }
+
 },{}],23:[function(require,module,exports){
 "use strict";
 
