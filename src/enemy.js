@@ -22,8 +22,9 @@ function Enemy(position, tilemap, combatClass, target, onDeathCB) {
 }
 
 Enemy.prototype.processTurn = function() {
+    if (this.combat.status.effect != "None") window.combatController.handleStatus(this.combat);
     if (this.combat.health <= 0) this.state = "dead";
-    if (this.state == "dead") return; // shouldnt be necessary
+    if (this.state == "dead" || this.combat.status.effect == "Frozen") return;
 
     this.combat.turnAI(this);
 }

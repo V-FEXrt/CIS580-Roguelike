@@ -72,12 +72,10 @@ Player.prototype.changeClass = function(chosenClass) {
  *{input} keyboard input given for this turn
  */
 Player.prototype.processTurn = function(input) {
-
     if (!this.shouldProcessTurn) return;
-
+    if (this.combat.status.effect != "None") window.combatController.handleStatus(this.combat);
     if (this.combat.health <= 0) this.state = "dead";
-    if (this.state == "dead") return; // shouldnt be necessary
-
+    if (this.state == "dead" || this.combat.status.effect == "Frozen") return;
 
     if (hasUserInput(input)) {
         // Cancel walk
@@ -120,15 +118,14 @@ Player.prototype.processTurn = function(input) {
     if (screenCoor.x + 5 >= this.tilemap.draw.size.width) {
         this.tilemap.moveBy({ x: 1, y: 0 });
     }
-
 }
 
 Player.prototype.collided = function(entity) {
-    if(typeof entity == Weapon) { this.inventory.addWeapon(weapon); }
-    if(typeof entity == Armor) { this.inventory.addArmor(armor); }
+    if (typeof entity == Weapon) { this.inventory.addWeapon(weapon); }
+    if (typeof entity == Armor) { this.inventory.addArmor(armor); }
 
-    if(entity.type == "Stairs"){
-      this.shouldProcessTurn = false;
+    if (entity.type == "Stairs") {
+        this.shouldProcessTurn = false;
     }
 }
 

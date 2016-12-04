@@ -16,6 +16,7 @@ CombatController.prototype.handleAttack = function (aAttackerClass, aDefenderCla
     var lAttackBonus = aAttackerClass.weapon.hitBonus;
     var lAttackRoll = RNG.rollRandom(1, 20);
     var lAttackTotal = lAttackBase + lAttackBonus + lAttackRoll;
+    var lAttackEffect = aAttackerClass.weapon.attackEffect;
 
     var lDefenseBase = aDefenderClass.armor.defense;
     var lDefenseBonus = Math.floor(aDefenderClass.defenseBonus);
@@ -28,13 +29,20 @@ CombatController.prototype.handleAttack = function (aAttackerClass, aDefenderCla
     var lDamageBonus = Math.floor(aAttackerClass.damageBonus);
     var lDamageTotal = lDamageBase + lDamageBonus + lDamageRoll;
 
+    var lApplyEffect = false;
+
     var message;
     var attacker = aAttackerClass.type;
     var defender = aDefenderClass.type;
     var playerAttacker = (attacker == "Knight" || attacker == "Archer" || attacker == "Mage");
+
     if (lAttackRoll == 1) {
         var lSelfDamage = RNG.rollMultiple(1, 3, aAttackerClass.weapon.level);
         aAttackerClass.health -= lSelfDamage;
+        if (aAttackerClass.health <= 0) { // Crit fail cant kill an entity
+            lSelfDamage - (1 - aAttackerClass.health);
+            aAttackerClass.health = 1;
+        }
         // attacker hit itself, play attacker hit sound
 
         // If attacker is player
@@ -43,21 +51,25 @@ CombatController.prototype.handleAttack = function (aAttackerClass, aDefenderCla
         } else { // attacker is enemy
             message = `The ${attacker} critically fails its attack and takes ${lSelfDamage} damage.`;
         }
-    } else if (lAttackRoll == 20 || (lAttackRoll == 19 && (aAttackerClass.attackType == "Ranged" || aAttackerClass.weapon.type == "Battleaxe"))) {
+    } else if (lAttackRoll == 20 || (lAttackRoll == 19 && (aAttackerClass.attackType == "Ranged" || aAttackerClass.weapon.name == "Battleaxe"))) {
         lDamageTotal += lDamageMax;
         aDefenderClass.health -= lDamageTotal;
         // defender hit, play defender hit sound
+
+        if (lAttackEffect != "") lApplyEffect = RNG.rollWeighted(25, 75);
 
         // If attacker is player
         if (playerAttacker) {
             message = `Your attack is perfect, striking the ${defender} for ${lDamageTotal} damage.`;
         } else { // attacker is enemy
-            message = `The ${attacker}'s attack is perfect striking you for ${lDamageTotal} damage.`;
+            message = `The ${attacker}'s attack is perfect, striking you for ${lDamageTotal} damage.`;
         }
     } else {
-        if (lAttackTotal > lDefenseTotal) {
+        if (lAttackTotal > lDefenseTotal || aAttackerClass.weapon.name == "Magic Missile") {
             aDefenderClass.health -= lDamageTotal;
             // defender hit, play defender hit sound
+
+            if (lAttackEffect != "") lApplyEffect = RNG.rollWeighted(50, 50);
 
             // If attacker is player
             if (playerAttacker) {
@@ -75,7 +87,49 @@ CombatController.prototype.handleAttack = function (aAttackerClass, aDefenderCla
         }
     }
 
-    window.terminal.log(message + "\n");
+    if (aDefenderClass.health <= 0) message = message.replace(".", ", killing it.");
+    window.terminal.log(message);
+    if (lApplyEffect) {
+        aDefenderClass.status.effect = lAttackEffect;
+        aDefenderClass.status.timer = 2;
+        window.terminal.log(`The ${defender} is now ${lAttackEffect}.`);
+    }
+}
+
+CombatController.prototype.handleStatus = function (aCombatClass) {
+    switch (aCombatClass.status.effect) {
+        case "Burned":
+        case "Poisoned":
+            if (aCombatClass.status.timer > 0) {
+                aCombatClass.status.timer--;
+                var damage = RNG.rollMultiple(1, 5, window.player.level);
+                aCombatClass.health -= damage;
+                window.terminal.log(`${damage} Poison damage.`);
+            } else {
+                aCombatClass.status.effect == "None";
+            }
+            break;
+
+        case "Frozen":
+            switch (aCombatClass.status.timer) {
+                case 2:
+                    aCombatClass.status.timer--;
+                    window.terminal.log("Frozen");
+                    return;
+
+                case 1:
+                    if (RNG.rollWeighted(50, 50)) aCombatClass.status.timer--;
+                    else window.terminal.log("Frozen");
+
+                case 0:
+                    aCombatClass.status.effect = "None";
+                    break;
+            }
+            break;
+
+        default:
+            return;
+    }
 }
 
 CombatController.prototype.randomDrop = function (aPosition) {

@@ -23,6 +23,7 @@ function CombatClass(aType) {
             this.weapon = new Weapon("Longsword", 1);
             this.armor = new Armor("Hide"); // No restrictions on Armor types
             this.attackType = "Melee";
+            this.status = { effect: "None", timer: 0 }
             break;
 
         case "Archer":
@@ -33,6 +34,7 @@ function CombatClass(aType) {
             this.weapon = new Weapon("Broadhead", 1);
             this.armor = new Armor("Hide"); // Can't wear Chain or Plate
             this.attackType = "Ranged";
+            this.status = { effect: "None", timer: 0 }
             break;
 
         case "Mage":
@@ -43,6 +45,7 @@ function CombatClass(aType) {
             this.weapon = new Weapon("Eldritch Blast", 1);
             this.armor = new Armor("Robes"); // Can only wear Robes, nothing else
             this.attackType = "Magic";
+            this.status = { effect: "None", timer: 0 }
             break;
 
 
@@ -54,6 +57,7 @@ function CombatClass(aType) {
             this.weapon = new Weapon("Claw", 1);
             this.armor = new Armor("Flesh");
             this.attackType = "Melee";
+            this.status = { effect: "None", timer: 0 }
             this.senseRange = 5;
 
             this.turnAI = function(aEnemy) {
@@ -78,6 +82,7 @@ function CombatClass(aType) {
             this.weapon = new Weapon("Broadhead", 1);
             this.armor = new Armor("Hide");
             this.attackType = "Ranged";
+            this.status = { effect: "None", timer: 0 }
             this.senseRange = 10;
 
             this.turnAI = function(aEnemy) {
@@ -102,6 +107,7 @@ function CombatClass(aType) {
             this.weapon = new Weapon("Battleaxe", 1);
             this.armor = new Armor("Chain");
             this.attackType = "Melee";
+            this.status = { effect: "None", timer: 0 }
             this.senseRange = 15;
 
             this.turnAI = function(aEnemy) {
@@ -126,6 +132,7 @@ function CombatClass(aType) {
             this.weapon = new Weapon("Eldritch Blast", 1);
             this.armor = new Armor("Robes");
             this.attackType = "Magic";
+            this.status = { effect: "None", timer: 0 }
             this.senseRange = 10;
 
             this.turnAI = function(aEnemy) {
