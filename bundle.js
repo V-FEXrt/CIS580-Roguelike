@@ -2106,6 +2106,7 @@ Stairs.prototype.render = function (elapsedTime, ctx) {
 "use strict";
 
 const MAX_MSG_COUNT = 50;
+const MAX_MSG_LENGTH = 29;
 
 module.exports = exports = Terminal;
 
@@ -2140,8 +2141,8 @@ function splitMessage(message, messages) {
         messages.unshift(message);
     }
     else {
-        messages.unshift(message.slice(0,28));
-        splitMessage(message.slice(28,message.length), messages);
+        messages.unshift(message.slice(0,MAX_MSG_LENGTH));
+        splitMessage(message.slice(MAX_MSG_LENGTH,message.length), messages);
     }
 
 }
