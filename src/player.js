@@ -121,9 +121,6 @@ Player.prototype.processTurn = function(input) {
 }
 
 Player.prototype.collided = function(entity) {
-    if (typeof entity == Weapon) { this.inventory.addWeapon(weapon); }
-    if (typeof entity == Armor) { this.inventory.addArmor(armor); }
-
     if (entity.type == "Stairs") {
         this.shouldProcessTurn = false;
     }
@@ -154,4 +151,3 @@ Player.prototype.render = function(elapsedTime, ctx) {
 function hasUserInput(input) {
     return input.up || input.down || input.right || input.left;
 }
-

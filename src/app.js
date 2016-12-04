@@ -42,6 +42,7 @@ var tilemap = new Tilemap(screenSize, 65, 65, tileset, {
 
 var pathfinder = new Pathfinder(tilemap);
 window.pathfinder = pathfinder;
+window.tilemap = tilemap;
 
 var input = {
   up: false,

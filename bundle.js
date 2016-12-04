@@ -491,6 +491,7 @@ var tilemap = new Tilemap(screenSize, 65, 65, tileset, {
 
 var pathfinder = new Pathfinder(tilemap);
 window.pathfinder = pathfinder;
+window.tilemap = tilemap;
 
 var input = {
   up: false,
@@ -783,6 +784,7 @@ module.exports = exports = Armor;
 
 function Armor(aType) {
     this.type = aType;
+    this.shouldRetain = true;
 
     switch (aType) {
         case "Flesh":
@@ -824,11 +826,19 @@ function Armor(aType) {
 
     // static properties for entities
     this.position = { x: -1, y: -1 };
-    this.size = { width: 72, height: 72 }; // correct size for sprites? Dylan?
+    this.size = { width: 96, height: 96 };
+    this.spritesheet = new Image();
+    this.spritesheet.src = './spritesheets/powerup.png';
+
+    this.currY = 0;
+    this.movingUp = true;
 }
 
 Armor.prototype.collided = function (aEntity) {
-
+  if(aEntity.type == "Player"){
+    aEntity.inventory.addArmor(this);
+    this.shouldRetain = false;
+  }
 }
 
 Armor.prototype.processTurn = function () {
@@ -836,17 +846,21 @@ Armor.prototype.processTurn = function () {
 }
 
 Armor.prototype.retain = function () {
-    return true;
+    return this.shouldRetain;
 }
 
 Armor.prototype.update = function () {
-
+  if (this.currY >= 5) this.movingUp = false;
+  else if (this.currY <= -5) this.movingUp = true;
+  if (this.movingUp) this.currY += .2;
+  else this.currY -= .2;
 }
 
-Armor.prototype.render = function () {
+Armor.prototype.render = function (time, ctx) {
+  var position = window.tilemap.toScreenCoords(this.position);
+  ctx.drawImage(this.spritesheet, 305, 225, 75, 75, (position.x * this.size.width), (position.y * this.size.height) + this.currY, 96, 96);
 
 }
-
 
 },{}],6:[function(require,module,exports){
 "use strict";
@@ -923,6 +937,7 @@ function CombatClass(aType) {
             this.weapon = new Weapon("Longsword", 1);
             this.armor = new Armor("Hide"); // No restrictions on Armor types
             this.attackType = "Melee";
+            this.status = { effect: "None", timer: 0 }
             break;
 
         case "Archer":
@@ -933,6 +948,7 @@ function CombatClass(aType) {
             this.weapon = new Weapon("Broadhead", 1);
             this.armor = new Armor("Hide"); // Can't wear Chain or Plate
             this.attackType = "Ranged";
+            this.status = { effect: "None", timer: 0 }
             break;
 
         case "Mage":
@@ -943,6 +959,7 @@ function CombatClass(aType) {
             this.weapon = new Weapon("Eldritch Blast", 1);
             this.armor = new Armor("Robes"); // Can only wear Robes, nothing else
             this.attackType = "Magic";
+            this.status = { effect: "None", timer: 0 }
             break;
 
 
@@ -954,6 +971,7 @@ function CombatClass(aType) {
             this.weapon = new Weapon("Claw", 1);
             this.armor = new Armor("Flesh");
             this.attackType = "Melee";
+            this.status = { effect: "None", timer: 0 }
             this.senseRange = 5;
 
             this.turnAI = function(aEnemy) {
@@ -978,6 +996,7 @@ function CombatClass(aType) {
             this.weapon = new Weapon("Broadhead", 1);
             this.armor = new Armor("Hide");
             this.attackType = "Ranged";
+            this.status = { effect: "None", timer: 0 }
             this.senseRange = 10;
 
             this.turnAI = function(aEnemy) {
@@ -1002,6 +1021,7 @@ function CombatClass(aType) {
             this.weapon = new Weapon("Battleaxe", 1);
             this.armor = new Armor("Chain");
             this.attackType = "Melee";
+            this.status = { effect: "None", timer: 0 }
             this.senseRange = 15;
 
             this.turnAI = function(aEnemy) {
@@ -1026,6 +1046,7 @@ function CombatClass(aType) {
             this.weapon = new Weapon("Eldritch Blast", 1);
             this.armor = new Armor("Robes");
             this.attackType = "Magic";
+            this.status = { effect: "None", timer: 0 }
             this.senseRange = 10;
 
             this.turnAI = function(aEnemy) {
@@ -1064,6 +1085,7 @@ CombatController.prototype.handleAttack = function (aAttackerClass, aDefenderCla
     var lAttackBonus = aAttackerClass.weapon.hitBonus;
     var lAttackRoll = RNG.rollRandom(1, 20);
     var lAttackTotal = lAttackBase + lAttackBonus + lAttackRoll;
+    var lAttackEffect = aAttackerClass.weapon.attackEffect;
 
     var lDefenseBase = aDefenderClass.armor.defense;
     var lDefenseBonus = Math.floor(aDefenderClass.defenseBonus);
@@ -1076,13 +1098,20 @@ CombatController.prototype.handleAttack = function (aAttackerClass, aDefenderCla
     var lDamageBonus = Math.floor(aAttackerClass.damageBonus);
     var lDamageTotal = lDamageBase + lDamageBonus + lDamageRoll;
 
+    var lApplyEffect = false;
+
     var message;
     var attacker = aAttackerClass.type;
     var defender = aDefenderClass.type;
     var playerAttacker = (attacker == "Knight" || attacker == "Archer" || attacker == "Mage");
+
     if (lAttackRoll == 1) {
         var lSelfDamage = RNG.rollMultiple(1, 3, aAttackerClass.weapon.level);
         aAttackerClass.health -= lSelfDamage;
+        if (aAttackerClass.health <= 0) { // Crit fail cant kill an entity
+            lSelfDamage - (1 - aAttackerClass.health);
+            aAttackerClass.health = 1;
+        }
         // attacker hit itself, play attacker hit sound
 
         // If attacker is player
@@ -1091,21 +1120,25 @@ CombatController.prototype.handleAttack = function (aAttackerClass, aDefenderCla
         } else { // attacker is enemy
             message = `The ${attacker} critically fails its attack and takes ${lSelfDamage} damage.`;
         }
-    } else if (lAttackRoll == 20 || (lAttackRoll == 19 && (aAttackerClass.attackType == "Ranged" || aAttackerClass.weapon.type == "Battleaxe"))) {
+    } else if (lAttackRoll == 20 || (lAttackRoll == 19 && (aAttackerClass.attackType == "Ranged" || aAttackerClass.weapon.name == "Battleaxe"))) {
         lDamageTotal += lDamageMax;
         aDefenderClass.health -= lDamageTotal;
         // defender hit, play defender hit sound
+
+        if (lAttackEffect != "") lApplyEffect = RNG.rollWeighted(25, 75);
 
         // If attacker is player
         if (playerAttacker) {
             message = `Your attack is perfect, striking the ${defender} for ${lDamageTotal} damage.`;
         } else { // attacker is enemy
-            message = `The ${attacker}'s attack is perfect striking you for ${lDamageTotal} damage.`;
+            message = `The ${attacker}'s attack is perfect, striking you for ${lDamageTotal} damage.`;
         }
     } else {
-        if (lAttackTotal > lDefenseTotal) {
+        if (lAttackTotal > lDefenseTotal || aAttackerClass.weapon.name == "Magic Missile") {
             aDefenderClass.health -= lDamageTotal;
             // defender hit, play defender hit sound
+
+            if (lAttackEffect != "") lApplyEffect = RNG.rollWeighted(50, 50);
 
             // If attacker is player
             if (playerAttacker) {
@@ -1123,7 +1156,49 @@ CombatController.prototype.handleAttack = function (aAttackerClass, aDefenderCla
         }
     }
 
-    window.terminal.log(message + "\n");
+    if (aDefenderClass.health <= 0) message = message.replace(".", ", killing it.");
+    window.terminal.log(message);
+    if (lApplyEffect) {
+        aDefenderClass.status.effect = lAttackEffect;
+        aDefenderClass.status.timer = 2;
+        window.terminal.log(`The ${defender} is now ${lAttackEffect}.`);
+    }
+}
+
+CombatController.prototype.handleStatus = function (aCombatClass) {
+    switch (aCombatClass.status.effect) {
+        case "Burned":
+        case "Poisoned":
+            if (aCombatClass.status.timer > 0) {
+                aCombatClass.status.timer--;
+                var damage = RNG.rollMultiple(1, 5, window.player.level);
+                aCombatClass.health -= damage;
+                window.terminal.log(`${damage} Poison damage.`);
+            } else {
+                aCombatClass.status.effect == "None";
+            }
+            break;
+
+        case "Frozen":
+            switch (aCombatClass.status.timer) {
+                case 2:
+                    aCombatClass.status.timer--;
+                    window.terminal.log("Frozen");
+                    return;
+
+                case 1:
+                    if (RNG.rollWeighted(50, 50)) aCombatClass.status.timer--;
+                    else window.terminal.log("Frozen");
+
+                case 0:
+                    aCombatClass.status.effect = "None";
+                    break;
+            }
+            break;
+
+        default:
+            return;
+    }
 }
 
 CombatController.prototype.randomDrop = function (aPosition) {
@@ -1188,8 +1263,9 @@ function Enemy(position, tilemap, combatClass, target, onDeathCB) {
 }
 
 Enemy.prototype.processTurn = function() {
+    if (this.combat.status.effect != "None") window.combatController.handleStatus(this.combat);
     if (this.combat.health <= 0) this.state = "dead";
-    if (this.state == "dead") return; // shouldnt be necessary
+    if (this.state == "dead" || this.combat.status.effect == "Frozen") return;
 
     this.combat.turnAI(this);
 }
@@ -1807,45 +1883,45 @@ module.exports = exports = Inventory;
  */
 function Inventory(weapon, armor) {
 	this.inventory = [];
-    this.inventory.push(weapon);
-    this.inventory.push(armor);
+  this.inventory.push(weapon);
+  this.inventory.push(armor);
 }
 
 /**
  * @function processes a new weapon item
- * 
+ *
  */
 Inventory.prototype.addWeapon = function(weapon) {
     checkWeapon(weapon);
     if(this.inventory.length >= 17) { /* Tell GUI that inventory is full */ }
     if(weapon.type.damageMax > this.inventory[0].type.damageMax) { // This needs to be changed to prompting the user, I'll wait until there's a working GUI class to do that
-        this.push(this.inventory[0]);
+        this.inventory.push(this.inventory[0]);
         this.inventory[0] = weapon;
     }
     else {
-        this.push(weapon);
+        this.inventory.push(weapon);
     }
 }
 
 /**
  * @function processes a new armor item
- * 
+ *
  */
 Inventory.prototype.addArmor = function(armor) {
     checkArmor(armor);
     if(this.inventory.length >= 17) { /* Tell GUI that inventory is full */ }
     if(armor.type.defense > this.inventory[1].type.defense) { // See line 25
-        this.push(this.inventory[0]);
-        this.inventory[0] = armor;
+        this.inventory.push(this.inventory[1]);
+        this.inventory[1] = armor;
     }
     else {
-        this.push(armor);
+        this.inventory.push(armor);
     }
 }
 
 /**
  * @function power up the equipped weapon
- * 
+ *
  */
 Inventory.prototype.powerupWeapon = function(damage) {
     this.inventory[0].type.damageMax += damage;
@@ -1853,7 +1929,7 @@ Inventory.prototype.powerupWeapon = function(damage) {
 
 /**
  * @function power up the equipped armor
- * 
+ *
  */
 Inventory.prototype.powerupArmor = function(defense) {
     this.inventory[1].type.defense += defense;
@@ -1861,7 +1937,7 @@ Inventory.prototype.powerupArmor = function(defense) {
 
 /**
  * @function add item to inventory
- * 
+ *
  */
 Inventory.prototype.addItem = function(item) {
     if(this.inventory.length >= 17) { /* Tell GUI inventory is full */ }
@@ -1870,7 +1946,7 @@ Inventory.prototype.addItem = function(item) {
 
 /**
  * @function remove item from inventory
- * 
+ *
  */
 Inventory.prototype.removeItem = function(item) {
     this.inventory.remove(this.inventory.indexOf(item));
@@ -1878,30 +1954,30 @@ Inventory.prototype.removeItem = function(item) {
 
 /**
  * @function makes sure item is a weapon
- * 
+ *
  */
 function checkWeapon(item) {
     if(typeof item == 'undefined') failWeapon();
     if(typeof item.type == 'undefined') failWeapon();
     if(typeof item.level == "undefined") failWeapon();
-    if(typeof item.type.damageMax == "undefined") failWeapon();
-    if(typeof item.type.damageMin == "undefined") failWeapon();
-    if(typeof item.type.damageType == "undefined") failWeapon();
-    if(typeof item.type.range == "undefined") failWeapon();
-    if(typeof item.type.hitBonus == "undefined") failWeapon();
-    if(typeof item.type.properties == "undefined") failWeapon();
+    if(typeof item.damageMax == "undefined") failWeapon();
+    if(typeof item.damageMin == "undefined") failWeapon();
+    if(typeof item.damageType == "undefined") failWeapon();
+    if(typeof item.range == "undefined") failWeapon();
+    if(typeof item.hitBonus == "undefined") failWeapon();
+    if(typeof item.properties == "undefined") failWeapon();
 }
 
 /**
  * @function makes sure item is armor
- * 
+ *
  */
 function checkArmor(item) {
     if(typeof item == 'undefined') failArmor();
     if(typeof item.type == 'undefined') failArmor();
-    if(typeof item.type.defense == "undefined") failArmor();
-    if(typeof item.type.strongType == "undefined") failArmor();
-    if(typeof item.type.weakType == "undefined") failArmor();
+    if(typeof item.defense == "undefined") failArmor();
+    if(typeof item.strongType == "undefined") failArmor();
+    if(typeof item.weakType == "undefined") failArmor();
 }
 
 function failWeapon() {
@@ -1911,6 +1987,7 @@ function failWeapon() {
 function failArmor() {
     throw new Error("Item doesn't match type definition for 'Armor'");
 }
+
 },{}],15:[function(require,module,exports){
 "use strict";
 
@@ -2327,12 +2404,10 @@ Player.prototype.changeClass = function(chosenClass) {
  *{input} keyboard input given for this turn
  */
 Player.prototype.processTurn = function(input) {
-
     if (!this.shouldProcessTurn) return;
-
+    if (this.combat.status.effect != "None") window.combatController.handleStatus(this.combat);
     if (this.combat.health <= 0) this.state = "dead";
-    if (this.state == "dead") return; // shouldnt be necessary
-
+    if (this.state == "dead" || this.combat.status.effect == "Frozen") return;
 
     if (hasUserInput(input)) {
         // Cancel walk
@@ -2375,15 +2450,11 @@ Player.prototype.processTurn = function(input) {
     if (screenCoor.x + 5 >= this.tilemap.draw.size.width) {
         this.tilemap.moveBy({ x: 1, y: 0 });
     }
-
 }
 
 Player.prototype.collided = function(entity) {
-    if(typeof entity == Weapon) { this.inventory.addWeapon(weapon); }
-    if(typeof entity == Armor) { this.inventory.addArmor(armor); }
-
-    if(entity.type == "Stairs"){
-      this.shouldProcessTurn = false;
+    if (entity.type == "Stairs") {
+        this.shouldProcessTurn = false;
     }
 }
 
@@ -2412,7 +2483,6 @@ Player.prototype.render = function(elapsedTime, ctx) {
 function hasUserInput(input) {
     return input.up || input.down || input.right || input.left;
 }
-
 
 },{"./armor.js":5,"./combat_class":7,"./inventory.js":14,"./tilemap":23,"./vector":24,"./weapon.js":25}],18:[function(require,module,exports){
 "use strict";
@@ -3070,11 +3140,12 @@ function equals(a, b){
 module.exports = exports = Weapon;
 
 // I'm sure there's a better way to do this,
-// especially wince we have to restrict weapon types to different classes. 
+// especially wince we have to restrict weapon types to different classes.
 function Weapon(aName, aLevel) {
     this.type = "Weapon";
     this.name = aName;
     this.level = aLevel;
+    this.shouldRetain = true;
 
     switch (aName) {
         // Melee
@@ -3084,6 +3155,7 @@ function Weapon(aName, aLevel) {
             this.damageType = "s";
             this.range = 1;
             this.hitBonus = 0;
+            this.attackEffect = "";
             this.properties = "+1 Min Damage";
             break;
 
@@ -3093,6 +3165,7 @@ function Weapon(aName, aLevel) {
             this.damageType = "b";
             this.range = 1;
             this.hitBonus = 2;
+            this.attackEffect = "";
             this.properties = "+2 to Hit";
             break;
 
@@ -3102,6 +3175,7 @@ function Weapon(aName, aLevel) {
             this.damageType = "s";
             this.range = 2;
             this.hitBonus = 0;
+            this.attackEffect = "";
             this.properties = "+1 Range";
             break;
 
@@ -3111,6 +3185,7 @@ function Weapon(aName, aLevel) {
             this.damageType = "sb";
             this.range = 1;
             this.hitBonus = 1;
+            this.attackEffect = "";
             this.properties = "+3 Min Damage, +1 Crit Chance";
             break;
 
@@ -3120,6 +3195,7 @@ function Weapon(aName, aLevel) {
             this.damageType = "s";
             this.range = 1;
             this.hitBonus = 0;
+            this.attackEffect = "";
             this.properties = "+1 Min Damage";
             break;
 
@@ -3130,6 +3206,7 @@ function Weapon(aName, aLevel) {
             this.damageType = "p";
             this.range = 6;
             this.hitBonus = 3;
+            this.attackEffect = "";
             this.properties = "+1 Range, +3 to Hit";
             break;
 
@@ -3139,6 +3216,7 @@ function Weapon(aName, aLevel) {
             this.damageType = "p";
             this.range = 5;
             this.hitBonus = 0;
+            this.attackEffect = "";
             this.properties = "+1 Min Damage";
             break;
 
@@ -3148,6 +3226,7 @@ function Weapon(aName, aLevel) {
             this.damageType = "p";
             this.range = 5;
             this.hitBonus = 0;
+            this.attackEffect = "Poisoned";
             this.properties = "50% Poison Chance";
             break;
 
@@ -3157,6 +3236,7 @@ function Weapon(aName, aLevel) {
             this.damageType = "b";
             this.range = 3;
             this.hitBonus = 0;
+            this.attackEffect = "";
             this.properties = "+3 Min Damage, -2 Range";
             break;
 
@@ -3167,6 +3247,7 @@ function Weapon(aName, aLevel) {
             this.damageType = "m";
             this.range = 255;
             this.hitBonus = 255;
+            this.attackEffect = "";
             this.properties = "Never Misses";
             break;
 
@@ -3176,6 +3257,7 @@ function Weapon(aName, aLevel) {
             this.damageType = "m";
             this.range = 255;
             this.hitBonus = 0;
+            this.attackEffect = "Burned";
             this.properties = "Explodes on Contact, 50% Burn Chance";
             break;
 
@@ -3185,6 +3267,7 @@ function Weapon(aName, aLevel) {
             this.damageType = "m";
             this.range = 255;
             this.hitBonus = 0;
+            this.attackEffect = "Frozen";
             this.properties = "50% Freeze Chance";
             break;
 
@@ -3194,17 +3277,26 @@ function Weapon(aName, aLevel) {
             this.damageType = "m";
             this.range = 255;
             this.hitBonus = -2;
+            this.attackEffect = "";
             this.properties = "-2 to Hit";
             break;
     }
 
     // static properties for entities
     this.position = { x: -1, y: -1 };
-    this.size = { width: 72, height: 72 }; // correct size for sprites? Dylan?
+    this.size = { width: 96, height: 96 };
+    this.spritesheet = new Image();
+    this.spritesheet.src = './spritesheets/powerup.png';
+
+    this.currY = 0;
+    this.movingUp = true;
 }
 
 Weapon.prototype.collided = function (aEntity) {
-
+  if(aEntity.type == "Player"){
+    aEntity.inventory.addWeapon(this);
+    this.shouldRetain = false;
+  }
 }
 
 Weapon.prototype.processTurn = function () {
@@ -3212,17 +3304,20 @@ Weapon.prototype.processTurn = function () {
 }
 
 Weapon.prototype.retain = function () {
-    return true;
+    return this.shouldRetain;
 }
 
 Weapon.prototype.update = function () {
-
+  if (this.currY >= 5) this.movingUp = false;
+  else if (this.currY <= -5) this.movingUp = true;
+  if (this.movingUp) this.currY += .2;
+  else this.currY -= .2;
 }
 
-Weapon.prototype.render = function () {
-
+Weapon.prototype.render = function (time, ctx) {
+  var position = window.tilemap.toScreenCoords(this.position);
+  ctx.drawImage(this.spritesheet, 375, 75, 75, 75, (position.x * this.size.width), (position.y * this.size.height) + this.currY, 96, 96);
 }
-
 
 },{}],26:[function(require,module,exports){
 module.exports={
