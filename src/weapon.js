@@ -17,6 +17,7 @@ function Weapon(aName, aLevel) {
             this.damageType = "s";
             this.range = 1;
             this.hitBonus = 0;
+            this.attackEffect = "";
             this.properties = "+1 Min Damage";
             break;
 
@@ -26,6 +27,7 @@ function Weapon(aName, aLevel) {
             this.damageType = "b";
             this.range = 1;
             this.hitBonus = 2;
+            this.attackEffect = "";
             this.properties = "+2 to Hit";
             break;
 
@@ -35,6 +37,7 @@ function Weapon(aName, aLevel) {
             this.damageType = "s";
             this.range = 2;
             this.hitBonus = 0;
+            this.attackEffect = "";
             this.properties = "+1 Range";
             break;
 
@@ -44,6 +47,7 @@ function Weapon(aName, aLevel) {
             this.damageType = "sb";
             this.range = 1;
             this.hitBonus = 1;
+            this.attackEffect = "";
             this.properties = "+3 Min Damage, +1 Crit Chance";
             break;
 
@@ -53,6 +57,7 @@ function Weapon(aName, aLevel) {
             this.damageType = "s";
             this.range = 1;
             this.hitBonus = 0;
+            this.attackEffect = "";
             this.properties = "+1 Min Damage";
             break;
 
@@ -63,6 +68,7 @@ function Weapon(aName, aLevel) {
             this.damageType = "p";
             this.range = 6;
             this.hitBonus = 3;
+            this.attackEffect = "";
             this.properties = "+1 Range, +3 to Hit";
             break;
 
@@ -72,6 +78,7 @@ function Weapon(aName, aLevel) {
             this.damageType = "p";
             this.range = 5;
             this.hitBonus = 0;
+            this.attackEffect = "";
             this.properties = "+1 Min Damage";
             break;
 
@@ -81,6 +88,7 @@ function Weapon(aName, aLevel) {
             this.damageType = "p";
             this.range = 5;
             this.hitBonus = 0;
+            this.attackEffect = "Poisoned";
             this.properties = "50% Poison Chance";
             break;
 
@@ -90,6 +98,7 @@ function Weapon(aName, aLevel) {
             this.damageType = "b";
             this.range = 3;
             this.hitBonus = 0;
+            this.attackEffect = "";
             this.properties = "+3 Min Damage, -2 Range";
             break;
 
@@ -100,6 +109,7 @@ function Weapon(aName, aLevel) {
             this.damageType = "m";
             this.range = 255;
             this.hitBonus = 255;
+            this.attackEffect = "";
             this.properties = "Never Misses";
             break;
 
@@ -109,6 +119,7 @@ function Weapon(aName, aLevel) {
             this.damageType = "m";
             this.range = 255;
             this.hitBonus = 0;
+            this.attackEffect = "Burned";
             this.properties = "Explodes on Contact, 50% Burn Chance";
             break;
 
@@ -118,6 +129,7 @@ function Weapon(aName, aLevel) {
             this.damageType = "m";
             this.range = 255;
             this.hitBonus = 0;
+            this.attackEffect = "Frozen";
             this.properties = "50% Freeze Chance";
             break;
 
@@ -127,6 +139,7 @@ function Weapon(aName, aLevel) {
             this.damageType = "m";
             this.range = 255;
             this.hitBonus = -2;
+            this.attackEffect = "";
             this.properties = "-2 to Hit";
             break;
     }
