@@ -446,7 +446,7 @@ function pickAdjacent(room) {
   return {x: x, y: y};
 }
 
-},{"./../vector":23}],4:[function(require,module,exports){
+},{"./../vector":24}],4:[function(require,module,exports){
 "use strict";
 
 window.debug = false;
@@ -718,6 +718,7 @@ function nextLevel(fadeOut){
       regen = false;
 
       //gen new map
+      tilemap.changeTileset();
       tilemap.generateMap();
 
       //move player to valid location
@@ -770,7 +771,7 @@ function unfadeFromBlack(){
   fadeAnimationProgress.isActive = true;
 }
 
-},{"../tilemaps/tiledef.json":25,"./click":6,"./combat_controller":8,"./entity_manager":10,"./entity_spawner":11,"./game":12,"./gui":13,"./pathfinder.js":16,"./player":17,"./progress_manager":19,"./stairs":20,"./terminal.js":21,"./tilemap":22,"./vector":23}],5:[function(require,module,exports){
+},{"../tilemaps/tiledef.json":26,"./click":6,"./combat_controller":8,"./entity_manager":10,"./entity_spawner":11,"./game":12,"./gui":13,"./pathfinder.js":16,"./player":17,"./progress_manager":19,"./stairs":21,"./terminal.js":22,"./tilemap":23,"./vector":24}],5:[function(require,module,exports){
 "use strict";
 
 module.exports = exports = Armor;
@@ -911,8 +912,9 @@ function CombatClass(aType) {
     switch (aType) {
         case "Knight":
             this.health = 20;
-            this.stamina = 100;
-            this.someOtherPowerup = 50;
+            this.attackBonus = 0;
+            this.damageBonus = 0;
+            this.defenseBonus = 0;
             this.weapon = new Weapon("Longsword", 1);
             this.armor = new Armor("Hide"); // No restrictions on Armor types
             this.attackType = "Melee";
@@ -920,8 +922,9 @@ function CombatClass(aType) {
 
         case "Archer":
             this.health = 10;
-            this.stamina = 100;
-            this.someOtherPowerup = 50;
+            this.attackBonus = 0;
+            this.damageBonus = 0;
+            this.defenseBonus = 0;
             this.weapon = new Weapon("Broadhead", 1);
             this.armor = new Armor("Hide"); // Can't wear Chain or Plate
             this.attackType = "Ranged";
@@ -929,8 +932,9 @@ function CombatClass(aType) {
 
         case "Mage":
             this.health = 10;
-            this.stamina = 100;
-            this.someOtherPowerup = 50;
+            this.attackBonus = 0;
+            this.damageBonus = 0;
+            this.defenseBonus = 0;
             this.weapon = new Weapon("Eldritch Blast", 1);
             this.armor = new Armor("Robes"); // Can only wear Robes, nothing else
             this.attackType = "Magic";
@@ -939,55 +943,46 @@ function CombatClass(aType) {
 
         case "Zombie":
             this.health = 10;
-            this.stamina = 100;
-            this.someOtherPowerup = 50;
+            this.attackBonus = 0;
+            this.damageBonus = 0;
+            this.defenseBonus = 0;
             this.weapon = new Weapon("Claw", 1);
             this.armor = new Armor("Flesh");
             this.attackType = "Melee";
-            this.senseRange = 10; // This might be too high, what if we keep the camera centered..?
+            this.senseRange = 5;
 
-            this.turnAI = function (aEnemy) {
-                // console.log("\nenemy turn");
-                // console.log(aEnemy.position.x + " " + aEnemy.position.y);
+            this.turnAI = function(aEnemy) {
                 var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
                 if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
-                    console.log("player within attack range");
                     combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
                 } else if (distance.x <= aEnemy.combat.senseRange && distance.y <= aEnemy.combat.senseRange) {
-                    console.log("player within sense range");
                     var path = pathfinder.findPath(aEnemy.position, aEnemy.target.position);
                     if (path.length > 1) aEnemy.position = { x: path[1].x, y: path[1].y };
-                    else console.log("path less than 1 - no path to target");
                 } else {
-                    console.log("moving randomly");
                     var nextTile = aEnemy.tilemap.getRandomAdjacent(aEnemy.position);
                     aEnemy.position = { x: nextTile.x, y: nextTile.y };
                 }
-                // console.log(aEnemy.position.x + " " + aEnemy.position.y);
             }
             break;
 
         case "EnemyRanged":
             this.health = 10;
-            this.stamina = 100;
-            this.someOtherPowerup = 50;
+            this.attackBonus = 0;
+            this.damageBonus = 0;
+            this.defenseBonus = 0;
             this.weapon = new Weapon("Broadhead", 1);
             this.armor = new Armor("Hide");
             this.attackType = "Ranged";
-            this.senseRange = 15;
+            this.senseRange = 10;
 
-            this.turnAI = function (aEnemy) {
+            this.turnAI = function(aEnemy) {
                 var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
                 if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
-                    console.log("player within attack range");
                     combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
                 } else if (distance.x <= aEnemy.combat.senseRange && distance.y <= aEnemy.combat.senseRange) {
-                    console.log("player within sense range");
                     var path = pathfinder.findPath(aEnemy.position, aEnemy.target.position);
                     if (path.length > 1) aEnemy.position = { x: path[1].x, y: path[1].y };
-                    else console.log("path less than 1 - no path to target");
                 } else {
-                    console.log("moving randomly");
                     var nextTile = aEnemy.tilemap.getRandomAdjacent(aEnemy.position);
                     aEnemy.position = { x: nextTile.x, y: nextTile.y };
                 }
@@ -996,25 +991,22 @@ function CombatClass(aType) {
 
         case "Captain":
             this.health = 25;
-            this.stamina = 100;
-            this.someOtherPowerup = 50;
+            this.attackBonus = 0;
+            this.damageBonus = 0;
+            this.defenseBonus = 0;
             this.weapon = new Weapon("Battleaxe", 1);
             this.armor = new Armor("Chain");
             this.attackType = "Melee";
-            this.senseRange = 20;
+            this.senseRange = 15;
 
-            this.turnAI = function (aEnemy) {
+            this.turnAI = function(aEnemy) {
                 var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
                 if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
-                    console.log("player within attack range");
                     combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
                 } else if (distance.x <= aEnemy.combat.senseRange && distance.y <= aEnemy.combat.senseRange) {
-                    console.log("player within sense range");
                     var path = pathfinder.findPath(aEnemy.position, aEnemy.target.position);
                     if (path.length > 1) aEnemy.position = { x: path[1].x, y: path[1].y };
-                    else console.log("path less than 1 - no path to target");
                 } else {
-                    console.log("moving randomly");
                     var nextTile = aEnemy.tilemap.getRandomAdjacent(aEnemy.position);
                     aEnemy.position = { x: nextTile.x, y: nextTile.y };
                 }
@@ -1023,25 +1015,22 @@ function CombatClass(aType) {
 
         case "Shaman":
             this.health = 10;
-            this.stamina = 100;
-            this.someOtherPowerup = 50;
+            this.attackBonus = 0;
+            this.damageBonus = 0;
+            this.defenseBonus = 0;
             this.weapon = new Weapon("Eldritch Blast", 1);
             this.armor = new Armor("Robes");
             this.attackType = "Magic";
             this.senseRange = 10;
 
-            this.turnAI = function (aEnemy) {
+            this.turnAI = function(aEnemy) {
                 var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
                 if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
-                    console.log("player within attack range");
                     combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
                 } else if (distance.x <= aEnemy.combat.senseRange && distance.y <= aEnemy.combat.senseRange) {
-                    console.log("player within sense range");
                     var path = pathfinder.findPath(aEnemy.position, aEnemy.target.position);
                     if (path.length > 1) aEnemy.position = { x: path[1].x, y: path[1].y };
-                    else console.log("path less than 1 - no path to target");
                 } else {
-                    console.log("moving randomly");
                     var nextTile = aEnemy.tilemap.getRandomAdjacent(aEnemy.position);
                     aEnemy.position = { x: nextTile.x, y: nextTile.y };
                 }
@@ -1051,7 +1040,7 @@ function CombatClass(aType) {
 }
 
 
-},{"./armor":5,"./tilemap":22,"./vector":23,"./weapon":24}],8:[function(require,module,exports){
+},{"./armor":5,"./tilemap":23,"./vector":24,"./weapon":25}],8:[function(require,module,exports){
 "use strict";
 
 module.exports = exports = CombatController;
@@ -1059,57 +1048,82 @@ module.exports = exports = CombatController;
 const CombatClass = require("./combat_class");
 const Weapon = require("./weapon");
 const Armor = require("./armor");
+const RNG = require("./rng");
 
 function CombatController() {
 
 }
 
-CombatController.prototype.handleAttack = function(aAttackerClass, aDefenderClass) {
-    var lAttackBase = 0;
+CombatController.prototype.handleAttack = function (aAttackerClass, aDefenderClass) {
+    var lAttackBase = Math.floor(aAttackerClass.attackBonus);
     var lAttackBonus = aAttackerClass.weapon.hitBonus;
-    var lAttackRoll = rollRandom(1, 21);
+    var lAttackRoll = RNG.rollRandom(1, 20);
     var lAttackTotal = lAttackBase + lAttackBonus + lAttackRoll;
 
     var lDefenseBase = aDefenderClass.armor.defense;
-    var lDefenseBonus = 0;
+    var lDefenseBonus = Math.floor(aDefenderClass.defenseBonus);
     var lDefenseTotal = lDefenseBase + lDefenseBonus;
 
     var lDamageBase = aAttackerClass.weapon.level - 1;
     var lDamageMax = aAttackerClass.weapon.damageMax;
     var lDamageMin = aAttackerClass.weapon.damageMin;
-    var lDamageRoll = rollRandom(lDamageMin, 1 + lDamageMax);
-    var lDamageBonus = 0;
+    var lDamageRoll = RNG.rollRandom(lDamageMin, lDamageMax);
+    var lDamageBonus = Math.floor(aAttackerClass.damageBonus);
     var lDamageTotal = lDamageBase + lDamageBonus + lDamageRoll;
 
+    var message;
+    var attacker = aAttackerClass.type;
+    var defender = aDefenderClass.type;
+    var playerAttacker = (attacker == "Knight" || attacker == "Archer" || attacker == "Mage");
     if (lAttackRoll == 1) {
-        var lSelfDamage = rollRandom(1, lDamageMax + 1);
+        var lSelfDamage = RNG.rollMultiple(1, 3, aAttackerClass.weapon.level);
         aAttackerClass.health -= lSelfDamage;
-        window.terminal.log("Crit Fail, take " + lSelfDamage + " damage.");
         // attacker hit itself, play attacker hit sound
-        // aDefenderClass.type != "Knight"||"Archer"||"Mage"
+
+        // If attacker is player
+        if (playerAttacker) {
+            message = `You critically fail your attack and hurt yourself for ${lSelfDamage} damage.`;
+        } else { // attacker is enemy
+            message = `The ${attacker} critically fails its attack and takes ${lSelfDamage} damage.`;
+        }
     } else if (lAttackRoll == 20 || (lAttackRoll == 19 && (aAttackerClass.attackType == "Ranged" || aAttackerClass.weapon.type == "Battleaxe"))) {
         lDamageTotal += lDamageMax;
         aDefenderClass.health -= lDamageTotal;
         // defender hit, play defender hit sound
+
+        // If attacker is player
+        if (playerAttacker) {
+            message = `Your attack is perfect, striking the ${defender} for ${lDamageTotal} damage.`;
+        } else { // attacker is enemy
+            message = `The ${attacker}'s attack is perfect striking you for ${lDamageTotal} damage.`;
+        }
     } else {
         if (lAttackTotal > lDefenseTotal) {
             aDefenderClass.health -= lDamageTotal;
-            window.terminal.log("Hit, deal " + lDamageTotal + " damage");
             // defender hit, play defender hit sound
+
+            // If attacker is player
+            if (playerAttacker) {
+                message = `Your attack strikes the ${defender} for ${lDamageTotal} damage.`;
+            } else { // attacker is enemy
+                message = `The ${attacker}'s attack strikes you for ${lDamageTotal} damage.`;
+            }
         } else {
-            window.terminal.log("Miss, " + lAttackTotal + " against " + lDefenseTotal);
+            // If attacker is player
+            if (playerAttacker) {
+                message = `Your attack misses the ${defender}.`;
+            } else { // attacker is enemy
+                message = `The ${attacker}'s attack misses you.`;
+            }
         }
     }
-    window.terminal.log("\n\n");
+
+    window.terminal.log(message + "\n");
 }
 
-function rollRandom(aMinimum, aMaximum) {
-    return Math.floor(Math.random() * (aMaximum - aMinimum) + aMinimum);
-}
-
-CombatController.prototype.randomDrop = function(aPosition) {
+CombatController.prototype.randomDrop = function (aPosition) {
     var lDrop = new Object();
-    var lRand = rollRandom(1, 21); // need to set up weighted rands
+    var lRand = RNG.rollRandom(1, 20); // need to set up weighted rands
     if (lRand > 17) {                           // spawn armor
         lDrop.type = "Armor";
         // TODO > properly implement...
@@ -1117,7 +1131,7 @@ CombatController.prototype.randomDrop = function(aPosition) {
     } else if (lRand >= 1 && lRand < 17) {      // spawn weapon
         lDrop.type = "Weapon";
         var playerClass = window.player.class;
-        var level = rollRandom(window.player.level, window.player.level + 3); // need to set up weighted rands
+        var level = RNG.rollRandom(window.player.level, window.player.level + 2); // need to set up weighted rands
         switch (lRand % 4) {
             // this is awful, why is this still here?
             case 0:
@@ -1144,7 +1158,7 @@ CombatController.prototype.randomDrop = function(aPosition) {
 }
 
 
-},{"./armor":5,"./combat_class":7,"./weapon":24}],9:[function(require,module,exports){
+},{"./armor":5,"./combat_class":7,"./rng":20,"./weapon":25}],9:[function(require,module,exports){
 "use strict";
 
 const Tilemap = require('./tilemap');
@@ -1209,7 +1223,7 @@ Enemy.prototype.render = function(elapsedTime, ctx) {
 }
 
 
-},{"./combat_class":7,"./tilemap":22}],10:[function(require,module,exports){
+},{"./combat_class":7,"./tilemap":23}],10:[function(require,module,exports){
 "use strict";
 
 /**
@@ -2395,10 +2409,11 @@ function hasUserInput(input) {
 }
 
 
-},{"./armor.js":5,"./combat_class":7,"./inventory.js":14,"./tilemap":22,"./vector":23,"./weapon.js":24}],18:[function(require,module,exports){
+},{"./armor.js":5,"./combat_class":7,"./inventory.js":14,"./tilemap":23,"./vector":24,"./weapon.js":25}],18:[function(require,module,exports){
 "use strict";
 
 const Tilemap = require('./tilemap');
+const RNG = require("./rng");
 
 /**
  * @module exports the Powerup class
@@ -2411,17 +2426,17 @@ module.exports = exports = Powerup;
  * @param {postition} position object specifying an x and y
  */
 function Powerup(position, tilemap) {
-    this.position = { x: position.x, y: position.y };
-    this.size = { width: 96, height: 96 };
-    this.spritesheet = new Image();
-    this.tilemap = tilemap;
-    this.spritesheet.src = './spritesheets/powerup.png';
-    this.type = "Powerup";
-    this.animation = true;
-    this.currY = 0;
-    this.movingUp = true;
-    this.currPower = Math.floor((Math.random() * 3) + 1);
-    this.used = false;
+  this.position = { x: position.x, y: position.y };
+  this.size = { width: 96, height: 96 };
+  this.spritesheet = new Image();
+  this.tilemap = tilemap;
+  this.spritesheet.src = './spritesheets/powerup.png';
+  this.type = "Powerup";
+  this.animation = true;
+  this.currY = 0;
+  this.movingUp = true;
+  this.currPower = RNG.rollRandom(1, 4);
+  this.used = false;
 }
 
 /**
@@ -2429,10 +2444,10 @@ function Powerup(position, tilemap) {
  * {DOMHighResTimeStamp} time the elapsed time since the last frame
  */
 Powerup.prototype.update = function (time) {
-    if (this.currY >= 5) this.movingUp = false;
-    else if (this.currY <= -5) this.movingUp = true;
-    if (this.movingUp) this.currY += .2;
-    else this.currY -= .2;
+  if (this.currY >= 5) this.movingUp = false;
+  else if (this.currY <= -5) this.movingUp = true;
+  if (this.movingUp) this.currY += .2;
+  else this.currY -= .2;
 }
 
 Powerup.prototype.processTurn = function (input) {
@@ -2440,28 +2455,41 @@ Powerup.prototype.processTurn = function (input) {
 }
 
 Powerup.prototype.collided = function (entity) {
-    if (this.used) return;
-    if (entity.type == "Player") {
-        //Update player's health/strength/item
-        switch (this.currPower) {
-            case 1:
-                entity.combat.health += 5;
-                this.used = true;
-                break;
-            case 2:
-                entity.combat.stamina += 20;
-                this.used = true;
-                break;
-            case 3:
-                entity.combat.someOtherPowerup += 10;
-                this.used = true;
-                break;
-        }
+  if (this.used) return;
+  if (entity.type == "Player") {
+    //Update player's health/strength/item
+    switch (this.currPower) {
+      case 1:
+        entity.combat.damageBonus += 0.2;
+        window.terminal.log("The crystal radiates a bright blue and you feel its energy course through you.");
+        if (window.debug) console.log(entity.combat.damageBonus);
+        this.used = true;
+        break;
+      case 2:
+        var potionValue = RNG.rollMultiple(3, 6, entity.level);
+        entity.combat.health += potionValue;
+        window.terminal.log("You quaff the large crimson potion and feel rejuvenated.");
+        if (window.debug) console.log("+" + potionValue + " health = " + entity.combat.health);
+        this.used = true;
+        break;
+      case 3:
+        entity.combat.defenseBonus += 0.2;
+        window.terminal.log("As you finish the potion a faint ward forms around you.");
+        if (window.debug) console.log(entity.combat.defenseBonus);
+        this.used = true;
+        break;
+      case 4:
+        entity.combat.attackBonus += 0.2;
+        window.terminal.log("The very smell of the verdant green potion awakens you and you feel more agile.");
+        if (window.debug) console.log(entity.combat.attackBonus);
+        this.used = true;
+        break;
     }
+  }
 }
 
 Powerup.prototype.retain = function () {
-    return !this.used;
+  return !this.used;
 }
 
 /**
@@ -2469,25 +2497,28 @@ Powerup.prototype.retain = function () {
  * {CanvasRenderingContext2D} ctx the context to render into
  */
 Powerup.prototype.render = function (elapsedTime, ctx) {
-    var position = this.tilemap.toScreenCoords(this.position);
-    switch (this.currPower) {
-        case 1:
-            ctx.drawImage(this.spritesheet, 0, 150, 75, 75, (position.x * this.size.width), (position.y * this.size.height) + this.currY, 96, 96);
-            break;
-        case 2:
-            ctx.drawImage(this.spritesheet, 150, 150, 75, 75, (position.x * this.size.width), (position.y * this.size.height) + this.currY, 96, 96);
-            break;
-        case 3:
-            ctx.drawImage(this.spritesheet, 75, 150, 75, 75, (position.x * this.size.width), (position.y * this.size.height) + this.currY, 96, 96);
-            break;
-    }
+  var position = this.tilemap.toScreenCoords(this.position);
+  switch (this.currPower) {
+    case 1:
+      ctx.drawImage(this.spritesheet, 0, 150, 75, 75, (position.x * this.size.width), (position.y * this.size.height) + this.currY, 96, 96);
+      break;
+    case 2:
+      ctx.drawImage(this.spritesheet, 75, 150, 75, 75, (position.x * this.size.width), (position.y * this.size.height) + this.currY, 96, 96);
+      break;
+    case 3:
+      ctx.drawImage(this.spritesheet, 150, 150, 75, 75, (position.x * this.size.width), (position.y * this.size.height) + this.currY, 96, 96);
+      break;
+    case 4:
+      ctx.drawImage(this.spritesheet, 225, 150, 75, 75, (position.x * this.size.width), (position.y * this.size.height) + this.currY, 96, 96);
+      break;
+  }
 }
 
     //Other potential powerups
     //ctx.drawImage(this.power,0,25,25,25,position.x*this.size.width, position.y*this.size.height,96,96);
     //ctx.drawImage(this.power,25,50,25,25,position.x*this.size.width, position.y*this.size.height,96,96);
 
-},{"./tilemap":22}],19:[function(require,module,exports){
+},{"./rng":20,"./tilemap":23}],19:[function(require,module,exports){
 "use strict";
 
 module.exports = exports = ProgressManager;
@@ -2522,6 +2553,63 @@ ProgressManager.prototype.reset = function(){
 }
 
 },{}],20:[function(require,module,exports){
+"use strict";
+
+module.exports = exports = {
+    rollRandom: rollRandom,
+    rollMultiple: rollMultiple,
+    rollWeighted: rollWeighted
+}
+
+/**
+ * @function rollRandom
+ * Generates a random number using given bounds.
+ * @param {Integer} aMinimum - inclusive lower bound
+ * @param {Integer} aMaximum - inclusive upper bound
+ */
+function rollRandom(aMinimum, aMaximum) {
+    return Math.floor(Math.random() * (aMaximum + 1 - aMinimum) + aMinimum);
+}
+
+/**
+ * @function rollMultiple
+ * Generates a sum of random numbers using gives bounds.
+ * @param {Integer} aMinimum - inclusive lower bound
+ * @param {Integer} aMaximum - inclusive upper bound
+ * @param {Integer} aNumber - number of times to generate a random number
+ */
+function rollMultiple(aMinimum, aMaximum, aNumber) {
+    var total = 0;
+    for (var i = 0; i < aNumber; i++) {
+        total += this.rollRandom(aMinimum, aMaximum);
+    }
+    return total;
+}
+
+/**
+ * @function rollWeighted
+ * Generates a weighted random number corresponding to the index of the weight given.
+ * Accepts any number of arguments greater than 0.
+ * Example: rollWeighted(10,50,20) might return 1 which corresponds to the weight of 50.
+ * Note: weights are not necessarily percentages; they can add up to any amount.
+ */
+function rollWeighted() {
+    var argLength = arguments.length;
+    if (argLength < 1) throw new Error("At least one argument required.");
+    var weightSum = 0;
+    for (var i = 0; i < argLength; i++) {
+        weightSum += arguments[i];
+    }
+    var roll = this.rollRandom(0, weightSum);
+    weightSum = 0;
+    for (var i = 0; i < argLength; i++) {
+        weightSum += arguments[i];
+        if (roll <= weightSum) return i;
+    }
+}
+
+
+},{}],21:[function(require,module,exports){
 "use strict";
 
 /**
@@ -2590,7 +2678,7 @@ Stairs.prototype.render = function (elapsedTime, ctx) {
   ctx.drawImage(this.spritesheet, 75 + this.spriteOff, 0, 75, 75, (position.x * this.size.width), (position.y * this.size.height), 96, 96);
 }
 
-},{}],21:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 "use strict";
 
 const MAX_MSG_COUNT = 50;
@@ -2622,7 +2710,7 @@ Terminal.prototype.render = function(elapsedTime, ctx) {
         ctx.fillText(message, self.startPos.x, self.startPos.y - 18*i);
     });
 }
-},{}],22:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 "use strict";
 
 const MapGenerator = require('./map_generator');
@@ -2642,6 +2730,8 @@ function Tilemap(canvas, width, height, tileset, options){
 
   this.draw = {};
   this.draw.origin = {x: 0, y: 0};
+
+  this.idx = 0;
 
   // We add one so that we go slightly beyond the canvas
   this.draw.size = {
@@ -2678,6 +2768,15 @@ function Tilemap(canvas, width, height, tileset, options){
 
 }
 
+Tilemap.prototype.changeTileset = function(){
+  this.idx++;
+  this.idx %= this.tileset.images.length;
+  var tset = new Image();
+  tset.src = this.tileset.images[this.idx];
+  this.tiles.forEach(function(tile){
+    tile.image = tset;
+  })
+}
 Tilemap.prototype.generateMap = function(){
   var map = new MapGenerator(this.tileset.edges, this.mapWidth, this.mapHeight);
 
@@ -2812,7 +2911,7 @@ Tilemap.prototype.findOpenSpace = function()
   {
     throw new Error("Could not find free space. Check map generation algorithms and definition of empty spaces.")
   }
-  
+
 	return {x: tile % this.mapWidth, y: Math.floor(tile / this.mapWidth)};
 }
 
@@ -2836,7 +2935,7 @@ Tilemap.prototype.getRandomAdjacent = function (aTile) {
   }
 }
 
-},{"./map_generator":15,"./vector":23}],23:[function(require,module,exports){
+},{"./map_generator":15,"./vector":24}],24:[function(require,module,exports){
 "use strict";
 
 /**
@@ -2944,7 +3043,7 @@ function equals(a, b){
   return a.x == b.x && a.y == b.y;
 }
 
-},{}],24:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 "use strict";
 
 module.exports = exports = Weapon;
@@ -3073,8 +3172,8 @@ function Weapon(aName, aLevel) {
             this.damageMin = 1;
             this.damageType = "m";
             this.range = 255;
-            this.hitBonus = -1;
-            this.properties = "-1 to Hit";
+            this.hitBonus = -2;
+            this.properties = "-2 to Hit";
             break;
     }
 
@@ -3104,11 +3203,12 @@ Weapon.prototype.render = function () {
 }
 
 
-},{}],25:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 module.exports={
  "tileheight":96,
  "tilewidth":96,
- "image":".\/tilesets\/tset.png",
+ "image":".\/tilesets\/grass.png",
+ "images": [".\/tilesets\/grass.png", ".\/tilesets\/tset.png"],
  "imageheight":672,
  "imagewidth":768,
  "edges":{
