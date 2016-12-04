@@ -3,11 +3,12 @@
 module.exports = exports = Weapon;
 
 // I'm sure there's a better way to do this,
-// especially wince we have to restrict weapon types to different classes. 
+// especially wince we have to restrict weapon types to different classes.
 function Weapon(aName, aLevel) {
     this.type = "Weapon";
     this.name = aName;
     this.level = aLevel;
+    this.shouldRetain = true;
 
     switch (aName) {
         // Melee
@@ -146,11 +147,19 @@ function Weapon(aName, aLevel) {
 
     // static properties for entities
     this.position = { x: -1, y: -1 };
-    this.size = { width: 72, height: 72 }; // correct size for sprites? Dylan?
+    this.size = { width: 96, height: 96 };
+    this.spritesheet = new Image();
+    this.spritesheet.src = './spritesheets/powerup.png';
+
+    this.currY = 0;
+    this.movingUp = true;
 }
 
 Weapon.prototype.collided = function (aEntity) {
-
+  if(aEntity.type == "Player"){
+    aEntity.inventory.addWeapon(this);
+    this.shouldRetain = false;
+  }
 }
 
 Weapon.prototype.processTurn = function () {
@@ -158,14 +167,17 @@ Weapon.prototype.processTurn = function () {
 }
 
 Weapon.prototype.retain = function () {
-    return true;
+    return this.shouldRetain;
 }
 
 Weapon.prototype.update = function () {
-
+  if (this.currY >= 5) this.movingUp = false;
+  else if (this.currY <= -5) this.movingUp = true;
+  if (this.movingUp) this.currY += .2;
+  else this.currY -= .2;
 }
 
-Weapon.prototype.render = function () {
-
+Weapon.prototype.render = function (time, ctx) {
+  var position = window.tilemap.toScreenCoords(this.position);
+  ctx.drawImage(this.spritesheet, 375, 75, 75, 75, (position.x * this.size.width), (position.y * this.size.height) + this.currY, 96, 96);
 }
-
