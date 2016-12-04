@@ -10,7 +10,7 @@ function Terminal() {
 }
 
 Terminal.prototype.log = function(message) {
-    this.messages.unshift(message);
+    splitMessage(message, this.messages);
     if(this.messages.length > MAX_MSG_COUNT) {
         this.messages.pop();
     }
@@ -23,9 +23,20 @@ Terminal.prototype.update = function(time) {
 
 Terminal.prototype.render = function(elapsedTime, ctx) {
     ctx.fillStyle = 'white';
-    ctx.font = "15px Arial";
+    ctx.font = "15px Courier New";
     var self = this;
     this.messages.forEach(function(message, i) {
         ctx.fillText(message, self.startPos.x, self.startPos.y - 18*i);
     });
+}
+
+function splitMessage(message, messages) {
+    if(message.length < 29) {
+        messages.unshift(message);
+    }
+    else {
+        messages.unshift(message.slice(0,28));
+        splitMessage(message.slice(28,message.length), messages);
+    }
+
 }

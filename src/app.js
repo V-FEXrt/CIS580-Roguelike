@@ -30,6 +30,7 @@ window.combatController = new CombatController();
 
 window.terminal = new Terminal();
 window.terminal.log("Terminal successfully loaded");
+window.terminal.log("This is a message that should be too long for the console");
 
 var gui = new GUI(screenSize);
 
