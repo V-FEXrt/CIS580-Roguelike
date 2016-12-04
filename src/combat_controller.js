@@ -43,7 +43,7 @@ CombatController.prototype.handleAttack = function (aAttackerClass, aDefenderCla
         } else { // attacker is enemy
             message = `The ${attacker} critically fails its attack and takes ${lSelfDamage} damage.`;
         }
-    } else if (lAttackRoll == 20 || (lAttackRoll == 19 && (aAttackerClass.attackType == "Ranged" || aAttackerClass.weapon.type == "Battleaxe"))) {
+    } else if (lAttackRoll == 20 || (lAttackRoll == 19 && (aAttackerClass.attackType == "Ranged" || aAttackerClass.weapon.name == "Battleaxe"))) {
         lDamageTotal += lDamageMax;
         aDefenderClass.health -= lDamageTotal;
         // defender hit, play defender hit sound
@@ -55,7 +55,7 @@ CombatController.prototype.handleAttack = function (aAttackerClass, aDefenderCla
             message = `The ${attacker}'s attack is perfect striking you for ${lDamageTotal} damage.`;
         }
     } else {
-        if (lAttackTotal > lDefenseTotal) {
+        if (lAttackTotal > lDefenseTotal || aAttackerClass.weapon.name == "Magic Missile") {
             aDefenderClass.health -= lDamageTotal;
             // defender hit, play defender hit sound
 
@@ -76,6 +76,12 @@ CombatController.prototype.handleAttack = function (aAttackerClass, aDefenderCla
     }
 
     window.terminal.log(message + "\n");
+}
+
+CombatController.prototype.handleStatus(aCombatClass){
+    switch(aCombatClass.statusEffect){
+        
+    }
 }
 
 CombatController.prototype.randomDrop = function (aPosition) {

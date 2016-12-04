@@ -26,6 +26,8 @@ Enemy.prototype.processTurn = function() {
     if (this.state == "dead") return; // shouldnt be necessary
 
     this.combat.turnAI(this);
+
+    if (this.combat.statusEffect != "None") window.combatController.handleStatus(this.combat);
 }
 
 Enemy.prototype.update = function(time) {
