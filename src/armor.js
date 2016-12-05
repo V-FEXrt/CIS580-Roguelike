@@ -8,7 +8,7 @@ function Armor(aName) {
     this.level = 0;
     this.shouldRetain = true;
 
-    switch (aType) {
+    switch (aName) {
         case "Flesh":
             this.defense = 3;
             this.strongType = "";

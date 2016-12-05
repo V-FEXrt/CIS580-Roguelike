@@ -21,6 +21,8 @@ function Inventory(weapon, armor) {
  */
 Inventory.prototype.addWeapon = function (weapon) {
     checkWeapon(weapon);
+    // check for invalids
+
     window.terminal.log(`Picked up a level ${weapon.level} ${weapon.name} with damage range ${weapon.damageMin}-${weapon.damageMax}, with ${weapon.properties}.`);
     var weaponToDrop = this.inventory[0];
     this.inventory[0] = weapon;
@@ -47,6 +49,12 @@ Inventory.prototype.addWeapon = function (weapon) {
  */
 Inventory.prototype.addArmor = function (armor) {
     checkArmor(armor);
+    // check for invalids
+    if (player.class == "Mage" && armor.name != "Robes") {
+        window.terminal.log("Mages don't wear armor...");
+        return;
+    }
+
     window.terminal.log(`Picked up level ${armor.level} ${armor.name}.`);
     var armorToDrop = this.inventory[1];
     this.inventory[1] = armor;
@@ -107,12 +115,15 @@ Inventory.prototype.removeItem = function (item) {
 function checkWeapon(item) {
     if (typeof item == 'undefined') failWeapon();
     if (typeof item.type == 'undefined') failWeapon();
+    if (typeof item.name == 'undefined') failWeapon();
     if (typeof item.level == "undefined") failWeapon();
+    if (typeof item.shouldRetain == 'undefined') failWeapon();
     if (typeof item.damageMax == "undefined") failWeapon();
     if (typeof item.damageMin == "undefined") failWeapon();
     if (typeof item.damageType == "undefined") failWeapon();
     if (typeof item.range == "undefined") failWeapon();
     if (typeof item.hitBonus == "undefined") failWeapon();
+    if (typeof item.attackEffect == 'undefined') failWeapon();
     if (typeof item.properties == "undefined") failWeapon();
 }
 
@@ -123,6 +134,9 @@ function checkWeapon(item) {
 function checkArmor(item) {
     if (typeof item == 'undefined') failArmor();
     if (typeof item.type == 'undefined') failArmor();
+    if (typeof item.name == 'undefined') failWeapon();
+    if (typeof item.level == 'undefined') failWeapon();
+    if (typeof item.shouldRetain == 'undefined') failWeapon();
     if (typeof item.defense == "undefined") failArmor();
     if (typeof item.strongType == "undefined") failArmor();
     if (typeof item.weakType == "undefined") failArmor();
