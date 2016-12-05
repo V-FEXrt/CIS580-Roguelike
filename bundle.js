@@ -735,7 +735,7 @@ function nextLevel(fadeOut){
       // allow player to move
       player.shouldProcessTurn = true;
 
-      // Find stairs location that is at least 5 away.
+      // Find stairs location that is at least 8 away.
       var pos;
       var dist;
       var iterations = 0;
@@ -756,7 +756,7 @@ function nextLevel(fadeOut){
     // add stairs
     window.entityManager.addEntity(new Stairs(pos, tilemap, function(){nextLevel(true)}));
     //place new entities
-    EntitySpawner.spawn(player, tilemap, 30, 25);
+    EntitySpawner.spawn(player, tilemap, 30, [20, 20, 20, 20, 20, 0, 0, 0]);
 
     unfadeFromBlack();
 
@@ -1477,6 +1477,7 @@ function collision(entity1, entity2){
 
 const Enemy = require('./enemy');
 const Powerup = require('./powerup');
+const RNG = require('./rng');
 
 /**
  * @module EntitySpawner
@@ -1493,9 +1494,37 @@ const Powerup = require('./powerup');
  * @constructor EntitySpawner
  * Creates a EntitySpawner
  */
-function spawn(player, tilemap, count, percentEnemy) {
+var spawnArray = [
+  function(){ spawnPowerup(1); },
+  function(){ spawnPowerup(2); },
+  function(){ spawnPowerup(3); },
+  function(){ spawnPowerup(4); },
+  function(){ spawnEnemy("Zombie"); },
+  function(){ spawnEnemy("EnemyRanged"); },
+  function(){ spawnEnemy("Captain"); },
+  function(){ spawnEnemy("Shaman"); },
+]
+
+var tilemap;
+var player;
+ // percents should be an array of the percent everything should be spawned. in this format
+ // [ crystal, red potion, blue potion, green potion, Zombie, EnemyRanged, Captain, Shaman ]
+function spawn(aPlayer, tmap, count, percents) {
+  tilemap = tmap;
+  player = aPlayer;
   for(var i = 0; i < count; i++){
-    (Math.random() < (percentEnemy/100)) ? spawnEnemy(tilemap, player) : spawnPowerup(tilemap);
+    var idx = RNG.rollWeighted(
+      percents[0],
+      percents[1],
+      percents[2],
+      percents[3],
+      percents[4],
+      percents[5],
+      percents[6],
+      percents[7]
+    );
+    //window.terminal.log(""+idx, 'lime');
+    spawnArray[idx]()
   }
   if(window.debug){
     console.log(pu + " powerups spawned");
@@ -1503,14 +1532,14 @@ function spawn(player, tilemap, count, percentEnemy) {
   }
 }
 
-function spawnPowerup(tilemap){
+function spawnPowerup(pType){
   pu++;
-  window.entityManager.addEntity(new Powerup(tilemap.findOpenSpace(), tilemap));
+  window.entityManager.addEntity(new Powerup(tilemap.findOpenSpace(), tilemap, pType));
 }
 
-function spawnEnemy(tilemap, player){
+function spawnEnemy(eType){
   en++;
-  window.entityManager.addEntity(new Enemy(tilemap.findOpenSpace(), tilemap, "Zombie", player, spawnDrop))
+  window.entityManager.addEntity(new Enemy(tilemap.findOpenSpace(), tilemap, eType, player, spawnDrop))
 }
 
 function spawnDrop(position){
@@ -1519,8 +1548,7 @@ function spawnDrop(position){
   if(drop.type != "None") window.entityManager.addEntity(drop);
 }
 
-
-},{"./enemy":9,"./powerup":18}],12:[function(require,module,exports){
+},{"./enemy":9,"./powerup":18,"./rng":20}],12:[function(require,module,exports){
 "use strict";
 
 /**
@@ -2500,7 +2528,7 @@ module.exports = exports = Powerup;
  * Creates a new Powerup object
  * @param {postition} position object specifying an x and y
  */
-function Powerup(position, tilemap) {
+function Powerup(position, tilemap, pType) {
   this.position = { x: position.x, y: position.y };
   this.size = { width: 96, height: 96 };
   this.spritesheet = new Image();
@@ -2510,7 +2538,7 @@ function Powerup(position, tilemap) {
   this.animation = true;
   this.currY = 0;
   this.movingUp = true;
-  this.currPower = RNG.rollRandom(1, 4);
+  this.currPower = pType;
   this.used = false;
 }
 
@@ -2766,8 +2794,9 @@ function Terminal() {
     this.startPos = {x: 1063, y: 667};
 }
 
-Terminal.prototype.log = function(message) {
-    splitMessage(message, this.messages);
+Terminal.prototype.log = function(message, color) {
+    if(typeof color == 'undefined') color = 'white';
+    splitMessage(message, this.messages, color);
     if(this.messages.length > MAX_MSG_COUNT) {
         this.messages.pop();
     }
@@ -2783,24 +2812,25 @@ Terminal.prototype.update = function(time) {
 }
 
 Terminal.prototype.render = function(elapsedTime, ctx) {
-    ctx.fillStyle = 'white';
     ctx.font = "15px Courier New";
     var self = this;
     this.messages.forEach(function(message, i) {
-        ctx.fillText(message, self.startPos.x, self.startPos.y - 18*i);
+        ctx.fillStyle = message.color;
+        ctx.fillText(message.text, self.startPos.x, self.startPos.y - 18*i);
     });
 }
 
-function splitMessage(message, messages) {
+function splitMessage(message, messages, color) {
     if(message.length < 29) {
-        messages.unshift(message);
+        messages.unshift({text: message, color: color});
     }
     else {
-        messages.unshift(message.slice(0,MAX_MSG_LENGTH));
-        splitMessage(message.slice(MAX_MSG_LENGTH,message.length), messages);
+        messages.unshift({text: message.slice(0,MAX_MSG_LENGTH), color: color});
+        splitMessage(message.slice(MAX_MSG_LENGTH,message.length), messages, color);
     }
 
 }
+
 },{}],23:[function(require,module,exports){
 "use strict";
 
@@ -3146,6 +3176,15 @@ function Weapon(aName, aLevel) {
     this.name = aName;
     this.level = aLevel;
     this.shouldRetain = true;
+    this.spriteIdx = 0;
+    this.spritePositions = [
+      {x: 75, y: 75},  // 0 - Magic Staff
+      {x: 225, y: 75}, // 1 - Bow
+      {x: 300, y: 75}, // 2 - Mace
+      {x: 375, y: 75}, // 3 - Knife/Sword
+      {x: 450, y: 75}, // 4 - Axe
+      {x: 675, y: 75}  // 5 - Another Magic Staff
+    ];
 
     switch (aName) {
         // Melee
@@ -3157,6 +3196,7 @@ function Weapon(aName, aLevel) {
             this.hitBonus = 0;
             this.attackEffect = "";
             this.properties = "+1 Min Damage";
+            this.spriteIdx = 3;
             break;
 
         case "Morning Star":
@@ -3167,6 +3207,7 @@ function Weapon(aName, aLevel) {
             this.hitBonus = 2;
             this.attackEffect = "";
             this.properties = "+2 to Hit";
+            this.spriteIdx = 2;
             break;
 
         case "Halberd":
@@ -3177,6 +3218,7 @@ function Weapon(aName, aLevel) {
             this.hitBonus = 0;
             this.attackEffect = "";
             this.properties = "+1 Range";
+            this.spriteIdx = 4;
             break;
 
         case "Battleaxe":
@@ -3187,6 +3229,7 @@ function Weapon(aName, aLevel) {
             this.hitBonus = 1;
             this.attackEffect = "";
             this.properties = "+3 Min Damage, +1 Crit Chance";
+            this.spriteIdx = 4;
             break;
 
         case "Claw":
@@ -3197,6 +3240,7 @@ function Weapon(aName, aLevel) {
             this.hitBonus = 0;
             this.attackEffect = "";
             this.properties = "+1 Min Damage";
+            this.spriteIdx = 3;
             break;
 
         // Ranged
@@ -3208,6 +3252,7 @@ function Weapon(aName, aLevel) {
             this.hitBonus = 3;
             this.attackEffect = "";
             this.properties = "+1 Range, +3 to Hit";
+            this.spriteIdx = 1;
             break;
 
         case "Broadhead":
@@ -3218,6 +3263,7 @@ function Weapon(aName, aLevel) {
             this.hitBonus = 0;
             this.attackEffect = "";
             this.properties = "+1 Min Damage";
+            this.spriteIdx = 1;
             break;
 
         case "Poison-Tipped":
@@ -3228,6 +3274,7 @@ function Weapon(aName, aLevel) {
             this.hitBonus = 0;
             this.attackEffect = "Poisoned";
             this.properties = "50% Poison Chance";
+            this.spriteIdx = 1;
             break;
 
         case "Heavy Bolts":
@@ -3238,6 +3285,7 @@ function Weapon(aName, aLevel) {
             this.hitBonus = 0;
             this.attackEffect = "";
             this.properties = "+3 Min Damage, -2 Range";
+            this.spriteIdx = 1;
             break;
 
         // Spells
@@ -3249,6 +3297,7 @@ function Weapon(aName, aLevel) {
             this.hitBonus = 255;
             this.attackEffect = "";
             this.properties = "Never Misses";
+            this.spriteIdx = 0;
             break;
 
         case "Fireball":
@@ -3259,6 +3308,7 @@ function Weapon(aName, aLevel) {
             this.hitBonus = 0;
             this.attackEffect = "Burned";
             this.properties = "Explodes on Contact, 50% Burn Chance";
+            this.spriteIdx = 5;
             break;
 
         case "Frostbolt":
@@ -3269,6 +3319,7 @@ function Weapon(aName, aLevel) {
             this.hitBonus = 0;
             this.attackEffect = "Frozen";
             this.properties = "50% Freeze Chance";
+            this.spriteIdx = 5;
             break;
 
         case "Eldritch Blast":
@@ -3279,6 +3330,7 @@ function Weapon(aName, aLevel) {
             this.hitBonus = -2;
             this.attackEffect = "";
             this.properties = "-2 to Hit";
+            this.spriteIdx = 0;
             break;
     }
 
@@ -3316,7 +3368,8 @@ Weapon.prototype.update = function () {
 
 Weapon.prototype.render = function (time, ctx) {
   var position = window.tilemap.toScreenCoords(this.position);
-  ctx.drawImage(this.spritesheet, 375, 75, 75, 75, (position.x * this.size.width), (position.y * this.size.height) + this.currY, 96, 96);
+  var spriteSource = this.spritePositions[this.spriteIdx];
+  ctx.drawImage(this.spritesheet, spriteSource.x, spriteSource.y, 75, 75, (position.x * this.size.width), (position.y * this.size.height) + this.currY, 96, 96);
 }
 
 },{}],26:[function(require,module,exports){
