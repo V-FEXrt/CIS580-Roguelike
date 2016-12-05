@@ -138,7 +138,7 @@ CombatController.prototype.randomDrop = function (aPosition) {
     if (lRand > 17) {                           // spawn armor
         lDrop.type = "Armor";
         // TODO > properly implement...
-        lDrop = new Armor("Leather");
+        lDrop = new Armor("Leather Armor");
     } else if (lRand >= 1 && lRand < 17) {      // spawn weapon
         lDrop.type = "Weapon";
         var playerClass = window.player.class;

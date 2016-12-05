@@ -134,9 +134,9 @@ function checkWeapon(item) {
 function checkArmor(item) {
     if (typeof item == 'undefined') failArmor();
     if (typeof item.type == 'undefined') failArmor();
-    if (typeof item.name == 'undefined') failWeapon();
-    if (typeof item.level == 'undefined') failWeapon();
-    if (typeof item.shouldRetain == 'undefined') failWeapon();
+    if (typeof item.name == 'undefined') failArmor();
+    if (typeof item.level == 'undefined') failArmor();
+    if (typeof item.shouldRetain == 'undefined') failArmor();
     if (typeof item.defense == "undefined") failArmor();
     if (typeof item.strongType == "undefined") failArmor();
     if (typeof item.weakType == "undefined") failArmor();
