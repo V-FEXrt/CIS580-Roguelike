@@ -42,6 +42,7 @@ var tilemap = new Tilemap(screenSize, 65, 65, tileset, {
 
 var pathfinder = new Pathfinder(tilemap);
 window.pathfinder = pathfinder;
+window.tilemap = tilemap;
 
 var input = {
   up: false,
@@ -241,7 +242,7 @@ function render(elapsedTime, ctx) {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.restore();
 
-  ctx.fillRect(1060,0,256,672);
+  ctx.fillRect(1060,0,273,672);
 
   ctx.fillStyle = "white";
   ctx.fillRect(1057,0,2,672);
