@@ -3,7 +3,8 @@
 module.exports = exports = {
     rollRandom: rollRandom,
     rollMultiple: rollMultiple,
-    rollWeighted: rollWeighted
+    rollWeighted: rollWeighted,
+    oneIn: oneIn
 }
 
 /**
@@ -26,7 +27,7 @@ function rollRandom(aMinimum, aMaximum) {
 function rollMultiple(aMinimum, aMaximum, aNumber) {
     var total = 0;
     for (var i = 0; i < aNumber; i++) {
-        total += this.rollRandom(aMinimum, aMaximum);
+        total += rollRandom(aMinimum, aMaximum);
     }
     return total;
 }
@@ -45,7 +46,7 @@ function rollWeighted() {
     for (var i = 0; i < argLength; i++) {
         weightSum += arguments[i];
     }
-    var roll = this.rollRandom(0, weightSum);
+    var roll = rollRandom(0, weightSum);
     weightSum = 0;
     for (var i = 0; i < argLength; i++) {
         weightSum += arguments[i];
@@ -53,3 +54,10 @@ function rollWeighted() {
     }
 }
 
+function oneIn(x) {
+    var percent = 100 / x;
+    var excess = 100 - percent;
+    var roll = rollWeighted(excess, percent);
+    console.log(`one in ${x} = ${roll}, excess: ${excess}`);
+    return roll;
+}
