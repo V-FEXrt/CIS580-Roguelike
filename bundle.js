@@ -735,7 +735,7 @@ function nextLevel(fadeOut){
       // allow player to move
       player.shouldProcessTurn = true;
 
-      // Find stairs location that is at least 5 away.
+      // Find stairs location that is at least 8 away.
       var pos;
       var dist;
       var iterations = 0;
@@ -756,7 +756,7 @@ function nextLevel(fadeOut){
     // add stairs
     window.entityManager.addEntity(new Stairs(pos, tilemap, function(){nextLevel(true)}));
     //place new entities
-    EntitySpawner.spawn(player, tilemap, 30, 25);
+    EntitySpawner.spawn(player, tilemap, 30, [20, 20, 20, 20, 20, 0, 0, 0]);
 
     unfadeFromBlack();
 
@@ -1477,6 +1477,7 @@ function collision(entity1, entity2){
 
 const Enemy = require('./enemy');
 const Powerup = require('./powerup');
+const RNG = require('./rng');
 
 /**
  * @module EntitySpawner
@@ -1493,9 +1494,37 @@ const Powerup = require('./powerup');
  * @constructor EntitySpawner
  * Creates a EntitySpawner
  */
-function spawn(player, tilemap, count, percentEnemy) {
+var spawnArray = [
+  function(){ spawnPowerup(1); },
+  function(){ spawnPowerup(2); },
+  function(){ spawnPowerup(3); },
+  function(){ spawnPowerup(4); },
+  function(){ spawnEnemy("Zombie"); },
+  function(){ spawnEnemy("EnemyRanged"); },
+  function(){ spawnEnemy("Captain"); },
+  function(){ spawnEnemy("Shaman"); },
+]
+
+var tilemap;
+var player;
+ // percents should be an array of the percent everything should be spawned. in this format
+ // [ crystal, red potion, blue potion, green potion, Zombie, EnemyRanged, Captain, Shaman ]
+function spawn(aPlayer, tmap, count, percents) {
+  tilemap = tmap;
+  player = aPlayer;
   for(var i = 0; i < count; i++){
-    (Math.random() < (percentEnemy/100)) ? spawnEnemy(tilemap, player) : spawnPowerup(tilemap);
+    var idx = RNG.rollWeighted(
+      percents[0],
+      percents[1],
+      percents[2],
+      percents[3],
+      percents[4],
+      percents[5],
+      percents[6],
+      percents[7]
+    );
+    //window.terminal.log(""+idx, 'lime');
+    spawnArray[idx]()
   }
   if(window.debug){
     console.log(pu + " powerups spawned");
@@ -1503,14 +1532,14 @@ function spawn(player, tilemap, count, percentEnemy) {
   }
 }
 
-function spawnPowerup(tilemap){
+function spawnPowerup(pType){
   pu++;
-  window.entityManager.addEntity(new Powerup(tilemap.findOpenSpace(), tilemap));
+  window.entityManager.addEntity(new Powerup(tilemap.findOpenSpace(), tilemap, pType));
 }
 
-function spawnEnemy(tilemap, player){
+function spawnEnemy(eType){
   en++;
-  window.entityManager.addEntity(new Enemy(tilemap.findOpenSpace(), tilemap, "Zombie", player, spawnDrop))
+  window.entityManager.addEntity(new Enemy(tilemap.findOpenSpace(), tilemap, eType, player, spawnDrop))
 }
 
 function spawnDrop(position){
@@ -1519,8 +1548,7 @@ function spawnDrop(position){
   if(drop.type != "None") window.entityManager.addEntity(drop);
 }
 
-
-},{"./enemy":9,"./powerup":18}],12:[function(require,module,exports){
+},{"./enemy":9,"./powerup":18,"./rng":20}],12:[function(require,module,exports){
 "use strict";
 
 /**
@@ -2500,7 +2528,7 @@ module.exports = exports = Powerup;
  * Creates a new Powerup object
  * @param {postition} position object specifying an x and y
  */
-function Powerup(position, tilemap) {
+function Powerup(position, tilemap, pType) {
   this.position = { x: position.x, y: position.y };
   this.size = { width: 96, height: 96 };
   this.spritesheet = new Image();
@@ -2510,7 +2538,7 @@ function Powerup(position, tilemap) {
   this.animation = true;
   this.currY = 0;
   this.movingUp = true;
-  this.currPower = RNG.rollRandom(1, 4);
+  this.currPower = pType;
   this.used = false;
 }
 

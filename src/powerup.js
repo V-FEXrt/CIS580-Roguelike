@@ -13,7 +13,7 @@ module.exports = exports = Powerup;
  * Creates a new Powerup object
  * @param {postition} position object specifying an x and y
  */
-function Powerup(position, tilemap) {
+function Powerup(position, tilemap, pType) {
   this.position = { x: position.x, y: position.y };
   this.size = { width: 96, height: 96 };
   this.spritesheet = new Image();
@@ -23,7 +23,7 @@ function Powerup(position, tilemap) {
   this.animation = true;
   this.currY = 0;
   this.movingUp = true;
-  this.currPower = RNG.rollRandom(1, 4);
+  this.currPower = pType;
   this.used = false;
 }
 
