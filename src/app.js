@@ -107,9 +107,6 @@ canvas.onclick = function (event) {
       processTurn();
     }
   }));
-  if (event.offsetX > 1056 && event.offsetY > 649) {
-    handleInput();
-  }
 }
 
 /**
@@ -118,8 +115,12 @@ canvas.onclick = function (event) {
  */
 window.onkeydown = function (event) {
   switch (event.key) {
-    case "ArrowUp":
     case "w":
+      if(!player.shouldProcessTurn) {
+        inputString = inputString.concat(event.key);
+      }
+    case "ArrowUp":
+      if(!player.shouldProcessTurn) break;
       input.up = true;
       if (resetTimer) {
         turnTimer = turnDelay;
@@ -127,8 +128,12 @@ window.onkeydown = function (event) {
       }
       event.preventDefault();
       break;
-    case "ArrowDown":
     case "s":
+      if(!player.shouldProcessTurn) {
+          inputString = inputString.concat(event.key);
+        }
+    case "ArrowDown":
+      if(!player.shouldProcessTurn) break;
       input.down = true;
       if (resetTimer) {
         turnTimer = turnDelay;
@@ -136,8 +141,12 @@ window.onkeydown = function (event) {
       }
       event.preventDefault();
       break;
-    case "ArrowLeft":
     case "a":
+      if(!player.shouldProcessTurn) {
+          inputString = inputString.concat(event.key);
+        }
+    case "ArrowLeft":
+      if(!player.shouldProcessTurn) break;
       input.left = true;
       if (resetTimer) {
         turnTimer = turnDelay;
@@ -145,8 +154,12 @@ window.onkeydown = function (event) {
       }
       event.preventDefault();
       break;
-    case "ArrowRight":
     case "d":
+      if(!player.shouldProcessTurn) {
+          inputString = inputString.concat(event.key);
+        }
+    case "ArrowRight":
+      if(!player.shouldProcessTurn) break;
       input.right = true;
       if (resetTimer) {
         turnTimer = turnDelay;
@@ -156,9 +169,29 @@ window.onkeydown = function (event) {
       break;
     case "Shift":
       event.preventDefault();
+      if(!player.shouldProcessTurn) break;
       turnDelay = defaultTurnDelay / 2;
       autoTurn = true;
       break;
+    case "Control":
+      event.preventDefault();
+      break;
+    case "/":
+      player.shouldProcessTurn = false;
+      window.terminal.active = true;
+      inputString = "/";
+      break;
+    case "Enter":
+      window.terminal.processInput(inputString);
+      inputString = "";
+      player.shouldProcessTurn = true;
+      window.terminal.active = false;
+      break;
+    case "Backspace":
+      inputString = inputString.substr(0, inputString.length - 1);
+      break;
+    default:
+      inputString = inputString.concat(event.key);
   }
 }
 
@@ -328,26 +361,6 @@ function unfadeFromBlack() {
   isFadeOut = false;
   fadeAnimationProgress = new ProgressManager(1000, function () { });
   fadeAnimationProgress.isActive = true;
-}
-
-function handleInput() {
-  player.shouldProcessTurn = false;
-  window.terminal.clicked = true;
-  window.onkeydown = function (event) {
-    switch (event.key) {
-      case "Enter":
-        window.terminal.processInput(inputString);
-        inputString = "";
-        return;
-      case "Backspace":
-        inputString = inputString.substr(0, inputString.length - 1);
-        break;
-      case "Shift":
-        break;
-      default:
-        inputString = inputString.concat(event.key);
-    }
-  }
 }
 
 function renderInput(ctx) {
