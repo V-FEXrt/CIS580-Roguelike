@@ -24,7 +24,7 @@ var game = new Game(canvas, update, render);
 window.entityManager = new EntityManager();
 var fadeAnimationProgress = new ProgressManager(0, function () { });
 var isFadeOut = true;
-var screenSize = { width: 1056, height: 672 };
+var screenSize = { width: 1056, height: 1056 };
 
 window.combatController = new CombatController();
 
