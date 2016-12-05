@@ -29,6 +29,8 @@ function Player(position, tilemap, combatClass) {
     this.changeClass(combatClass);
     this.level = 0;
     this.shouldProcessTurn = true;
+
+    window.terminal.addCommand("/class", "Get your player class", this.getClass.bind(this));
 }
 
 /**
@@ -66,6 +68,10 @@ Player.prototype.changeClass = function(chosenClass) {
         this.spritesheetPos = { x: 7, y: 6 };
     }
 };
+
+Player.prototype.getClass = function(){
+    window.terminal.log("Class: " + this.class, "lime");
+}
 
 /**
  *@function handles the players turn

@@ -563,13 +563,10 @@ canvas.onclick = function (event) {
  * Handles keydown events
  */
 window.onkeydown = function (event) {
+  if (window.terminal.onkeydown(event)) return;
   switch (event.key) {
-    case "w":
-      if(!player.shouldProcessTurn) {
-        inputString = inputString.concat(event.key);
-      }
     case "ArrowUp":
-      if(!player.shouldProcessTurn) break;
+    case "w":
       input.up = true;
       if (resetTimer) {
         turnTimer = turnDelay;
@@ -577,12 +574,8 @@ window.onkeydown = function (event) {
       }
       event.preventDefault();
       break;
-    case "s":
-      if(!player.shouldProcessTurn) {
-          inputString = inputString.concat(event.key);
-        }
     case "ArrowDown":
-      if(!player.shouldProcessTurn) break;
+    case "s":
       input.down = true;
       if (resetTimer) {
         turnTimer = turnDelay;
@@ -590,12 +583,8 @@ window.onkeydown = function (event) {
       }
       event.preventDefault();
       break;
-    case "a":
-      if(!player.shouldProcessTurn) {
-          inputString = inputString.concat(event.key);
-        }
     case "ArrowLeft":
-      if(!player.shouldProcessTurn) break;
+    case "a":
       input.left = true;
       if (resetTimer) {
         turnTimer = turnDelay;
@@ -603,12 +592,8 @@ window.onkeydown = function (event) {
       }
       event.preventDefault();
       break;
-    case "d":
-      if(!player.shouldProcessTurn) {
-          inputString = inputString.concat(event.key);
-        }
     case "ArrowRight":
-      if(!player.shouldProcessTurn) break;
+    case "d":
       input.right = true;
       if (resetTimer) {
         turnTimer = turnDelay;
@@ -618,29 +603,9 @@ window.onkeydown = function (event) {
       break;
     case "Shift":
       event.preventDefault();
-      if(!player.shouldProcessTurn) break;
       turnDelay = defaultTurnDelay / 2;
       autoTurn = true;
       break;
-    case "Control":
-      event.preventDefault();
-      break;
-    case "/":
-      player.shouldProcessTurn = false;
-      window.terminal.active = true;
-      inputString = "/";
-      break;
-    case "Enter":
-      window.terminal.processInput(inputString);
-      inputString = "";
-      player.shouldProcessTurn = true;
-      window.terminal.active = false;
-      break;
-    case "Backspace":
-      inputString = inputString.substr(0, inputString.length - 1);
-      break;
-    default:
-      inputString = inputString.concat(event.key);
   }
 }
 
@@ -730,7 +695,7 @@ function render(elapsedTime, ctx) {
   ctx.fillStyle = "white";
   ctx.fillRect(1057, 0, 2, 672);
   window.terminal.render(elapsedTime, ctx);
-  renderInput(ctx);
+
   gui.render(elapsedTime, ctx);
 }
 
@@ -810,11 +775,6 @@ function unfadeFromBlack() {
   isFadeOut = false;
   fadeAnimationProgress = new ProgressManager(1000, function () { });
   fadeAnimationProgress.isActive = true;
-}
-
-function renderInput(ctx) {
-  ctx.fillStyle = "white";
-  ctx.fillText(inputString, 1078, 667);
 }
 
 },{"../tilemaps/tiledef.json":26,"./click":6,"./combat_controller":8,"./entity_manager":10,"./entity_spawner":11,"./game":12,"./gui":13,"./pathfinder.js":16,"./player":17,"./progress_manager":19,"./stairs":21,"./terminal.js":22,"./tilemap":23,"./vector":24}],5:[function(require,module,exports){
@@ -2401,6 +2361,8 @@ function Player(position, tilemap, combatClass) {
     this.changeClass(combatClass);
     this.level = 0;
     this.shouldProcessTurn = true;
+
+    window.terminal.addCommand("/class", "Get your player class", this.getClass.bind(this));
 }
 
 /**
@@ -2438,6 +2400,10 @@ Player.prototype.changeClass = function(chosenClass) {
         this.spritesheetPos = { x: 7, y: 6 };
     }
 };
+
+Player.prototype.getClass = function(){
+    window.terminal.log("Class: " + this.class, "lime");
+}
 
 /**
  *@function handles the players turn
@@ -2805,6 +2771,10 @@ function Terminal() {
     this.messages = [];
     this.startPos = { x: 1063, y: 649 };
     this.active = false;
+    this.input = "";
+    this.commands = {};
+
+    this.addCommand("/help", "Print out all commands", this.helpCommand.bind(this));
 }
 
 Terminal.prototype.log = function (message, color) {
@@ -2831,13 +2801,64 @@ Terminal.prototype.render = function (elapsedTime, ctx) {
         ctx.fillStyle = message.color;
         ctx.fillText(message.text, self.startPos.x, self.startPos.y - 18 * i);
     });
+
     ctx.fillText(">", 1063, 667);
-    ctx.fillStyle = "#d3d3d3";
-    if (!this.active) ctx.fillText("Press / to type", 1078, 667);
+
+    if (this.active){
+      ctx.fillStyle = "white";
+      ctx.fillText(this.input, 1078, 667)
+    } else{
+      ctx.fillStyle = "#d3d3d3";
+      ctx.fillText("Press / to type", 1078, 667);
+    }
 }
 
-Terminal.prototype.processInput = function (string) {
-    switch (string) {
+Terminal.prototype.onkeydown = function (event) {
+  switch (event.key) {
+    case "/":
+      this.active = true;
+      this.input = "/";
+      break;
+    case "Enter":
+      this.processInput();
+      console.log('dd');
+      this.input = "";
+      this.active = false;
+      break;
+    case "Backspace":
+      this.input = this.input.substr(0, inputString.length - 1);
+      break;
+    default:
+      if(this.active) this.input = this.input.concat(event.key);
+  }
+
+  return this.active;
+}
+
+// Callback should accept a string and return true if it handles the Command
+// else it should return false
+Terminal.prototype.addCommand = function(command, description, callback){
+  this.commands[command] = {command: command, description: description, callback: callback};
+}
+
+Terminal.prototype.helpCommand = function(){
+  var self = this;
+  Object.keys(self.commands).forEach(function(command){
+    var c = self.commands[command];
+    self.log(c.command + " " + c.description);
+  });
+}
+
+Terminal.prototype.processInput = function () {
+    this.log(this.input.slice(1), "yellow");
+
+    if(this.input in this.commands){
+        this.commands[this.input].callback();
+        return;
+    }
+
+    this.log("Command not found", "red");
+    /*switch (this.input) {
         case "/stats":
             window.terminal.log("Here are your current stats:");
             break;
@@ -2854,7 +2875,7 @@ Terminal.prototype.processInput = function (string) {
             break;
         default:
             window.terminal.log("Command not found");
-    }
+    }*/
 }
 
 function splitMessage(message, messages, color) {

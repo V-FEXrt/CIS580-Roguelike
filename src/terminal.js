@@ -9,6 +9,10 @@ function Terminal() {
     this.messages = [];
     this.startPos = { x: 1063, y: 649 };
     this.active = false;
+    this.input = "";
+    this.commands = {};
+
+    this.addCommand("/help", "Print out all commands", this.helpCommand.bind(this));
 }
 
 Terminal.prototype.log = function (message, color) {
@@ -35,13 +39,64 @@ Terminal.prototype.render = function (elapsedTime, ctx) {
         ctx.fillStyle = message.color;
         ctx.fillText(message.text, self.startPos.x, self.startPos.y - 18 * i);
     });
+
     ctx.fillText(">", 1063, 667);
-    ctx.fillStyle = "#d3d3d3";
-    if (!this.active) ctx.fillText("Press / to type", 1078, 667);
+
+    if (this.active){
+      ctx.fillStyle = "white";
+      ctx.fillText(this.input, 1078, 667)
+    } else{
+      ctx.fillStyle = "#d3d3d3";
+      ctx.fillText("Press / to type", 1078, 667);
+    }
 }
 
-Terminal.prototype.processInput = function (string) {
-    switch (string) {
+Terminal.prototype.onkeydown = function (event) {
+  switch (event.key) {
+    case "/":
+      this.active = true;
+      this.input = "/";
+      break;
+    case "Enter":
+      this.processInput();
+      console.log('dd');
+      this.input = "";
+      this.active = false;
+      break;
+    case "Backspace":
+      this.input = this.input.substr(0, inputString.length - 1);
+      break;
+    default:
+      if(this.active) this.input = this.input.concat(event.key);
+  }
+
+  return this.active;
+}
+
+// Callback should accept a string and return true if it handles the Command
+// else it should return false
+Terminal.prototype.addCommand = function(command, description, callback){
+  this.commands[command] = {command: command, description: description, callback: callback};
+}
+
+Terminal.prototype.helpCommand = function(){
+  var self = this;
+  Object.keys(self.commands).forEach(function(command){
+    var c = self.commands[command];
+    self.log(c.command + " " + c.description);
+  });
+}
+
+Terminal.prototype.processInput = function () {
+    this.log(this.input.slice(1), "yellow");
+
+    if(this.input in this.commands){
+        this.commands[this.input].callback();
+        return;
+    }
+
+    this.log("Command not found", "red");
+    /*switch (this.input) {
         case "/stats":
             window.terminal.log("Here are your current stats:");
             break;
@@ -58,7 +113,7 @@ Terminal.prototype.processInput = function (string) {
             break;
         default:
             window.terminal.log("Command not found");
-    }
+    }*/
 }
 
 function splitMessage(message, messages, color) {
