@@ -27,19 +27,19 @@ function Weapon(aName, aLevel) {
             this.damageMin = 1;
             this.damageType = "b";
             this.range = 1;
-            this.hitBonus = 2;
+            this.hitBonus = 3;
             this.attackEffect = "";
-            this.properties = "+2 to Hit";
+            this.properties = "+3 to Hit";
             break;
 
         case "Halberd":
             this.damageMax = 8
-            this.damageMin = 1;
+            this.damageMin = 2;
             this.damageType = "s";
             this.range = 2;
             this.hitBonus = 0;
             this.attackEffect = "";
-            this.properties = "+1 Range";
+            this.properties = "+1 Range, +1 Min Damage";
             break;
 
         case "Battleaxe":
@@ -67,10 +67,10 @@ function Weapon(aName, aLevel) {
             this.damageMax = 4
             this.damageMin = 1;
             this.damageType = "p";
-            this.range = 6;
+            this.range = 5;
             this.hitBonus = 3;
             this.attackEffect = "";
-            this.properties = "+1 Range, +3 to Hit";
+            this.properties = "+3 to Hit";
             break;
 
         case "Broadhead":
@@ -156,10 +156,10 @@ function Weapon(aName, aLevel) {
 }
 
 Weapon.prototype.collided = function (aEntity) {
-  if(aEntity.type == "Player"){
-    aEntity.inventory.addWeapon(this);
-    this.shouldRetain = false;
-  }
+    if (aEntity.type == "Player") {
+        aEntity.inventory.addWeapon(this);
+        this.shouldRetain = false;
+    }
 }
 
 Weapon.prototype.processTurn = function () {
@@ -171,13 +171,13 @@ Weapon.prototype.retain = function () {
 }
 
 Weapon.prototype.update = function () {
-  if (this.currY >= 5) this.movingUp = false;
-  else if (this.currY <= -5) this.movingUp = true;
-  if (this.movingUp) this.currY += .2;
-  else this.currY -= .2;
+    if (this.currY >= 5) this.movingUp = false;
+    else if (this.currY <= -5) this.movingUp = true;
+    if (this.movingUp) this.currY += .2;
+    else this.currY -= .2;
 }
 
 Weapon.prototype.render = function (time, ctx) {
-  var position = window.tilemap.toScreenCoords(this.position);
-  ctx.drawImage(this.spritesheet, 375, 75, 75, 75, (position.x * this.size.width), (position.y * this.size.height) + this.currY, 96, 96);
+    var position = window.tilemap.toScreenCoords(this.position);
+    ctx.drawImage(this.spritesheet, 375, 75, 75, 75, (position.x * this.size.width), (position.y * this.size.height) + this.currY, 96, 96);
 }
