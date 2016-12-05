@@ -22,9 +22,10 @@ const Terminal = require('./terminal.js');
 var canvas = document.getElementById('screen');
 var game = new Game(canvas, update, render);
 window.entityManager = new EntityManager();
-var fadeAnimationProgress = new ProgressManager(0, function(){});
+var fadeAnimationProgress = new ProgressManager(0, function () { });
 var isFadeOut = true;
-var screenSize = {width: 1056, height: 672};
+var screenSize = { width: 1056, height: 672 };
+var inputString = "";
 
 window.combatController = new CombatController();
 
@@ -53,12 +54,12 @@ var input = {
 
 var backgroundMusic = new Audio('sounds/tempBGMusic.wav');
 backgroundMusic.volume = 0.3;
-backgroundMusic.addEventListener('ended', function(){
-   setNewMusic();
+backgroundMusic.addEventListener('ended', function () {
+  setNewMusic();
 }, false);
 backgroundMusic.play();
 
-var setNewMusic = function() {
+var setNewMusic = function () {
   var backgroundMusicOnLoop = new Audio('sounds/tempBGMusicLoop.wav');
   backgroundMusicOnLoop.volume = 0.3;
   backgroundMusicOnLoop.loop = true;
@@ -75,22 +76,19 @@ var player = new Player({ x: 0, y: 0 }, tilemap, "Mage");
 
 window.player = player;
 
-window.onmousemove = function(event) {
-	gui.onmousemove(event);
+window.onmousemove = function (event) {
+  gui.onmousemove(event);
 }
 
-window.onmousedown = function(event)
-{
-    // Init the level when class is chosen
-    if(gui.state == "start" || gui.state == "choose class")
-    {
-        gui.onmousedown(event);
-        if(gui.chosenClass != "")
-        {
-            player.changeClass(gui.chosenClass);
-            nextLevel(false);
-        }
+window.onmousedown = function (event) {
+  // Init the level when class is chosen
+  if (gui.state == "start" || gui.state == "choose class") {
+    gui.onmousedown(event);
+    if (gui.chosenClass != "") {
+      player.changeClass(gui.chosenClass);
+      nextLevel(false);
     }
+  }
 }
 
 canvas.onclick = function (event) {
@@ -100,7 +98,7 @@ canvas.onclick = function (event) {
   }
 
   var clickedWorldPos = tilemap.toWorldCoords(node);
-  window.entityManager.addEntity(new Click(clickedWorldPos, tilemap, player, function(enemy){
+  window.entityManager.addEntity(new Click(clickedWorldPos, tilemap, player, function (enemy) {
     var distance = Vector.distance(player.position, enemy.position);
     if (distance.x <= player.combat.weapon.range && distance.y <= player.combat.weapon.range) {
       turnDelay = defaultTurnDelay;
@@ -116,6 +114,7 @@ canvas.onclick = function (event) {
  * Handles keydown events
  */
 window.onkeydown = function (event) {
+  if (window.terminal.onkeydown(event)) return;
   switch (event.key) {
     case "ArrowUp":
     case "w":
@@ -210,7 +209,7 @@ var masterLoop = function (timestamp) {
  * the number of milliseconds passed since the last frame.
  */
 function update(elapsedTime) {
-	gui.update(elapsedTime);
+  gui.update(elapsedTime);
   if (input.left || input.right || input.up || input.down || autoTurn) {
     turnTimer += elapsedTime;
     if (turnTimer >= turnDelay) {
@@ -242,11 +241,12 @@ function render(elapsedTime, ctx) {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.restore();
 
-  ctx.fillRect(1060,0,256,672);
+  ctx.fillRect(1060, 0, 273, 672);
 
   ctx.fillStyle = "white";
-  ctx.fillRect(1057,0,2,672);
+  ctx.fillRect(1057, 0, 2, 672);
   window.terminal.render(elapsedTime, ctx);
+
   gui.render(elapsedTime, ctx);
 }
 
@@ -258,9 +258,9 @@ function processTurn() {
   window.entityManager.processTurn(input);
 }
 
-function nextLevel(fadeOut){
+function nextLevel(fadeOut) {
   player.level++;
-  var init = function(){
+  var init = function () {
     // clear terminal
     window.terminal.clear();
     window.terminal.log("   ---===| LEVEL " + player.level + " |===---");
@@ -270,7 +270,7 @@ function nextLevel(fadeOut){
 
     var regen = false;
 
-    do{
+    do {
       //reset the regen flag
       regen = false;
 
@@ -280,7 +280,7 @@ function nextLevel(fadeOut){
 
       //move player to valid location
       var pos = tilemap.findOpenSpace();
-      player.position = {x: pos.x, y: pos.y};
+      player.position = { x: pos.x, y: pos.y };
       tilemap.moveTo({ x: pos.x - 5, y: pos.y - 3 });
 
       // allow player to move
@@ -294,18 +294,18 @@ function nextLevel(fadeOut){
         pos = tilemap.findOpenSpace();
         dist = pathfinder.findPath(player.position, pos).length
         iterations++;
-        if(iterations > 20) {
+        if (iterations > 20) {
           regen = true;
           break;
         }
-      } while(dist == 0 && dist < 8);
+      } while (dist == 0 && dist < 8);
 
-    } while(regen);
+    } while (regen);
 
     // add player
     window.entityManager.addEntity(player);
     // add stairs
-    window.entityManager.addEntity(new Stairs(pos, tilemap, function(){nextLevel(true)}));
+    window.entityManager.addEntity(new Stairs(pos, tilemap, function () { nextLevel(true) }));
     //place new entities
     EntitySpawner.spawn(player, tilemap, 30, [20, 20, 20, 20, 20, 0, 0, 0]);
 
@@ -316,14 +316,14 @@ function nextLevel(fadeOut){
   (fadeOut) ? fadeToBlack(init) : init()
 }
 
-function fadeToBlack(completion){
+function fadeToBlack(completion) {
   isFadeOut = true;
   fadeAnimationProgress = new ProgressManager(1000, completion);
   fadeAnimationProgress.isActive = true;
 }
 
-function unfadeFromBlack(){
+function unfadeFromBlack() {
   isFadeOut = false;
-  fadeAnimationProgress = new ProgressManager(1000, function(){});
+  fadeAnimationProgress = new ProgressManager(1000, function () { });
   fadeAnimationProgress.isActive = true;
 }

@@ -471,9 +471,10 @@ const Terminal = require('./terminal.js');
 var canvas = document.getElementById('screen');
 var game = new Game(canvas, update, render);
 window.entityManager = new EntityManager();
-var fadeAnimationProgress = new ProgressManager(0, function(){});
+var fadeAnimationProgress = new ProgressManager(0, function () { });
 var isFadeOut = true;
-var screenSize = {width: 1056, height: 672};
+var screenSize = { width: 1056, height: 672 };
+var inputString = "";
 
 window.combatController = new CombatController();
 
@@ -502,12 +503,12 @@ var input = {
 
 var backgroundMusic = new Audio('sounds/tempBGMusic.wav');
 backgroundMusic.volume = 0.3;
-backgroundMusic.addEventListener('ended', function(){
-   setNewMusic();
+backgroundMusic.addEventListener('ended', function () {
+  setNewMusic();
 }, false);
 backgroundMusic.play();
 
-var setNewMusic = function() {
+var setNewMusic = function () {
   var backgroundMusicOnLoop = new Audio('sounds/tempBGMusicLoop.wav');
   backgroundMusicOnLoop.volume = 0.3;
   backgroundMusicOnLoop.loop = true;
@@ -524,22 +525,19 @@ var player = new Player({ x: 0, y: 0 }, tilemap, "Mage");
 
 window.player = player;
 
-window.onmousemove = function(event) {
-	gui.onmousemove(event);
+window.onmousemove = function (event) {
+  gui.onmousemove(event);
 }
 
-window.onmousedown = function(event)
-{
-    // Init the level when class is chosen
-    if(gui.state == "start" || gui.state == "choose class")
-    {
-        gui.onmousedown(event);
-        if(gui.chosenClass != "")
-        {
-            player.changeClass(gui.chosenClass);
-            nextLevel(false);
-        }
+window.onmousedown = function (event) {
+  // Init the level when class is chosen
+  if (gui.state == "start" || gui.state == "choose class") {
+    gui.onmousedown(event);
+    if (gui.chosenClass != "") {
+      player.changeClass(gui.chosenClass);
+      nextLevel(false);
     }
+  }
 }
 
 canvas.onclick = function (event) {
@@ -549,7 +547,7 @@ canvas.onclick = function (event) {
   }
 
   var clickedWorldPos = tilemap.toWorldCoords(node);
-  window.entityManager.addEntity(new Click(clickedWorldPos, tilemap, player, function(enemy){
+  window.entityManager.addEntity(new Click(clickedWorldPos, tilemap, player, function (enemy) {
     var distance = Vector.distance(player.position, enemy.position);
     if (distance.x <= player.combat.weapon.range && distance.y <= player.combat.weapon.range) {
       turnDelay = defaultTurnDelay;
@@ -565,6 +563,7 @@ canvas.onclick = function (event) {
  * Handles keydown events
  */
 window.onkeydown = function (event) {
+  if (window.terminal.onkeydown(event)) return;
   switch (event.key) {
     case "ArrowUp":
     case "w":
@@ -659,7 +658,7 @@ var masterLoop = function (timestamp) {
  * the number of milliseconds passed since the last frame.
  */
 function update(elapsedTime) {
-	gui.update(elapsedTime);
+  gui.update(elapsedTime);
   if (input.left || input.right || input.up || input.down || autoTurn) {
     turnTimer += elapsedTime;
     if (turnTimer >= turnDelay) {
@@ -691,11 +690,12 @@ function render(elapsedTime, ctx) {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.restore();
 
-  ctx.fillRect(1060,0,256,672);
+  ctx.fillRect(1060, 0, 273, 672);
 
   ctx.fillStyle = "white";
-  ctx.fillRect(1057,0,2,672);
+  ctx.fillRect(1057, 0, 2, 672);
   window.terminal.render(elapsedTime, ctx);
+
   gui.render(elapsedTime, ctx);
 }
 
@@ -707,9 +707,9 @@ function processTurn() {
   window.entityManager.processTurn(input);
 }
 
-function nextLevel(fadeOut){
+function nextLevel(fadeOut) {
   player.level++;
-  var init = function(){
+  var init = function () {
     // clear terminal
     window.terminal.clear();
     window.terminal.log("   ---===| LEVEL " + player.level + " |===---");
@@ -719,7 +719,7 @@ function nextLevel(fadeOut){
 
     var regen = false;
 
-    do{
+    do {
       //reset the regen flag
       regen = false;
 
@@ -729,7 +729,7 @@ function nextLevel(fadeOut){
 
       //move player to valid location
       var pos = tilemap.findOpenSpace();
-      player.position = {x: pos.x, y: pos.y};
+      player.position = { x: pos.x, y: pos.y };
       tilemap.moveTo({ x: pos.x - 5, y: pos.y - 3 });
 
       // allow player to move
@@ -743,18 +743,18 @@ function nextLevel(fadeOut){
         pos = tilemap.findOpenSpace();
         dist = pathfinder.findPath(player.position, pos).length
         iterations++;
-        if(iterations > 20) {
+        if (iterations > 20) {
           regen = true;
           break;
         }
-      } while(dist == 0 && dist < 8);
+      } while (dist == 0 && dist < 8);
 
-    } while(regen);
+    } while (regen);
 
     // add player
     window.entityManager.addEntity(player);
     // add stairs
-    window.entityManager.addEntity(new Stairs(pos, tilemap, function(){nextLevel(true)}));
+    window.entityManager.addEntity(new Stairs(pos, tilemap, function () { nextLevel(true) }));
     //place new entities
     EntitySpawner.spawn(player, tilemap, 30, [20, 20, 20, 20, 20, 0, 0, 0]);
 
@@ -765,15 +765,15 @@ function nextLevel(fadeOut){
   (fadeOut) ? fadeToBlack(init) : init()
 }
 
-function fadeToBlack(completion){
+function fadeToBlack(completion) {
   isFadeOut = true;
   fadeAnimationProgress = new ProgressManager(1000, completion);
   fadeAnimationProgress.isActive = true;
 }
 
-function unfadeFromBlack(){
+function unfadeFromBlack() {
   isFadeOut = false;
-  fadeAnimationProgress = new ProgressManager(1000, function(){});
+  fadeAnimationProgress = new ProgressManager(1000, function () { });
   fadeAnimationProgress.isActive = true;
 }
 
@@ -2425,6 +2425,8 @@ function Player(position, tilemap, combatClass) {
     this.changeClass(combatClass);
     this.level = 0;
     this.shouldProcessTurn = true;
+
+    window.terminal.addCommand("/class", "Get your player class", this.getClass.bind(this));
 }
 
 /**
@@ -2462,6 +2464,10 @@ Player.prototype.changeClass = function(chosenClass) {
         this.spritesheetPos = { x: 7, y: 6 };
     }
 };
+
+Player.prototype.getClass = function(){
+    window.terminal.log("Class: " + this.class, "lime");
+}
 
 /**
  *@function handles the players turn
@@ -2842,42 +2848,122 @@ module.exports = exports = Terminal;
 
 function Terminal() {
     this.messages = [];
-    this.startPos = {x: 1063, y: 667};
+    this.startPos = { x: 1063, y: 649 };
+    this.active = false;
+    this.input = "";
+    this.commands = {};
+
+    this.addCommand("/help", "Print out all commands", this.helpCommand.bind(this));
 }
 
-Terminal.prototype.log = function(message, color) {
-    if(typeof color == 'undefined') color = 'white';
+Terminal.prototype.log = function (message, color) {
+    if (typeof color == 'undefined') color = 'white';
     splitMessage(message, this.messages, color);
-    if(this.messages.length > MAX_MSG_COUNT) {
+    if (this.messages.length > MAX_MSG_COUNT) {
         this.messages.pop();
     }
-    if(window.debug) console.log(message);
+    if (window.debug) console.log(message);
 }
 
-Terminal.prototype.clear = function() {
+Terminal.prototype.clear = function () {
     this.messages = [];
 }
 
-Terminal.prototype.update = function(time) {
+Terminal.prototype.update = function (time) {
 
 }
 
-Terminal.prototype.render = function(elapsedTime, ctx) {
+Terminal.prototype.render = function (elapsedTime, ctx) {
     ctx.font = "15px Courier New";
     var self = this;
-    this.messages.forEach(function(message, i) {
+    this.messages.forEach(function (message, i) {
         ctx.fillStyle = message.color;
-        ctx.fillText(message.text, self.startPos.x, self.startPos.y - 18*i);
+        ctx.fillText(message.text, self.startPos.x, self.startPos.y - 18 * i);
     });
+
+    ctx.fillText(">", 1063, 667);
+
+    if (this.active){
+      ctx.fillStyle = "white";
+      ctx.fillText(this.input, 1078, 667)
+    } else{
+      ctx.fillStyle = "#d3d3d3";
+      ctx.fillText("Press / to type", 1078, 667);
+    }
+}
+
+Terminal.prototype.onkeydown = function (event) {
+  switch (event.key) {
+    case "/":
+      this.active = true;
+      this.input = "/";
+      break;
+    case "Enter":
+      this.processInput();
+      console.log('dd');
+      this.input = "";
+      this.active = false;
+      break;
+    case "Backspace":
+      this.input = this.input.substr(0, inputString.length - 1);
+      break;
+    default:
+      if(this.active) this.input = this.input.concat(event.key);
+  }
+
+  return this.active;
+}
+
+// Callback should accept a string and return true if it handles the Command
+// else it should return false
+Terminal.prototype.addCommand = function(command, description, callback){
+  this.commands[command] = {command: command, description: description, callback: callback};
+}
+
+Terminal.prototype.helpCommand = function(){
+  var self = this;
+  Object.keys(self.commands).forEach(function(command){
+    var c = self.commands[command];
+    self.log(c.command + " " + c.description);
+  });
+}
+
+Terminal.prototype.processInput = function () {
+    this.log(this.input.slice(1), "yellow");
+
+    if(this.input in this.commands){
+        this.commands[this.input].callback();
+        return;
+    }
+
+    this.log("Command not found", "red");
+    /*switch (this.input) {
+        case "/stats":
+            window.terminal.log("Here are your current stats:");
+            break;
+        case "/weapon":
+            window.terminal.log("Here are your weapon's current stats:");
+            break;
+        case "/armor":
+            window.terminal.log("Here are your armor's current stats:");
+            break;
+        case "/help":
+            window.terminal.log("/stats - Show's your current stats for your player");
+            window.terminal.log("/weapon - Show's the current stats of your weapon");
+            window.terminal.log("/armor - Show's the current stats of your armor");
+            break;
+        default:
+            window.terminal.log("Command not found");
+    }*/
 }
 
 function splitMessage(message, messages, color) {
-    if(message.length < 29) {
-        messages.unshift({text: message, color: color});
+    if (message.length < 29) {
+        messages.unshift({ text: message, color: color });
     }
     else {
-        messages.unshift({text: message.slice(0,MAX_MSG_LENGTH), color: color});
-        splitMessage(message.slice(MAX_MSG_LENGTH,message.length), messages, color);
+        messages.unshift({ text: message.slice(0, MAX_MSG_LENGTH), color: color });
+        splitMessage(message.slice(MAX_MSG_LENGTH, message.length), messages, color);
     }
 
 }
