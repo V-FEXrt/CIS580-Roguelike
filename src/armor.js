@@ -4,6 +4,7 @@ module.exports = exports = Armor;
 
 function Armor(aType) {
     this.type = aType;
+    this.shouldRetain = true;
 
     switch (aType) {
         case "Flesh":
@@ -45,11 +46,19 @@ function Armor(aType) {
 
     // static properties for entities
     this.position = { x: -1, y: -1 };
-    this.size = { width: 72, height: 72 }; // correct size for sprites? Dylan?
+    this.size = { width: 96, height: 96 };
+    this.spritesheet = new Image();
+    this.spritesheet.src = './spritesheets/powerup.png';
+
+    this.currY = 0;
+    this.movingUp = true;
 }
 
 Armor.prototype.collided = function (aEntity) {
-
+  if(aEntity.type == "Player"){
+    aEntity.inventory.addArmor(this);
+    this.shouldRetain = false;
+  }
 }
 
 Armor.prototype.processTurn = function () {
@@ -57,14 +66,18 @@ Armor.prototype.processTurn = function () {
 }
 
 Armor.prototype.retain = function () {
-    return true;
+    return this.shouldRetain;
 }
 
 Armor.prototype.update = function () {
-
+  if (this.currY >= 5) this.movingUp = false;
+  else if (this.currY <= -5) this.movingUp = true;
+  if (this.movingUp) this.currY += .2;
+  else this.currY -= .2;
 }
 
-Armor.prototype.render = function () {
+Armor.prototype.render = function (time, ctx) {
+  var position = window.tilemap.toScreenCoords(this.position);
+  ctx.drawImage(this.spritesheet, 305, 225, 75, 75, (position.x * this.size.width), (position.y * this.size.height) + this.currY, 96, 96);
 
 }
-
