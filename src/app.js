@@ -286,7 +286,7 @@ function nextLevel(fadeOut){
       // allow player to move
       player.shouldProcessTurn = true;
 
-      // Find stairs location that is at least 5 away.
+      // Find stairs location that is at least 8 away.
       var pos;
       var dist;
       var iterations = 0;
@@ -307,7 +307,7 @@ function nextLevel(fadeOut){
     // add stairs
     window.entityManager.addEntity(new Stairs(pos, tilemap, function(){nextLevel(true)}));
     //place new entities
-    EntitySpawner.spawn(player, tilemap, 30, [0, 0, 1, 0, 0, 0, 0, 0]);
+    EntitySpawner.spawn(player, tilemap, 30, [20, 20, 20, 20, 20, 0, 0, 0]);
 
     unfadeFromBlack();
 

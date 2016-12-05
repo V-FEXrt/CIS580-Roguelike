@@ -48,7 +48,7 @@ function spawn(aPlayer, tmap, count, percents) {
       percents[6],
       percents[7]
     );
-    window.terminal.log(""+idx, 'lime');
+    //window.terminal.log(""+idx, 'lime');
     spawnArray[idx]()
   }
   if(window.debug){
