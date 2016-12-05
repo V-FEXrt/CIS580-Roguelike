@@ -1497,7 +1497,7 @@ const RNG = require('./rng');
 var spawnArray = [
   function(){ spawnPowerup(1); },
   function(){ spawnPowerup(2); },
-  function(){ window.terminal.log('' + pu, 'cyan'); spawnPowerup(3); },
+  function(){ spawnPowerup(3); },
   function(){ spawnPowerup(4); },
   function(){ spawnEnemy("Zombie"); },
   function(){ spawnEnemy("EnemyRanged"); },
@@ -1513,7 +1513,7 @@ function spawn(aPlayer, tmap, count, percents) {
   tilemap = tmap;
   player = aPlayer;
   for(var i = 0; i < count; i++){
-    spawnArray[RNG.rollWeighted(
+    var idx = RNG.rollWeighted(
       percents[0],
       percents[1],
       percents[2],
@@ -1522,7 +1522,9 @@ function spawn(aPlayer, tmap, count, percents) {
       percents[5],
       percents[6],
       percents[7]
-    )]()
+    );
+    window.terminal.log(""+idx, 'lime');
+    spawnArray[idx]()
   }
   if(window.debug){
     console.log(pu + " powerups spawned");
