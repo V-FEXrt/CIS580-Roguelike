@@ -2919,6 +2919,12 @@ Terminal.prototype.addCommand = function(command, description, callback){
   this.commands[command] = {command: command, description: description, callback: callback};
 }
 
+Terminal.prototype.removeCommand = function(command){
+  if(command in this.commands){
+      delete this.commands[command];
+  }
+}
+
 Terminal.prototype.helpCommand = function(){
   var self = this;
   Object.keys(self.commands).forEach(function(command){
