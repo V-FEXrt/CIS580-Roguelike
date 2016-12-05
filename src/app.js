@@ -240,7 +240,7 @@ function render(elapsedTime, ctx) {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.restore();
 
-  ctx.fillRect(1060, 0, 732, 1056);
+  ctx.fillRect(1060, 0, 732, 1116);
 
   ctx.fillStyle = "white";
   ctx.fillRect(1057, 0, 2, 1116);
