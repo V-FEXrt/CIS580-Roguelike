@@ -64,7 +64,7 @@ Terminal.prototype.onkeydown = function (event) {
       this.active = false;
       break;
     case "Backspace":
-      this.input = this.input.substr(0, inputString.length - 1);
+      this.input = this.input.substr(0, this.input.length - 1);
       break;
     default:
       if(this.active) this.input = this.input.concat(event.key);
