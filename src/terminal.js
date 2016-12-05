@@ -1,13 +1,13 @@
 "use strict";
 
 const MAX_MSG_COUNT = 50;
-const MAX_MSG_LENGTH = 29;
+const MAX_MSG_LENGTH = 80;
 
 module.exports = exports = Terminal;
 
 function Terminal() {
     this.messages = [];
-    this.startPos = { x: 1063, y: 649 };
+    this.startPos = { x: 1063, y: 1095 };
     this.active = false;
     this.input = "";
     this.commands = {};
@@ -40,14 +40,14 @@ Terminal.prototype.render = function (elapsedTime, ctx) {
         ctx.fillText(message.text, self.startPos.x, self.startPos.y - 18 * i);
     });
 
-    ctx.fillText(">", 1063, 667);
+    ctx.fillText(">", 1063, 1111);
 
     if (this.active){
       ctx.fillStyle = "white";
-      ctx.fillText(this.input, 1078, 667)
+      ctx.fillText(this.input, 1078, 1111)
     } else{
       ctx.fillStyle = "#d3d3d3";
-      ctx.fillText("Press / to type", 1078, 667);
+      ctx.fillText("Press / to type", 1078, 1111);
     }
 }
 
