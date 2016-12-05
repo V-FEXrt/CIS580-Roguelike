@@ -2,6 +2,7 @@
 
 const Enemy = require('./enemy');
 const Powerup = require('./powerup');
+const RNG = require('./rng');
 
 /**
  * @module EntitySpawner
@@ -18,9 +19,35 @@ const Powerup = require('./powerup');
  * @constructor EntitySpawner
  * Creates a EntitySpawner
  */
-function spawn(player, tilemap, count, percentEnemy) {
+var spawnArray = [
+  function(){ spawnPowerup(1); },
+  function(){ spawnPowerup(2); },
+  function(){ window.terminal.log('' + pu, 'cyan'); spawnPowerup(3); },
+  function(){ spawnPowerup(4); },
+  function(){ spawnEnemy("Zombie"); },
+  function(){ spawnEnemy("EnemyRanged"); },
+  function(){ spawnEnemy("Captain"); },
+  function(){ spawnEnemy("Shaman"); },
+]
+
+var tilemap;
+var player;
+ // percents should be an array of the percent everything should be spawned. in this format
+ // [ crystal, red potion, blue potion, green potion, Zombie, EnemyRanged, Captain, Shaman ]
+function spawn(aPlayer, tmap, count, percents) {
+  tilemap = tmap;
+  player = aPlayer;
   for(var i = 0; i < count; i++){
-    (Math.random() < (percentEnemy/100)) ? spawnEnemy(tilemap, player) : spawnPowerup(tilemap);
+    spawnArray[RNG.rollWeighted(
+      percents[0],
+      percents[1],
+      percents[2],
+      percents[3],
+      percents[4],
+      percents[5],
+      percents[6],
+      percents[7]
+    )]()
   }
   if(window.debug){
     console.log(pu + " powerups spawned");
@@ -28,14 +55,14 @@ function spawn(player, tilemap, count, percentEnemy) {
   }
 }
 
-function spawnPowerup(tilemap){
+function spawnPowerup(pType){
   pu++;
-  window.entityManager.addEntity(new Powerup(tilemap.findOpenSpace(), tilemap));
+  window.entityManager.addEntity(new Powerup(tilemap.findOpenSpace(), tilemap, pType));
 }
 
-function spawnEnemy(tilemap, player){
+function spawnEnemy(eType){
   en++;
-  window.entityManager.addEntity(new Enemy(tilemap.findOpenSpace(), tilemap, "Zombie", player, spawnDrop))
+  window.entityManager.addEntity(new Enemy(tilemap.findOpenSpace(), tilemap, eType, player, spawnDrop))
 }
 
 function spawnDrop(position){
@@ -43,4 +70,3 @@ function spawnDrop(position){
   var drop = window.combatController.randomDrop(position);
   if(drop.type != "None") window.entityManager.addEntity(drop);
 }
-
