@@ -109,11 +109,11 @@ Player.prototype.processTurn = function(input) {
 
     var screenCoor = this.tilemap.toScreenCoords(this.position);
 
-    if (screenCoor.y < 3) {
+    if (screenCoor.y < 5) {
         this.tilemap.moveBy({ x: 0, y: -1 });
     }
 
-    if (screenCoor.y + 3 == this.tilemap.draw.size.height) {
+    if (screenCoor.y + 5 == this.tilemap.draw.size.height) {
         this.tilemap.moveBy({ x: 0, y: 1 });
     }
 

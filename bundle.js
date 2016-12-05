@@ -473,7 +473,7 @@ var game = new Game(canvas, update, render);
 window.entityManager = new EntityManager();
 var fadeAnimationProgress = new ProgressManager(0, function () { });
 var isFadeOut = true;
-var screenSize = { width: 1056, height: 672 };
+var screenSize = { width: 1056, height: 1056 };
 
 window.combatController = new CombatController();
 
@@ -2504,11 +2504,11 @@ Player.prototype.processTurn = function(input) {
 
     var screenCoor = this.tilemap.toScreenCoords(this.position);
 
-    if (screenCoor.y < 3) {
+    if (screenCoor.y < 5) {
         this.tilemap.moveBy({ x: 0, y: -1 });
     }
 
-    if (screenCoor.y + 3 == this.tilemap.draw.size.height) {
+    if (screenCoor.y + 5 == this.tilemap.draw.size.height) {
         this.tilemap.moveBy({ x: 0, y: 1 });
     }
 
