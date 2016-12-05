@@ -30,7 +30,7 @@ function Player(position, tilemap, combatClass) {
     this.level = 0;
     this.shouldProcessTurn = true;
 
-    window.terminal.addCommand("/class", "Get your player class", this.getClass.bind(this));
+    window.terminal.addCommand("class", "Get your player class", this.getClass.bind(this));
 }
 
 /**

@@ -12,7 +12,7 @@ function Terminal() {
     this.input = "";
     this.commands = {};
 
-    this.addCommand("/help", "Print out all commands", this.helpCommand.bind(this));
+    this.addCommand("help", "Print out all commands", this.helpCommand.bind(this));
 }
 
 Terminal.prototype.log = function (message, color) {
@@ -55,17 +55,19 @@ Terminal.prototype.onkeydown = function (event) {
   switch (event.key) {
     case "/":
       this.active = true;
-      this.input = "/";
       break;
     case "Enter":
+      if(!this.active) return;
       this.processInput();
-      console.log('dd');
       this.input = "";
       this.active = false;
       break;
     case "Backspace":
       this.input = this.input.substr(0, this.input.length - 1);
       break;
+    case "Escape":
+      this.input = "";
+      this.active = false;
     default:
       if(this.active) this.input = this.input.concat(event.key);
   }
@@ -94,7 +96,7 @@ Terminal.prototype.helpCommand = function(){
 }
 
 Terminal.prototype.processInput = function () {
-    this.log(this.input.slice(1), "yellow");
+    this.log(this.input, "yellow");
 
     if(this.input in this.commands){
         this.commands[this.input].callback();
