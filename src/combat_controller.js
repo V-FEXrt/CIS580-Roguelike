@@ -6,6 +6,12 @@ const CombatClass = require("./combat_class");
 const Weapon = require("./weapon");
 const Armor = require("./armor");
 
+//declare sound files
+var playerHitSound = new Audio('sounds/PlayerHit.wav');
+
+var enemyHitSound = new Audio('sounds/EnemyHit.wav');
+
+
 function CombatController() {
 
 }
@@ -33,15 +39,33 @@ CombatController.prototype.handleAttack = function(aAttackerClass, aDefenderClas
         window.terminal.log("Crit Fail, take " + lSelfDamage + " damage.");
         // attacker hit itself, play attacker hit sound
         // aDefenderClass.type != "Knight"||"Archer"||"Mage"
+        if(aAttackerClass.type != "Knight" || aAttackerClass.type != "Archer" || aAttackerClass.type != "Mage") {
+          enemyHitSound.play();
+        }
+        else {
+          playerHitSound.play();
+        }
     } else if (lAttackRoll == 20 || (lAttackRoll == 19 && (aAttackerClass.attackType == "Ranged" || aAttackerClass.weapon.type == "Battleaxe"))) {
         lDamageTotal += lDamageMax;
         aDefenderClass.health -= lDamageTotal;
         // defender hit, play defender hit sound
+        if(aDefenderClass.type != "Knight" || aDefenderClass.type != "Archer" || aDefenderClass.type != "Mage") {
+          playerHitSound.play();
+        }
+        else {
+          enemyHitSound.play();
+        }
     } else {
         if (lAttackTotal > lDefenseTotal) {
             aDefenderClass.health -= lDamageTotal;
             window.terminal.log("Hit, deal " + lDamageTotal + " damage");
             // defender hit, play defender hit sound
+            if(aDefenderClass.type != "Knight" || aDefenderClass.type != "Archer" || aDefenderClass.type != "Mage") {
+              enemyHitSound.play();
+            }
+            else {
+              playerHitSound.play();
+            }
         } else {
             window.terminal.log("Miss, " + lAttackTotal + " against " + lDefenseTotal);
         }
@@ -88,4 +112,3 @@ CombatController.prototype.randomDrop = function(aPosition) {
     lDrop.position = aPosition;
     return lDrop;
 }
-

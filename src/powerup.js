@@ -7,6 +7,14 @@ const Tilemap = require('./tilemap');
  */
 module.exports = exports = Powerup;
 
+//declare sound files
+var healthPickupSound = new Audio('sounds/Powerup3.wav');
+healthPickupSound.volume = 0.2;
+var staminaPickupSound = new Audio('sounds/Powerup4.wav');
+staminaPickupSound.volume = 0.1;
+var someOtherPowerupSound = new Audio('sounds/Powerup1.wav');
+someOtherPowerupSound.volume = 0.2;
+
 /**
  * @constructor Powerup
  * Creates a new Powerup object
@@ -48,14 +56,17 @@ Powerup.prototype.collided = function (entity) {
         switch (this.currPower) {
             case 1:
                 entity.combat.health += 5;
+                healthPickupSound.play();
                 this.used = true;
                 break;
             case 2:
                 entity.combat.stamina += 20;
+                staminaPickupSound.play();
                 this.used = true;
                 break;
             case 3:
                 entity.combat.someOtherPowerup += 10;
+                someOtherPowerupSound.play();
                 this.used = true;
                 break;
         }

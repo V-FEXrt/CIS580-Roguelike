@@ -612,6 +612,12 @@ const CombatClass = require("./combat_class");
 const Weapon = require("./weapon");
 const Armor = require("./armor");
 
+//declare sound files
+var playerHitSound = new Audio('sounds/PlayerHit.wav');
+
+var enemyHitSound = new Audio('sounds/EnemyHit.wav');
+
+
 function CombatController() {
 
 }
@@ -639,15 +645,33 @@ CombatController.prototype.handleAttack = function(aAttackerClass, aDefenderClas
         window.terminal.log("Crit Fail, take " + lSelfDamage + " damage.");
         // attacker hit itself, play attacker hit sound
         // aDefenderClass.type != "Knight"||"Archer"||"Mage"
+        if(aAttackerClass.type != "Knight" || aAttackerClass.type != "Archer" || aAttackerClass.type != "Mage") {
+          enemyHitSound.play();
+        }
+        else {
+          playerHitSound.play();
+        }
     } else if (lAttackRoll == 20 || (lAttackRoll == 19 && (aAttackerClass.attackType == "Ranged" || aAttackerClass.weapon.type == "Battleaxe"))) {
         lDamageTotal += lDamageMax;
         aDefenderClass.health -= lDamageTotal;
         // defender hit, play defender hit sound
+        if(aDefenderClass.type != "Knight" || aDefenderClass.type != "Archer" || aDefenderClass.type != "Mage") {
+          playerHitSound.play();
+        }
+        else {
+          enemyHitSound.play();
+        }
     } else {
         if (lAttackTotal > lDefenseTotal) {
             aDefenderClass.health -= lDamageTotal;
             window.terminal.log("Hit, deal " + lDamageTotal + " damage");
             // defender hit, play defender hit sound
+            if(aDefenderClass.type != "Knight" || aDefenderClass.type != "Archer" || aDefenderClass.type != "Mage") {
+              enemyHitSound.play();
+            }
+            else {
+              playerHitSound.play();
+            }
         } else {
             window.terminal.log("Miss, " + lAttackTotal + " against " + lDefenseTotal);
         }
@@ -694,7 +718,6 @@ CombatController.prototype.randomDrop = function(aPosition) {
     lDrop.position = aPosition;
     return lDrop;
 }
-
 
 },{"./armor":2,"./combat_class":4,"./weapon":21}],6:[function(require,module,exports){
 "use strict";
@@ -2031,6 +2054,14 @@ const Tilemap = require('./tilemap');
  */
 module.exports = exports = Powerup;
 
+//declare sound files
+var healthPickupSound = new Audio('sounds/Powerup3.wav');
+healthPickupSound.volume = 0.2;
+var staminaPickupSound = new Audio('sounds/Powerup4.wav');
+staminaPickupSound.volume = 0.1;
+var someOtherPowerupSound = new Audio('sounds/Powerup1.wav');
+someOtherPowerupSound.volume = 0.2;
+
 /**
  * @constructor Powerup
  * Creates a new Powerup object
@@ -2072,14 +2103,17 @@ Powerup.prototype.collided = function (entity) {
         switch (this.currPower) {
             case 1:
                 entity.combat.health += 5;
+                healthPickupSound.play();
                 this.used = true;
                 break;
             case 2:
                 entity.combat.stamina += 20;
+                staminaPickupSound.play();
                 this.used = true;
                 break;
             case 3:
                 entity.combat.someOtherPowerup += 10;
+                someOtherPowerupSound.play();
                 this.used = true;
                 break;
         }
