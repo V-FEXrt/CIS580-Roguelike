@@ -8,12 +8,23 @@ const RNG = require("./rng");
  */
 module.exports = exports = Powerup;
 
+//declare sound files
+//declare sound files
+var healthPickupSound = new Audio('sounds/Powerup3.wav');
+healthPickupSound.volume = 0.1;
+var attackPowerupSound = new Audio('sounds/Powerup4.wav');
+attackPowerupSound.volume = 0.1;
+var damageBonusPowerupSound = new Audio('sounds/Powerup1.wav');
+damageBonusPowerupSound.volume = 0.1;
+var defensePowerupSound = new Audio('sounds/Powerup2.wav');
+defensePowerupSound.volume = 0.4;
+
 /**
  * @constructor Powerup
  * Creates a new Powerup object
  * @param {postition} position object specifying an x and y
  */
-function Powerup(position, tilemap) {
+function Powerup(position, tilemap, pType) {
   this.position = { x: position.x, y: position.y };
   this.size = { width: 96, height: 96 };
   this.spritesheet = new Image();
@@ -23,7 +34,7 @@ function Powerup(position, tilemap) {
   this.animation = true;
   this.currY = 0;
   this.movingUp = true;
-  this.currPower = RNG.rollRandom(1, 4);
+  this.currPower = pType;
   this.used = false;
 }
 
@@ -48,12 +59,14 @@ Powerup.prototype.collided = function (entity) {
     //Update player's health/strength/item
     switch (this.currPower) {
       case 1:
+        damageBonusPowerupSound.play();
         entity.combat.damageBonus += 0.2;
         window.terminal.log("The crystal radiates a bright blue and you feel its energy course through you.");
         if (window.debug) console.log(entity.combat.damageBonus);
         this.used = true;
         break;
       case 2:
+        healthPickupSound.play();
         var potionValue = RNG.rollMultiple(3, 6, entity.level);
         entity.combat.health += potionValue;
         window.terminal.log("You quaff the large crimson potion and feel rejuvenated.");
@@ -61,12 +74,14 @@ Powerup.prototype.collided = function (entity) {
         this.used = true;
         break;
       case 3:
+        defensePowerupSound.play();
         entity.combat.defenseBonus += 0.2;
         window.terminal.log("As you finish the potion a faint ward forms around you.");
         if (window.debug) console.log(entity.combat.defenseBonus);
         this.used = true;
         break;
       case 4:
+        attackPowerupSound.play();
         entity.combat.attackBonus += 0.2;
         window.terminal.log("The very smell of the verdant green potion awakens you and you feel more agile.");
         if (window.debug) console.log(entity.combat.attackBonus);

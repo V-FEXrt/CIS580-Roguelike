@@ -32,8 +32,8 @@ CombatController.prototype.handleAttack = function (aAttackerClass, aDefenderCla
     var lApplyEffect = false;
 
     var message;
-    var attacker = aAttackerClass.type;
-    var defender = aDefenderClass.type;
+    var attacker = aAttackerClass.name;
+    var defender = aDefenderClass.name;
     var playerAttacker = (attacker == "Knight" || attacker == "Archer" || attacker == "Mage");
 
     if (lAttackRoll == 1) {
@@ -104,7 +104,7 @@ CombatController.prototype.handleStatus = function (aCombatClass) {
                 aCombatClass.status.timer--;
                 var damage = RNG.rollMultiple(1, 5, window.player.level);
                 aCombatClass.health -= damage;
-                window.terminal.log(`${damage} Poison damage.`);
+                window.terminal.log(`${damage} ${aCombatClass.status.effect.substring(0, aCombatClass.status.effect.length - 2)} damage.`);
             } else {
                 aCombatClass.status.effect == "None";
             }
@@ -138,7 +138,7 @@ CombatController.prototype.randomDrop = function (aPosition) {
     if (lRand > 17) {                           // spawn armor
         lDrop.type = "Armor";
         // TODO > properly implement...
-        lDrop = new Armor("Leather");
+        lDrop = new Armor("Leather Armor");
     } else if (lRand >= 1 && lRand < 17) {      // spawn weapon
         lDrop.type = "Weapon";
         var playerClass = window.player.class;

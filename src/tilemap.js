@@ -214,7 +214,7 @@ Tilemap.prototype.getRandomAdjacent = function (aTile) {
     { x: aTile.x, y: aTile.y + 1, wall: this.isWall(aTile.x, aTile.y + 1) },
     { x: aTile.x + 1, y: aTile.y + 1, wall: this.isWall(aTile.x + 1, aTile.y + 1) }
   ];
-  adjacents = adjacents.filter(function (tile) { return tile.wall });
+  adjacents = adjacents.filter(function (tile) { return !tile.wall });
   if (adjacents.length == 0) {
     return aTile;
   } else {

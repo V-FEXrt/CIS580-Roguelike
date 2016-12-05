@@ -12,16 +12,16 @@ const Armor = require("./armor");
 
 module.exports = exports = CombatClass;
 
-function CombatClass(aType) {
-    this.type = aType;
-    switch (aType) {
+function CombatClass(aName) {
+    this.name = aName;
+    switch (aName) {
         case "Knight":
             this.health = 20;
             this.attackBonus = 0;
             this.damageBonus = 0;
             this.defenseBonus = 0;
             this.weapon = new Weapon("Longsword", 1);
-            this.armor = new Armor("Hide"); // No restrictions on Armor types
+            this.armor = new Armor("Hide Armor"); // No restrictions on Armor types
             this.attackType = "Melee";
             this.status = { effect: "None", timer: 0 }
             break;
@@ -32,7 +32,7 @@ function CombatClass(aType) {
             this.damageBonus = 0;
             this.defenseBonus = 0;
             this.weapon = new Weapon("Broadhead", 1);
-            this.armor = new Armor("Hide"); // Can't wear Chain or Plate
+            this.armor = new Armor("Hide Armor"); // Can't wear Chain or Plate
             this.attackType = "Ranged";
             this.status = { effect: "None", timer: 0 }
             break;
@@ -60,7 +60,7 @@ function CombatClass(aType) {
             this.status = { effect: "None", timer: 0 }
             this.senseRange = 5;
 
-            this.turnAI = function(aEnemy) {
+            this.turnAI = function (aEnemy) {
                 var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
                 if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
                     combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
@@ -80,12 +80,12 @@ function CombatClass(aType) {
             this.damageBonus = 0;
             this.defenseBonus = 0;
             this.weapon = new Weapon("Broadhead", 1);
-            this.armor = new Armor("Hide");
+            this.armor = new Armor("Hide Armor");
             this.attackType = "Ranged";
             this.status = { effect: "None", timer: 0 }
             this.senseRange = 10;
 
-            this.turnAI = function(aEnemy) {
+            this.turnAI = function (aEnemy) {
                 var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
                 if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
                     combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
@@ -105,12 +105,12 @@ function CombatClass(aType) {
             this.damageBonus = 0;
             this.defenseBonus = 0;
             this.weapon = new Weapon("Battleaxe", 1);
-            this.armor = new Armor("Chain");
+            this.armor = new Armor("Chainmail");
             this.attackType = "Melee";
             this.status = { effect: "None", timer: 0 }
             this.senseRange = 15;
 
-            this.turnAI = function(aEnemy) {
+            this.turnAI = function (aEnemy) {
                 var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
                 if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
                     combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
@@ -135,7 +135,7 @@ function CombatClass(aType) {
             this.status = { effect: "None", timer: 0 }
             this.senseRange = 10;
 
-            this.turnAI = function(aEnemy) {
+            this.turnAI = function (aEnemy) {
                 var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
                 if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
                     combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
