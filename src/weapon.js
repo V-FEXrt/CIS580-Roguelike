@@ -11,12 +11,12 @@ function Weapon(aName, aLevel) {
     this.shouldRetain = true;
     this.spriteIdx = 0;
     this.spritePositions = [
-      {x: 75, y: 75},  // 0 - Magic Staff
-      {x: 225, y: 75}, // 1 - Bow
-      {x: 300, y: 75}, // 2 - Mace
-      {x: 375, y: 75}, // 3 - Knife/Sword
-      {x: 450, y: 75}, // 4 - Axe
-      {x: 675, y: 75}  // 5 - Another Magic Staff
+        { x: 75, y: 75 },  // 0 - Magic Staff
+        { x: 225, y: 75 }, // 1 - Bow
+        { x: 300, y: 75 }, // 2 - Mace
+        { x: 375, y: 75 }, // 3 - Knife/Sword
+        { x: 450, y: 75 }, // 4 - Axe
+        { x: 675, y: 75 }  // 5 - Another Magic Staff
     ];
 
     switch (aName) {
@@ -37,20 +37,20 @@ function Weapon(aName, aLevel) {
             this.damageMin = 1;
             this.damageType = "b";
             this.range = 1;
-            this.hitBonus = 2;
+            this.hitBonus = 3;
             this.attackEffect = "";
-            this.properties = "+2 to Hit";
+            this.properties = "+3 to Hit";
             this.spriteIdx = 2;
             break;
 
         case "Halberd":
             this.damageMax = 8
-            this.damageMin = 1;
+            this.damageMin = 2;
             this.damageType = "s";
             this.range = 2;
             this.hitBonus = 0;
             this.attackEffect = "";
-            this.properties = "+1 Range";
+            this.properties = "+1 Range, +1 Min Damage";
             this.spriteIdx = 4;
             break;
 
@@ -81,10 +81,10 @@ function Weapon(aName, aLevel) {
             this.damageMax = 4
             this.damageMin = 1;
             this.damageType = "p";
-            this.range = 6;
+            this.range = 5;
             this.hitBonus = 3;
             this.attackEffect = "";
-            this.properties = "+1 Range, +3 to Hit";
+            this.properties = "+3 to Hit";
             this.spriteIdx = 1;
             break;
 
@@ -129,7 +129,7 @@ function Weapon(aName, aLevel) {
             this.range = 255;
             this.hitBonus = 255;
             this.attackEffect = "";
-            this.properties = "Never Misses";
+            this.properties = "Unerring Accuracy";
             this.spriteIdx = 0;
             break;
 
@@ -140,7 +140,7 @@ function Weapon(aName, aLevel) {
             this.range = 255;
             this.hitBonus = 0;
             this.attackEffect = "Burned";
-            this.properties = "Explodes on Contact, 50% Burn Chance";
+            this.properties = "50% Burn Chance, Explodes on Contact";
             this.spriteIdx = 5;
             break;
 
@@ -178,10 +178,10 @@ function Weapon(aName, aLevel) {
 }
 
 Weapon.prototype.collided = function (aEntity) {
-  if(aEntity.type == "Player"){
-    aEntity.inventory.addWeapon(this);
-    this.shouldRetain = false;
-  }
+    if (aEntity.type == "Player") {
+        aEntity.inventory.addWeapon(this);
+        this.shouldRetain = false;
+    }
 }
 
 Weapon.prototype.processTurn = function () {
@@ -193,14 +193,14 @@ Weapon.prototype.retain = function () {
 }
 
 Weapon.prototype.update = function () {
-  if (this.currY >= 5) this.movingUp = false;
-  else if (this.currY <= -5) this.movingUp = true;
-  if (this.movingUp) this.currY += .2;
-  else this.currY -= .2;
+    if (this.currY >= 5) this.movingUp = false;
+    else if (this.currY <= -5) this.movingUp = true;
+    if (this.movingUp) this.currY += .2;
+    else this.currY -= .2;
 }
 
 Weapon.prototype.render = function (time, ctx) {
-  var position = window.tilemap.toScreenCoords(this.position);
-  var spriteSource = this.spritePositions[this.spriteIdx];
-  ctx.drawImage(this.spritesheet, spriteSource.x, spriteSource.y, 75, 75, (position.x * this.size.width), (position.y * this.size.height) + this.currY, 96, 96);
+    var position = window.tilemap.toScreenCoords(this.position);
+    var spriteSource = this.spritePositions[this.spriteIdx];
+    ctx.drawImage(this.spritesheet, spriteSource.x, spriteSource.y, 75, 75, (position.x * this.size.width), (position.y * this.size.height) + this.currY, 96, 96);
 }
