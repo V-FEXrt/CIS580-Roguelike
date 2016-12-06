@@ -6,7 +6,7 @@ const CombatClass = require("./combat_class");
 const Inventory = require('./inventory.js');
 const Weapon = require('./weapon.js');
 const Armor = require('./armor.js');
-
+const Animator = require('./animator.js');
 /**
  * @module exports the Player class
  */
@@ -23,13 +23,14 @@ function Player(position, tilemap, combatClass) {
     this.size = { width: 96, height: 96 };
     this.spritesheet = new Image();
     this.tilemap = tilemap;
-    this.spritesheet.src = './spritesheets/sprites.png';
+    this.spritesheet.src = './spritesheets/player_animations.png';
     this.type = "Player";
     this.walk = [];
     this.changeClass(combatClass);
     this.level = 0;
     this.shouldProcessTurn = true;
-
+    this.direction = "right";
+    this.oldDirection = "right";
     window.terminal.addCommand("class", "Get your player class", this.getClass.bind(this));
 }
 
@@ -40,6 +41,7 @@ function Player(position, tilemap, combatClass) {
 Player.prototype.update = function(time) {
     // if we're dead, we should probably do something
     if (this.combat.health <= 0) this.state = "dead";
+    this.animator.update(time);
 }
 
 Player.prototype.walkPath = function(path, completion) {
@@ -61,11 +63,14 @@ Player.prototype.changeClass = function(chosenClass) {
     this.inventory = new Inventory(this.combat.weapon, this.combat.armor);
 
     if (this.class == "Knight") {
-        this.spritesheetPos = { x: 1, y: 5 };
+        //this.spritesheetPos = { x: 1, y: 5 };
+        this.animator = new Animator(4, this.state, this.class);
     } else if (this.class == "Mage") {
-        this.spritesheetPos = { x: 9, y: 5 };
+        //this.spritesheetPos = { x: 9, y: 5 };
+        this.animator = new Animator(0, this.state, this.class);
     } else if (this.class == "Archer") {
-        this.spritesheetPos = { x: 7, y: 6 };
+        //this.spritesheetPos = { x: 7, y: 6 };
+        this.animator = new Animator(0, this.state, this.class);
     }
 };
 
@@ -147,11 +152,32 @@ Player.prototype.render = function(elapsedTime, ctx) {
 
     ctx.drawImage(
         this.spritesheet,
-        96 * this.spritesheetPos.x, 96 * this.spritesheetPos.y,
+        96 * this.animator.index.x, 96 * this.animator.index.y,
         96, 96,
         position.x * this.size.width, position.y * this.size.height,
         96, 96
     );
+}
+
+Player.prototype.changeDirection = function(direction)
+{
+    if(direction == "down")
+    {
+        if(this.oldDirection == "right") this.animator.changeDirection("right");
+        else this.animator.changeDirection("left");
+    }
+    else
+    {
+        if(!direction == "up") this.oldDirection = direction;
+        this.animator.changeDirection(direction);
+    }
+}
+
+Player.prototype.playAttack = function(clickPos)
+{    
+    this.animator.updateState("attacking");
+    //if(clickPos.x < this.position.x) this.changeDirection("left");
+    //else this.changeDirection("right");
 }
 
 function hasUserInput(input) {

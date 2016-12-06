@@ -446,7 +446,134 @@ function pickAdjacent(room) {
   return {x: x, y: y};
 }
 
-},{"./../vector":24}],4:[function(require,module,exports){
+},{"./../vector":25}],4:[function(require,module,exports){
+"use strict";
+
+const sheetColumns = 10;
+const defaultFrameTime = 150;
+module.exports = exports = Animator;
+
+/**
+ * @constructor Animator
+ * Creates a new animator object
+ * @param {start} desired sprites start Y index on the spritesheet
+ * @param {state} the state of the entity to animate
+ * @param {entityClass} the kind of entity being animated
+ */
+function Animator(start, state, entityClass) {
+  this.start = start*sheetColumns;
+  this.frame = this.start;
+  this.state = state;
+  this.entity = entityClass;
+  this.direction = "right";
+  this.timer = 0;
+
+  this.index = {x: this.frame%sheetColumns, y: Math.floor(this.frame/sheetColumns)};
+}
+
+Animator.prototype.update = function(time){
+  this.timer += time;
+  
+  if(this.state == "idle")
+  {
+    if(this.timer >= defaultFrameTime)
+    {    
+      this.timer = 0;
+      if(this.direction == "right")
+      {
+        this.frame++;
+        if(this.frame > this.start+2) this.frame -= 3;
+      }
+      else if(this.direction == "left")
+      {
+        this.frame++;
+        if(this.frame > this.start+5) this.frame -= 3;
+      }
+      else
+      {
+        this.frame++;
+        if(this.frame > this.start+8) this.frame -=3;
+      }
+    }
+  }
+  else if(this.state == "attacking")
+  {
+    if(this.timer >= defaultFrameTime)
+    {    
+      this.timer = 0;
+      if(this.direction == "right")
+      {
+        this.frame++;
+        if(this.frame > this.start+sheetColumns+2) this.updateState("idle");
+      }
+      else if(this.direction == "left")
+      {
+        this.frame++;
+        if(this.frame > this.start+sheetColumns+5) this.updateState("idle");
+      }
+    }
+  }
+  
+  this.index = {x: this.frame%sheetColumns, y: Math.floor(this.frame/sheetColumns)};
+}
+
+Animator.prototype.updateState = function(state)
+{
+  this.state = state;
+  if(this.state == "idle")
+  {
+    this.frame = this.start;
+    if(this.direction == "left") this.frame+=3;
+  }
+  else if(this.state == "attacking")
+  {
+    this.frame = this.start+sheetColumns;
+  }
+}
+
+Animator.prototype.changeDirection = function(direction)
+{
+  var changed = false;
+  if(this.direction != direction) changed = true;
+  
+
+  if(changed)
+  {
+    if(this.state == "idle")
+    {
+      if(this.direction == "right")
+      {
+        if(direction == "left") this.frame += 3;
+        else this.frame += 6;
+      }
+      else if(this.direction == "left")
+      {
+        if(direction == "right") this.frame -= 3;
+        else this.frame += 3;
+      }
+      else if(this.direction == "up")
+      {
+        if(direction == "right") this.frame -= 6;
+        else this.frame -= 3;
+      }
+    }
+    if(this.state == "attacking")
+    {
+      if(this.direction == "right")
+      {
+        this.frame += 3;
+      }
+      else if(this.direction == "left")
+      {
+        this.frame -= 3;
+      }
+    }
+    this.direction = direction;
+    this.index = {x: this.frame%sheetColumns, y: Math.floor(this.frame/sheetColumns)};
+  }
+}
+
+},{}],5:[function(require,module,exports){
 "use strict";
 
 window.debug = false;
@@ -544,7 +671,8 @@ canvas.onclick = function (event) {
     x: parseInt(event.offsetX / 96),
     y: parseInt(event.offsetY / 96)
   }
-
+  
+  player.playAttack({x: event.offsetX, y: event.offsetY});
   var clickedWorldPos = tilemap.toWorldCoords(node);
   window.entityManager.addEntity(new Click(clickedWorldPos, tilemap, player, function (enemy) {
     var distance = Vector.distance(player.position, enemy.position);
@@ -571,6 +699,7 @@ window.onkeydown = function (event) {
         turnTimer = turnDelay;
         resetTimer = false;
       }
+      player.changeDirection("up");
       event.preventDefault();
       break;
     case "ArrowDown":
@@ -580,6 +709,7 @@ window.onkeydown = function (event) {
         turnTimer = turnDelay;
         resetTimer = false;
       }
+      player.changeDirection("down");
       event.preventDefault();
       break;
     case "ArrowLeft":
@@ -589,6 +719,7 @@ window.onkeydown = function (event) {
         turnTimer = turnDelay;
         resetTimer = false;
       }
+      player.changeDirection("left");
       event.preventDefault();
       break;
     case "ArrowRight":
@@ -598,6 +729,7 @@ window.onkeydown = function (event) {
         turnTimer = turnDelay;
         resetTimer = false;
       }
+      player.changeDirection("right");
       event.preventDefault();
       break;
     case "Shift":
@@ -776,7 +908,7 @@ function unfadeFromBlack() {
   fadeAnimationProgress.isActive = true;
 }
 
-},{"../tilemaps/tiledef.json":26,"./click":6,"./combat_controller":8,"./entity_manager":10,"./entity_spawner":11,"./game":12,"./gui":13,"./pathfinder.js":16,"./player":17,"./progress_manager":19,"./stairs":21,"./terminal.js":22,"./tilemap":23,"./vector":24}],5:[function(require,module,exports){
+},{"../tilemaps/tiledef.json":27,"./click":7,"./combat_controller":9,"./entity_manager":11,"./entity_spawner":12,"./game":13,"./gui":14,"./pathfinder.js":17,"./player":18,"./progress_manager":20,"./stairs":22,"./terminal.js":23,"./tilemap":24,"./vector":25}],6:[function(require,module,exports){
 "use strict";
 
 module.exports = exports = Armor;
@@ -863,7 +995,7 @@ Armor.prototype.render = function (time, ctx) {
 
 }
 
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 "use strict";
 
 module.exports = exports = Click;
@@ -912,7 +1044,7 @@ Click.prototype.render = function (elapsedTime, ctx) {
   }
 }
 
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 "use strict";
 
 const Tilemap = require('./tilemap');
@@ -1067,7 +1199,7 @@ function CombatClass(aName) {
 }
 
 
-},{"./armor":5,"./tilemap":23,"./vector":24,"./weapon":25}],8:[function(require,module,exports){
+},{"./armor":6,"./tilemap":24,"./vector":25,"./weapon":26}],9:[function(require,module,exports){
 "use strict";
 
 module.exports = exports = CombatController;
@@ -1239,7 +1371,7 @@ CombatController.prototype.randomDrop = function(aPosition) {
 }
 
 
-},{"./armor":5,"./combat_class":7,"./rng":20,"./weapon":25}],9:[function(require,module,exports){
+},{"./armor":6,"./combat_class":8,"./rng":21,"./weapon":26}],10:[function(require,module,exports){
 "use strict";
 
 const Tilemap = require('./tilemap');
@@ -1305,7 +1437,7 @@ Enemy.prototype.render = function(elapsedTime, ctx) {
 }
 
 
-},{"./combat_class":7,"./tilemap":23}],10:[function(require,module,exports){
+},{"./combat_class":8,"./tilemap":24}],11:[function(require,module,exports){
 "use strict";
 
 /**
@@ -1473,7 +1605,7 @@ function collision(entity1, entity2){
 
 }
 
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 "use strict";
 
 const Enemy = require('./enemy');
@@ -1549,7 +1681,7 @@ function spawnDrop(position){
   if(drop.type != "None") window.entityManager.addEntity(drop);
 }
 
-},{"./enemy":9,"./powerup":18,"./rng":20}],12:[function(require,module,exports){
+},{"./enemy":10,"./powerup":19,"./rng":21}],13:[function(require,module,exports){
 "use strict";
 
 /**
@@ -1607,7 +1739,7 @@ Game.prototype.loop = function(newTime) {
   this.frontCtx.drawImage(this.backBuffer, 0, 0);
 }
 
-},{}],13:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 "use strict";
 
 /**
@@ -1899,7 +2031,7 @@ GUI.prototype.render = function (elapsedTime, ctx) {
   }
 }
 
-},{}],14:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 "use strict";
 
 /**
@@ -2052,7 +2184,7 @@ function failArmor() {
     throw new Error("Item doesn't match type definition for 'Armor'");
 }
 
-},{}],15:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 "use strict";
 
 const CellularAutomata = require('./MapGeneration/cellular_automata_generation');
@@ -2152,7 +2284,7 @@ function rand(upper){
   return Math.floor(Math.random() * upper);
 }
 
-},{"./MapGeneration/cellular_automata_generation":1,"./MapGeneration/debug_map_generation":2,"./MapGeneration/rooms_hallways_generation":3}],16:[function(require,module,exports){
+},{"./MapGeneration/cellular_automata_generation":1,"./MapGeneration/debug_map_generation":2,"./MapGeneration/rooms_hallways_generation":3}],17:[function(require,module,exports){
 /**
  * @module A pathfinding module providing
  * a visualizaiton of common tree-search
@@ -2393,7 +2525,7 @@ Pathfinder.prototype.step = function() {
   return undefined;
 }
 
-},{}],17:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 "use strict";
 
 const Tilemap = require('./tilemap');
@@ -2402,7 +2534,7 @@ const CombatClass = require("./combat_class");
 const Inventory = require('./inventory.js');
 const Weapon = require('./weapon.js');
 const Armor = require('./armor.js');
-
+const Animator = require('./animator.js');
 /**
  * @module exports the Player class
  */
@@ -2419,13 +2551,14 @@ function Player(position, tilemap, combatClass) {
     this.size = { width: 96, height: 96 };
     this.spritesheet = new Image();
     this.tilemap = tilemap;
-    this.spritesheet.src = './spritesheets/sprites.png';
+    this.spritesheet.src = './spritesheets/player_animations.png';
     this.type = "Player";
     this.walk = [];
     this.changeClass(combatClass);
     this.level = 0;
     this.shouldProcessTurn = true;
-
+    this.direction = "right";
+    this.oldDirection = "right";
     window.terminal.addCommand("class", "Get your player class", this.getClass.bind(this));
 }
 
@@ -2436,6 +2569,7 @@ function Player(position, tilemap, combatClass) {
 Player.prototype.update = function(time) {
     // if we're dead, we should probably do something
     if (this.combat.health <= 0) this.state = "dead";
+    this.animator.update(time);
 }
 
 Player.prototype.walkPath = function(path, completion) {
@@ -2457,11 +2591,14 @@ Player.prototype.changeClass = function(chosenClass) {
     this.inventory = new Inventory(this.combat.weapon, this.combat.armor);
 
     if (this.class == "Knight") {
-        this.spritesheetPos = { x: 1, y: 5 };
+        //this.spritesheetPos = { x: 1, y: 5 };
+        this.animator = new Animator(4, this.state, this.class);
     } else if (this.class == "Mage") {
-        this.spritesheetPos = { x: 9, y: 5 };
+        //this.spritesheetPos = { x: 9, y: 5 };
+        this.animator = new Animator(0, this.state, this.class);
     } else if (this.class == "Archer") {
-        this.spritesheetPos = { x: 7, y: 6 };
+        //this.spritesheetPos = { x: 7, y: 6 };
+        this.animator = new Animator(0, this.state, this.class);
     }
 };
 
@@ -2543,18 +2680,39 @@ Player.prototype.render = function(elapsedTime, ctx) {
 
     ctx.drawImage(
         this.spritesheet,
-        96 * this.spritesheetPos.x, 96 * this.spritesheetPos.y,
+        96 * this.animator.index.x, 96 * this.animator.index.y,
         96, 96,
         position.x * this.size.width, position.y * this.size.height,
         96, 96
     );
 }
 
+Player.prototype.changeDirection = function(direction)
+{
+    if(direction == "down")
+    {
+        if(this.oldDirection == "right") this.animator.changeDirection("right");
+        else this.animator.changeDirection("left");
+    }
+    else
+    {
+        if(!direction == "up") this.oldDirection = direction;
+        this.animator.changeDirection(direction);
+    }
+}
+
+Player.prototype.playAttack = function(clickPos)
+{    
+    this.animator.updateState("attacking");
+    //if(clickPos.x < this.position.x) this.changeDirection("left");
+    //else this.changeDirection("right");
+}
+
 function hasUserInput(input) {
     return input.up || input.down || input.right || input.left;
 }
 
-},{"./armor.js":5,"./combat_class":7,"./inventory.js":14,"./tilemap":23,"./vector":24,"./weapon.js":25}],18:[function(require,module,exports){
+},{"./animator.js":4,"./armor.js":6,"./combat_class":8,"./inventory.js":15,"./tilemap":24,"./vector":25,"./weapon.js":26}],19:[function(require,module,exports){
 "use strict";
 
 const Tilemap = require('./tilemap');
@@ -2678,7 +2836,7 @@ Powerup.prototype.render = function (elapsedTime, ctx) {
     //ctx.drawImage(this.power,0,25,25,25,position.x*this.size.width, position.y*this.size.height,96,96);
     //ctx.drawImage(this.power,25,50,25,25,position.x*this.size.width, position.y*this.size.height,96,96);
 
-},{"./rng":20,"./tilemap":23}],19:[function(require,module,exports){
+},{"./rng":21,"./tilemap":24}],20:[function(require,module,exports){
 "use strict";
 
 module.exports = exports = ProgressManager;
@@ -2712,7 +2870,7 @@ ProgressManager.prototype.reset = function(){
   this.percent = 0;
 }
 
-},{}],20:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 "use strict";
 
 module.exports = exports = {
@@ -2779,7 +2937,7 @@ function oneIn(x) {
 }
 
 
-},{}],21:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 "use strict";
 
 /**
@@ -2848,7 +3006,7 @@ Stairs.prototype.render = function (elapsedTime, ctx) {
   ctx.drawImage(this.spritesheet, 75 + this.spriteOff, 0, 75, 75, (position.x * this.size.width), (position.y * this.size.height), 96, 96);
 }
 
-},{}],22:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 "use strict";
 
 const MAX_MSG_COUNT = 62;
@@ -2986,7 +3144,7 @@ function splitMessage(message, messages, color) {
 
 }
 
-},{}],23:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 "use strict";
 
 const MapGenerator = require('./map_generator');
@@ -3211,7 +3369,7 @@ Tilemap.prototype.getRandomAdjacent = function (aTile) {
   }
 }
 
-},{"./map_generator":15,"./vector":24}],24:[function(require,module,exports){
+},{"./map_generator":16,"./vector":25}],25:[function(require,module,exports){
 "use strict";
 
 /**
@@ -3319,7 +3477,7 @@ function equals(a, b){
   return a.x == b.x && a.y == b.y;
 }
 
-},{}],25:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 "use strict";
 
 module.exports = exports = Weapon;
@@ -3527,7 +3685,7 @@ Weapon.prototype.render = function (time, ctx) {
     ctx.drawImage(this.spritesheet, spriteSource.x, spriteSource.y, 75, 75, (position.x * this.size.width), (position.y * this.size.height) + this.currY, 96, 96);
 }
 
-},{}],26:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 module.exports={
  "tileheight":96,
  "tilewidth":96,
@@ -3796,4 +3954,4 @@ module.exports={
 	}
 }
 
-},{}]},{},[4]);
+},{}]},{},[5]);
