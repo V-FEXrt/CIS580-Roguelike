@@ -729,7 +729,7 @@ function nextLevel(fadeOut) {
       //move player to valid location
       var pos = tilemap.findOpenSpace();
       player.position = { x: pos.x, y: pos.y };
-      tilemap.moveTo({ x: pos.x - 5, y: pos.y - 3 });
+      tilemap.moveTo({ x: pos.x - 5, y: pos.y - 5 });
 
       // allow player to move
       player.shouldProcessTurn = true;
@@ -1081,7 +1081,7 @@ function CombatController() {
 
 }
 
-CombatController.prototype.handleAttack = function (aAttackerClass, aDefenderClass) {
+CombatController.prototype.handleAttack = function(aAttackerClass, aDefenderClass) {
     var lAttackBase = Math.floor(aAttackerClass.attackBonus);
     var lAttackBonus = aAttackerClass.weapon.hitBonus;
     var lAttackRoll = RNG.rollRandom(1, 20);
@@ -1166,7 +1166,7 @@ CombatController.prototype.handleAttack = function (aAttackerClass, aDefenderCla
     }
 }
 
-CombatController.prototype.handleStatus = function (aCombatClass) {
+CombatController.prototype.handleStatus = function(aCombatClass) {
     switch (aCombatClass.status.effect) {
         case "Burned":
         case "Poisoned":
@@ -1202,7 +1202,7 @@ CombatController.prototype.handleStatus = function (aCombatClass) {
     }
 }
 
-CombatController.prototype.randomDrop = function (aPosition) {
+CombatController.prototype.randomDrop = function(aPosition) {
     var lDrop = new Object();
     var lRand = RNG.rollRandom(1, 20); // need to set up weighted rands
     if (lRand > 17) {                           // spawn armor
@@ -1628,16 +1628,17 @@ function GUI(size) {
   this.startSprites = new Image();
   this.startSprites.src = './spritesheets/start.png';
   this.highlightSize = 10;
-  
+  this.startBackground = new Image();
+  this.startBackground.src = './spritesheets/start_background.png';
   this.swordHighlights = [0, 0, 0];
-  this.swordYPos = [288, 384, 480];
+  this.swordYPos = [480, 576, 672];
   
   this.playerHighlights = [0, 0, 0];
-  this.playerXPos = [336, 480, 624];
+  this.playerXPos = [705, 849, 993];
   
-  this.titleMinY = 75;
-  this.titleY = 75;
-  this.titleMaxY = 80;
+  this.titleMinY = 267;
+  this.titleY = 267;
+  this.titleMaxY = 272;
   this.titleDirection = 1;
   
   this.chosenClass = "";
@@ -1650,7 +1651,7 @@ GUI.prototype.onmousemove = function(event)
 	y = event.offsetY;
 	if(this.state == "start")
 	{
-		if(x >= 384 && x <= 672)
+		if(x >= 753 && x <= 1041)
 		{
 			if(y >= this.swordYPos[0] + 20 && y <= this.swordYPos[0] + 76)
 			{
@@ -1670,7 +1671,7 @@ GUI.prototype.onmousemove = function(event)
 	}
 	else if(this.state == "choose class")
 	{
-		if(y >= 288 && y <= 384)
+		if(y >= 480 && y <= 576)
 		{
 			if(x >= this.playerXPos[0] + 20 && x <= this.playerXPos[0] + 76)
 			{
@@ -1761,13 +1762,13 @@ GUI.prototype.render = function (elapsedTime, ctx) {
   {
 	//Background
 	ctx.drawImage(
-		this.startSprites,
+		this.startBackground,
 		0, 0,
-		this.size.width,
-		this.size.height,
+		1728,
+		1056,
 		0, 0,
-		this.size.width,
-		this.size.height
+		1788,
+		1116
 	);
 	
 	//Shadow
@@ -1775,7 +1776,7 @@ GUI.prototype.render = function (elapsedTime, ctx) {
 		this.startSprites,
 		0, 1056,
 		480, 480,
-		285, 96,
+		654, 288, //369, 192
 		480, 480
 	);
 	
@@ -1784,7 +1785,7 @@ GUI.prototype.render = function (elapsedTime, ctx) {
 		this.startSprites,
 		0, 768,
 		576, 288,
-		285, this.titleY,
+		649, this.titleY,
 		576, 288
 	);
 	
@@ -1793,7 +1794,7 @@ GUI.prototype.render = function (elapsedTime, ctx) {
 		this.startSprites,
 		0, 672,
 		288, 96,
-		384 - this.swordHighlights[0]/2, 288 - this.swordHighlights[0]/2,
+		753 - this.swordHighlights[0]/2, 480 - this.swordHighlights[0]/2,
 		288 +this.swordHighlights[0], 96 + this.swordHighlights[0]
 	);
 	
@@ -1802,7 +1803,7 @@ GUI.prototype.render = function (elapsedTime, ctx) {
 		this.startSprites,
 		288, 672,
 		288, 96,
-		384 - this.swordHighlights[1]/2, 384 - this.swordHighlights[1]/2,
+		753 - this.swordHighlights[1]/2, 576 - this.swordHighlights[1]/2,
 		288 +this.swordHighlights[1], 96 + this.swordHighlights[1]
 	);
 	
@@ -1811,40 +1812,40 @@ GUI.prototype.render = function (elapsedTime, ctx) {
 		this.startSprites,
 		576, 672,
 		288, 96,
-		384 - this.swordHighlights[2]/2, 480 - this.swordHighlights[2]/2,
+		753 - this.swordHighlights[2]/2, 672 - this.swordHighlights[2]/2,
 		288 +this.swordHighlights[2], 96 + this.swordHighlights[2]
 	);
   }
   else if(this.state == "choose class")
   {
   	//Background
-	ctx.drawImage(
-		this.startSprites,
-		0, 0,
-		this.size.width,
-		this.size.height,
-		0, 0,
-		this.size.width,
-		this.size.height
-	);
+    ctx.drawImage(
+      this.startBackground,
+      0, 0,
+      1728,
+      1056,
+      0, 0,
+      1788,
+      1116
+    );
 	
     //Shadow
     ctx.drawImage(
         this.startSprites,
         672, 1248,
         480, 384,
-        288, 165,
+        657, 357,
         480, 384
     );
     
-	//Nameplates
-	ctx.drawImage(
-		this.startSprites,
-		576, 768,
-		672, 480,
-		192, 96,
-		672, 480
-	);
+    //Nameplates
+    ctx.drawImage(
+      this.startSprites,
+      576, 768,
+      672, 480,
+      561, 288,
+      672, 480
+    );
 	
 	ctx.fillStyle = "lightgrey";   
     ctx.strokeStyle = "grey";
@@ -1862,7 +1863,7 @@ GUI.prototype.render = function (elapsedTime, ctx) {
       this.playerSprites,
       96, 96 *5,
       96 , 96,
-      this.playerXPos[0] - this.playerHighlights[0]/2, 282 - this.playerHighlights[0]/2,
+      this.playerXPos[0] - this.playerHighlights[0]/2, 474 - this.playerHighlights[0]/2,
       96 + this.playerHighlights[0], 96 + this.playerHighlights[0]
     );
     
@@ -1871,7 +1872,7 @@ GUI.prototype.render = function (elapsedTime, ctx) {
       this.playerSprites,
       96 * 7, 96 *6,
       96 , 96,
-      this.playerXPos[1]  - this.playerHighlights[1]/2, 282  - this.playerHighlights[1]/2,
+      this.playerXPos[1]  - this.playerHighlights[1]/2, 474  - this.playerHighlights[1]/2,
 	  96 + this.playerHighlights[1], 96 + this.playerHighlights[1]
     );
     
@@ -1880,7 +1881,7 @@ GUI.prototype.render = function (elapsedTime, ctx) {
       this.playerSprites,
       96*9, 96 *5,
       96 , 96,
-      this.playerXPos[2]  - this.playerHighlights[2]/2, 282  - this.playerHighlights[2]/2,
+      this.playerXPos[2]  - this.playerHighlights[2]/2, 474  - this.playerHighlights[2]/2,
       96 + this.playerHighlights[2] , 96 + this.playerHighlights[2]
     );
   }
@@ -2717,7 +2718,8 @@ ProgressManager.prototype.reset = function(){
 module.exports = exports = {
     rollRandom: rollRandom,
     rollMultiple: rollMultiple,
-    rollWeighted: rollWeighted
+    rollWeighted: rollWeighted,
+    oneIn: oneIn
 }
 
 /**
@@ -2740,7 +2742,7 @@ function rollRandom(aMinimum, aMaximum) {
 function rollMultiple(aMinimum, aMaximum, aNumber) {
     var total = 0;
     for (var i = 0; i < aNumber; i++) {
-        total += this.rollRandom(aMinimum, aMaximum);
+        total += rollRandom(aMinimum, aMaximum);
     }
     return total;
 }
@@ -2759,12 +2761,21 @@ function rollWeighted() {
     for (var i = 0; i < argLength; i++) {
         weightSum += arguments[i];
     }
-    var roll = this.rollRandom(0, weightSum);
+    var roll = rollRandom(0, weightSum);
     weightSum = 0;
     for (var i = 0; i < argLength; i++) {
         weightSum += arguments[i];
         if (roll <= weightSum) return i;
     }
+}
+
+/**
+ * @function oneIn
+ * Returns true with a 1 in X chance.
+ * @param {Integer} x - Chance to generate.
+ */
+function oneIn(x) {
+    return rollWeighted(100 - (100 / x), 100 / x);
 }
 
 
