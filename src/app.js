@@ -280,7 +280,7 @@ function nextLevel(fadeOut) {
       //move player to valid location
       var pos = tilemap.findOpenSpace();
       player.position = { x: pos.x, y: pos.y };
-      tilemap.moveTo({ x: pos.x - 5, y: pos.y - 3 });
+      tilemap.moveTo({ x: pos.x - 5, y: pos.y - 5 });
 
       // allow player to move
       player.shouldProcessTurn = true;
