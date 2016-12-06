@@ -3,15 +3,16 @@
 module.exports = exports = SFX;
 
 var background = new Audio();
-var healthPickupSound = new Audio();
-var attackPowerupSound = new Audio();
-var damageBonusPowerupSound = new Audio();
-var defensePowerupSound = new Audio();
+var healthPickup = new Audio();
+var attackPowerup = new Audio();
+var damageBonusPowerup = new Audio();
+var defensePowerup = new Audio();
+var click = new Audio();
 
 function SFX() {
     background.src = encodeURI('sounds/tempBGMusic.wav');
     background.volume = 0.3;
-    background.addEventListener('ended', function () {
+    background.addEventListener('ended', function() {
         var backgroundMusicOnLoop = new Audio('sounds/tempBGMusicLoop.wav');
         backgroundMusicOnLoop.volume = 0.3;
         backgroundMusicOnLoop.loop = true;
@@ -19,35 +20,42 @@ function SFX() {
     }, false);
     background.play();
 
-    healthPickupSound.src = encodeURI('sounds/Powerup3.wav');
-    healthPickupSound.volume = 0.1;
+    healthPickup.src = encodeURI('sounds/Powerup3.wav');
+    healthPickup.volume = 0.1;
 
-    attackPowerupSound.src = encodeURI('sounds/Powerup4.wav');
-    attackPowerupSound.volume = 0.1;
+    attackPowerup.src = encodeURI('sounds/Powerup4.wav');
+    attackPowerup.volume = 0.1;
 
-    damageBonusPowerupSound.src = encodeURI('sounds/Powerup1.wav');
-    damageBonusPowerupSound.volume = 0.1;
+    damageBonusPowerup.src = encodeURI('sounds/Powerup1.wav');
+    damageBonusPowerup.volume = 0.1;
 
-    defensePowerupSound.src = encodeURI('sounds/Powerup2.wav');
-    defensePowerupSound.volume = 0.4;
+    defensePowerup.src = encodeURI('sounds/Powerup2.wav');
+    defensePowerup.volume = 0.4;
+
+    click.src = encodeURI("sounds/click.wav");
+    click.volume = 0.4;
 }
 
-SFX.prototype.play = function (aSound) {
+SFX.prototype.play = function(aSound) {
     switch (aSound) {
         case "healthPickup":
-            healthPickupSound.play();
+            healthPickup.play();
             break;
 
         case "attackPickup":
-            attackPowerupSound.play();
+            attackPowerup.play();
             break;
 
         case "damagePickup":
-            damageBonusPowerupSound.play();
+            damageBonusPowerup.play();
             break;
 
         case "defensePickup":
-            defensePowerupSound.play();
+            defensePowerup.play();
+            break;
+
+        case "click":
+            click.play();
             break;
     }
 }

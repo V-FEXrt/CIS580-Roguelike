@@ -70,8 +70,10 @@ window.onmousemove = function(event) {
 window.onmousedown = function(event) {
     // Init the level when class is chosen
     if (gui.state == "start" || gui.state == "choose class") {
+        window.sfx.play("click");
         gui.onmousedown(event);
         if (gui.chosenClass != "") {
+            window.sfx.play("click");
             player.changeClass(gui.chosenClass);
             nextLevel(false);
         }
