@@ -262,7 +262,9 @@ function nextLevel(fadeOut) {
   var init = function () {
     // clear terminal
     window.terminal.clear();
-    window.terminal.log("   ---===| LEVEL " + player.level + " |===---");
+    var msg = "---===| LEVEL " + player.level + " |===---";
+    var padSpace = Math.floor((80 - msg.length) / 2);
+    window.terminal.log(Array(padSpace).join(' ') + msg);
 
     // reset entities
     window.entityManager.reset();
