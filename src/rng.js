@@ -54,10 +54,12 @@ function rollWeighted() {
     }
 }
 
+/**
+ * @function oneIn
+ * Returns true with a 1 in X chance.
+ * @param {Integer} x - Chance to generate.
+ */
 function oneIn(x) {
-    var percent = 100 / x;
-    var excess = 100 - percent;
-    var roll = rollWeighted(excess, percent);
-    console.log(`one in ${x} = ${roll}, excess: ${excess}`);
-    return roll;
+    return rollWeighted(100 - (100 / x), 100 / x);
 }
+

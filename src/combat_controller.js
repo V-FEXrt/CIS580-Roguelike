@@ -8,15 +8,7 @@ const Armor = require("./armor");
 const RNG = require("./rng");
 
 function CombatController() {
-    var t = 0;
-    var f = 0;
-    var roll;
-    for (var i = 0; i < 100; i++) {
-        roll = RNG.oneIn(5);
-        if (roll) t++;
-        else f++;
-    }
-    console.log(`\nT:${t}, F:${f}`);
+
 }
 
 CombatController.prototype.handleAttack = function(aAttackerClass, aDefenderClass) {
