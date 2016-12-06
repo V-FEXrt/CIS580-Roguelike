@@ -1,6 +1,6 @@
 "use strict";
 
-const MAX_MSG_COUNT = 50;
+const MAX_MSG_COUNT = 62;
 const MAX_MSG_LENGTH = 80;
 
 module.exports = exports = Terminal;
