@@ -30,7 +30,7 @@ function Player(position, tilemap, combatClass) {
     this.level = 0;
     this.shouldProcessTurn = true;
 
-    window.terminal.addCommand("/class", "Get your player class", this.getClass.bind(this));
+    window.terminal.addCommand("class", "Get your player class", this.getClass.bind(this));
 }
 
 /**
@@ -109,11 +109,11 @@ Player.prototype.processTurn = function(input) {
 
     var screenCoor = this.tilemap.toScreenCoords(this.position);
 
-    if (screenCoor.y < 3) {
+    if (screenCoor.y < 5) {
         this.tilemap.moveBy({ x: 0, y: -1 });
     }
 
-    if (screenCoor.y + 3 == this.tilemap.draw.size.height) {
+    if (screenCoor.y + 5 == this.tilemap.draw.size.height) {
         this.tilemap.moveBy({ x: 0, y: 1 });
     }
 

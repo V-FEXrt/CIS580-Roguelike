@@ -473,8 +473,7 @@ var game = new Game(canvas, update, render);
 window.entityManager = new EntityManager();
 var fadeAnimationProgress = new ProgressManager(0, function () { });
 var isFadeOut = true;
-var screenSize = { width: 1056, height: 672 };
-var inputString = "";
+var screenSize = { width: 1056, height: 1056 };
 
 window.combatController = new CombatController();
 
@@ -690,10 +689,10 @@ function render(elapsedTime, ctx) {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.restore();
 
-  ctx.fillRect(1060, 0, 273, 672);
+  ctx.fillRect(1060, 0, 732, 1116);
 
   ctx.fillStyle = "white";
-  ctx.fillRect(1057, 0, 2, 672);
+  ctx.fillRect(1057, 0, 2, 1116);
   window.terminal.render(elapsedTime, ctx);
 
   gui.render(elapsedTime, ctx);
@@ -2426,7 +2425,7 @@ function Player(position, tilemap, combatClass) {
     this.level = 0;
     this.shouldProcessTurn = true;
 
-    window.terminal.addCommand("/class", "Get your player class", this.getClass.bind(this));
+    window.terminal.addCommand("class", "Get your player class", this.getClass.bind(this));
 }
 
 /**
@@ -2505,11 +2504,11 @@ Player.prototype.processTurn = function(input) {
 
     var screenCoor = this.tilemap.toScreenCoords(this.position);
 
-    if (screenCoor.y < 3) {
+    if (screenCoor.y < 5) {
         this.tilemap.moveBy({ x: 0, y: -1 });
     }
 
-    if (screenCoor.y + 3 == this.tilemap.draw.size.height) {
+    if (screenCoor.y + 5 == this.tilemap.draw.size.height) {
         this.tilemap.moveBy({ x: 0, y: 1 });
     }
 
@@ -2841,19 +2840,19 @@ Stairs.prototype.render = function (elapsedTime, ctx) {
 },{}],22:[function(require,module,exports){
 "use strict";
 
-const MAX_MSG_COUNT = 50;
-const MAX_MSG_LENGTH = 29;
+const MAX_MSG_COUNT = 62;
+const MAX_MSG_LENGTH = 80;
 
 module.exports = exports = Terminal;
 
 function Terminal() {
     this.messages = [];
-    this.startPos = { x: 1063, y: 649 };
+    this.startPos = { x: 1063, y: 1095 };
     this.active = false;
     this.input = "";
     this.commands = {};
 
-    this.addCommand("/help", "Print out all commands", this.helpCommand.bind(this));
+    this.addCommand("help", "Print out all commands", this.helpCommand.bind(this));
 }
 
 Terminal.prototype.log = function (message, color) {
@@ -2881,14 +2880,14 @@ Terminal.prototype.render = function (elapsedTime, ctx) {
         ctx.fillText(message.text, self.startPos.x, self.startPos.y - 18 * i);
     });
 
-    ctx.fillText(">", 1063, 667);
+    ctx.fillText(">", 1063, 1111);
 
     if (this.active){
       ctx.fillStyle = "white";
-      ctx.fillText(this.input, 1078, 667)
+      ctx.fillText(this.input, 1078, 1111)
     } else{
       ctx.fillStyle = "#d3d3d3";
-      ctx.fillText("Press / to type", 1078, 667);
+      ctx.fillText("Press / to type", 1078, 1111);
     }
 }
 
@@ -2896,17 +2895,19 @@ Terminal.prototype.onkeydown = function (event) {
   switch (event.key) {
     case "/":
       this.active = true;
-      this.input = "/";
       break;
     case "Enter":
+      if(!this.active) return;
       this.processInput();
-      console.log('dd');
       this.input = "";
       this.active = false;
       break;
     case "Backspace":
-      this.input = this.input.substr(0, inputString.length - 1);
+      this.input = this.input.substr(0, this.input.length - 1);
       break;
+    case "Escape":
+      this.input = "";
+      this.active = false;
     default:
       if(this.active) this.input = this.input.concat(event.key);
   }
@@ -2920,6 +2921,12 @@ Terminal.prototype.addCommand = function(command, description, callback){
   this.commands[command] = {command: command, description: description, callback: callback};
 }
 
+Terminal.prototype.removeCommand = function(command){
+  if(command in this.commands){
+      delete this.commands[command];
+  }
+}
+
 Terminal.prototype.helpCommand = function(){
   var self = this;
   Object.keys(self.commands).forEach(function(command){
@@ -2929,7 +2936,7 @@ Terminal.prototype.helpCommand = function(){
 }
 
 Terminal.prototype.processInput = function () {
-    this.log(this.input.slice(1), "yellow");
+    this.log(this.input, "yellow");
 
     if(this.input in this.commands){
         this.commands[this.input].callback();

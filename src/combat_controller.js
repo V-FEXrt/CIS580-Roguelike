@@ -11,7 +11,7 @@ function CombatController() {
 
 }
 
-CombatController.prototype.handleAttack = function (aAttackerClass, aDefenderClass) {
+CombatController.prototype.handleAttack = function(aAttackerClass, aDefenderClass) {
     var lAttackBase = Math.floor(aAttackerClass.attackBonus);
     var lAttackBonus = aAttackerClass.weapon.hitBonus;
     var lAttackRoll = RNG.rollRandom(1, 20);
@@ -96,7 +96,7 @@ CombatController.prototype.handleAttack = function (aAttackerClass, aDefenderCla
     }
 }
 
-CombatController.prototype.handleStatus = function (aCombatClass) {
+CombatController.prototype.handleStatus = function(aCombatClass) {
     switch (aCombatClass.status.effect) {
         case "Burned":
         case "Poisoned":
@@ -132,7 +132,7 @@ CombatController.prototype.handleStatus = function (aCombatClass) {
     }
 }
 
-CombatController.prototype.randomDrop = function (aPosition) {
+CombatController.prototype.randomDrop = function(aPosition) {
     var lDrop = new Object();
     var lRand = RNG.rollRandom(1, 20); // need to set up weighted rands
     if (lRand > 17) {                           // spawn armor
