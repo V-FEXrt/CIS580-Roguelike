@@ -204,3 +204,7 @@ Weapon.prototype.render = function (time, ctx) {
     var spriteSource = this.spritePositions[this.spriteIdx];
     ctx.drawImage(this.spritesheet, spriteSource.x, spriteSource.y, 75, 75, (position.x * this.size.width), (position.y * this.size.height) + this.currY, 96, 96);
 }
+
+Weapon.prototype.toString = function () {
+    return `Level ${this.level} ${this.name} with damage range ${this.damageMin}-${this.damageMax}, with ${this.properties}`
+}

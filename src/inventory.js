@@ -13,6 +13,8 @@ function Inventory(weapon, armor) {
     this.inventory = [];
     this.inventory.push(weapon);
     this.inventory.push(armor);
+    window.terminal.addCommand("weapon", "Get your current weapon stats", this.weaponCommand.bind(this));
+    window.terminal.addCommand("armor", "Get your current armor atats", this.armorCommand.bind(this));
 }
 
 /**
@@ -106,6 +108,14 @@ Inventory.prototype.addItem = function (item) {
  */
 Inventory.prototype.removeItem = function (item) {
     this.inventory.remove(this.inventory.indexOf(item));
+}
+
+Inventory.prototype.weaponCommand = function () {
+    window.terminal.log(this.inventory[0].toString());
+}
+
+Inventory.prototype.armorCommand = function () {
+    window.terminal.log(this.inventory[1].toString());
 }
 
 /**

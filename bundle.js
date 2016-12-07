@@ -446,7 +446,7 @@ function pickAdjacent(room) {
   return {x: x, y: y};
 }
 
-},{"./../vector":24}],4:[function(require,module,exports){
+},{"./../vector":25}],4:[function(require,module,exports){
 "use strict";
 
 window.debug = false;
@@ -466,27 +466,34 @@ const Stairs = require('./stairs');
 const ProgressManager = require('./progress_manager');
 const GUI = require('./gui');
 const Terminal = require('./terminal.js');
+const SFX = require("./sfx");
 
 /* Global variables */
 var canvas = document.getElementById('screen');
 var game = new Game(canvas, update, render);
+window.sfx = new SFX();
 window.entityManager = new EntityManager();
 var fadeAnimationProgress = new ProgressManager(0, function () { });
 var isFadeOut = true;
 var screenSize = { width: 1056, height: 1056 };
+var stairs;
 
 window.combatController = new CombatController();
 
 window.terminal = new Terminal();
 window.terminal.log("Welcome to Roguelike");
 window.terminal.log("Good luck!");
+window.terminal.addCommand("debug", "Toggle debug",
+    function () {
+        window.debug = !window.debug;
+    });
 
 var gui = new GUI(screenSize);
 
 var tilemap = new Tilemap(screenSize, 65, 65, tileset, {
-  onload: function () {
-    masterLoop(performance.now());
-  }
+    onload: function () {
+        masterLoop(performance.now());
+    }
 });
 
 var pathfinder = new Pathfinder(tilemap);
@@ -494,24 +501,10 @@ window.pathfinder = pathfinder;
 window.tilemap = tilemap;
 
 var input = {
-  up: false,
-  down: false,
-  left: false,
-  right: false
-}
-
-var backgroundMusic = new Audio('sounds/tempBGMusic.wav');
-backgroundMusic.volume = 0.3;
-backgroundMusic.addEventListener('ended', function () {
-  setNewMusic();
-}, false);
-backgroundMusic.play();
-
-var setNewMusic = function () {
-  var backgroundMusicOnLoop = new Audio('sounds/tempBGMusicLoop.wav');
-  backgroundMusicOnLoop.volume = 0.3;
-  backgroundMusicOnLoop.loop = true;
-  backgroundMusicOnLoop.play();
+    up: false,
+    down: false,
+    left: false,
+    right: false
 }
 
 var turnTimer = 0;
@@ -525,36 +518,38 @@ var player = new Player({ x: 0, y: 0 }, tilemap, "Mage");
 window.player = player;
 
 window.onmousemove = function (event) {
-  gui.onmousemove(event);
+    gui.onmousemove(event);
 }
 
 window.onmousedown = function (event) {
-  // Init the level when class is chosen
-  if (gui.state == "start" || gui.state == "choose class") {
-    gui.onmousedown(event);
-    if (gui.chosenClass != "") {
-      player.changeClass(gui.chosenClass);
-      nextLevel(false);
+    // Init the level when class is chosen
+    if (gui.state == "start" || gui.state == "choose class") {
+        window.sfx.play("click");
+        gui.onmousedown(event);
+        if (gui.chosenClass != "") {
+            window.sfx.play("click");
+            player.changeClass(gui.chosenClass);
+            nextLevel(false);
+        }
     }
-  }
 }
 
 canvas.onclick = function (event) {
-  var node = {
-    x: parseInt(event.offsetX / 96),
-    y: parseInt(event.offsetY / 96)
-  }
-
-  var clickedWorldPos = tilemap.toWorldCoords(node);
-  window.entityManager.addEntity(new Click(clickedWorldPos, tilemap, player, function (enemy) {
-    var distance = Vector.distance(player.position, enemy.position);
-    if (distance.x <= player.combat.weapon.range && distance.y <= player.combat.weapon.range) {
-      turnDelay = defaultTurnDelay;
-      autoTurn = false;
-      combatController.handleAttack(player.combat, enemy.combat);
-      processTurn();
+    var node = {
+        x: parseInt(event.offsetX / 96),
+        y: parseInt(event.offsetY / 96)
     }
-  }));
+
+    var clickedWorldPos = tilemap.toWorldCoords(node);
+    window.entityManager.addEntity(new Click(clickedWorldPos, tilemap, player, function (enemy) {
+        var distance = Vector.distance(player.position, enemy.position);
+        if (distance.x <= player.combat.weapon.range && distance.y <= player.combat.weapon.range) {
+            turnDelay = defaultTurnDelay;
+            autoTurn = false;
+            combatController.handleAttack(player.combat, enemy.combat);
+            processTurn();
+        }
+    }));
 }
 
 /**
@@ -562,50 +557,50 @@ canvas.onclick = function (event) {
  * Handles keydown events
  */
 window.onkeydown = function (event) {
-  if (window.terminal.onkeydown(event)) return;
-  switch (event.key) {
-    case "ArrowUp":
-    case "w":
-      input.up = true;
-      if (resetTimer) {
-        turnTimer = turnDelay;
-        resetTimer = false;
-      }
-      event.preventDefault();
-      break;
-    case "ArrowDown":
-    case "s":
-      input.down = true;
-      if (resetTimer) {
-        turnTimer = turnDelay;
-        resetTimer = false;
-      }
-      event.preventDefault();
-      break;
-    case "ArrowLeft":
-    case "a":
-      input.left = true;
-      if (resetTimer) {
-        turnTimer = turnDelay;
-        resetTimer = false;
-      }
-      event.preventDefault();
-      break;
-    case "ArrowRight":
-    case "d":
-      input.right = true;
-      if (resetTimer) {
-        turnTimer = turnDelay;
-        resetTimer = false;
-      }
-      event.preventDefault();
-      break;
-    case "Shift":
-      event.preventDefault();
-      turnDelay = defaultTurnDelay / 2;
-      autoTurn = true;
-      break;
-  }
+    if (window.terminal.onkeydown(event)) return;
+    switch (event.key) {
+        case "ArrowUp":
+        case "w":
+            input.up = true;
+            if (resetTimer) {
+                turnTimer = turnDelay;
+                resetTimer = false;
+            }
+            event.preventDefault();
+            break;
+        case "ArrowDown":
+        case "s":
+            input.down = true;
+            if (resetTimer) {
+                turnTimer = turnDelay;
+                resetTimer = false;
+            }
+            event.preventDefault();
+            break;
+        case "ArrowLeft":
+        case "a":
+            input.left = true;
+            if (resetTimer) {
+                turnTimer = turnDelay;
+                resetTimer = false;
+            }
+            event.preventDefault();
+            break;
+        case "ArrowRight":
+        case "d":
+            input.right = true;
+            if (resetTimer) {
+                turnTimer = turnDelay;
+                resetTimer = false;
+            }
+            event.preventDefault();
+            break;
+        case "Shift":
+            event.preventDefault();
+            turnDelay = defaultTurnDelay / 2;
+            autoTurn = true;
+            break;
+    }
 }
 
 /**
@@ -613,29 +608,29 @@ window.onkeydown = function (event) {
  * Handles keyup events
  */
 window.onkeyup = function (event) {
-  switch (event.key) {
-    case "ArrowUp":
-    case "w":
-      input.up = false;
-      break;
-    case "ArrowDown":
-    case "s":
-      input.down = false;
-      break;
-    case "ArrowLeft":
-    case "a":
-      input.left = false;
-      break;
-    case "ArrowRight":
-    case "d":
-      input.right = false;
-      break;
-    case "Shift":
-      turnDelay = defaultTurnDelay;
-      autoTurn = false;
-      break;
-  }
-  if (!(input.left || input.right || input.up || input.down)) resetTimer = true;
+    switch (event.key) {
+        case "ArrowUp":
+        case "w":
+            input.up = false;
+            break;
+        case "ArrowDown":
+        case "s":
+            input.down = false;
+            break;
+        case "ArrowLeft":
+        case "a":
+            input.left = false;
+            break;
+        case "ArrowRight":
+        case "d":
+            input.right = false;
+            break;
+        case "Shift":
+            turnDelay = defaultTurnDelay;
+            autoTurn = false;
+            break;
+    }
+    if (!(input.left || input.right || input.up || input.down)) resetTimer = true;
 }
 
 /**
@@ -644,8 +639,8 @@ window.onkeyup = function (event) {
  * @param {DOMHighResTimeStamp} timestamp the current time
  */
 var masterLoop = function (timestamp) {
-  game.loop(timestamp);
-  window.requestAnimationFrame(masterLoop);
+    game.loop(timestamp);
+    window.requestAnimationFrame(masterLoop);
 }
 
 /**
@@ -657,17 +652,31 @@ var masterLoop = function (timestamp) {
  * the number of milliseconds passed since the last frame.
  */
 function update(elapsedTime) {
-  gui.update(elapsedTime);
-  if (input.left || input.right || input.up || input.down || autoTurn) {
-    turnTimer += elapsedTime;
-    if (turnTimer >= turnDelay) {
-      turnTimer = 0;
-      processTurn();
+    gui.update(elapsedTime);
+    if (input.left || input.right || input.up || input.down || autoTurn) {
+        turnTimer += elapsedTime;
+        if (turnTimer >= turnDelay) {
+            turnTimer = 0;
+            processTurn();
+        }
     }
-  }
-  window.entityManager.update(elapsedTime);
-  fadeAnimationProgress.progress(elapsedTime);
-  window.terminal.update(elapsedTime);
+    window.entityManager.update(elapsedTime);
+    fadeAnimationProgress.progress(elapsedTime);
+    window.terminal.update(elapsedTime);
+    if (window.debug) {
+        window.terminal.addCommand("door", "Get the coordinates of the exit door",
+            function () {
+                window.terminal.log("The coordinates of the exit door are x: " + stairs.position.x + " y: " + stairs.position.y);
+            });
+        window.terminal.addCommand("godmode", "Make yourself invincible",
+            function () {
+                window.player.combat.health = Number.POSITIVE_INFINITY;
+            });
+    }
+    else {
+        window.terminal.removeCommand("door");
+        window.terminal.removeCommand("godmode");
+    }
 }
 
 /**
@@ -678,24 +687,24 @@ function update(elapsedTime) {
   * @param {CanvasRenderingContext2D} ctx the context to render to
   */
 function render(elapsedTime, ctx) {
-  ctx.fillStyle = "black";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "black";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  tilemap.render(ctx);
-  entityManager.render(elapsedTime, ctx);
+    tilemap.render(ctx);
+    entityManager.render(elapsedTime, ctx);
 
-  ctx.save();
-  ctx.globalAlpha = (isFadeOut) ? fadeAnimationProgress.percent : 1 - fadeAnimationProgress.percent;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.restore();
+    ctx.save();
+    ctx.globalAlpha = (isFadeOut) ? fadeAnimationProgress.percent : 1 - fadeAnimationProgress.percent;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.restore();
 
-  ctx.fillRect(1060, 0, 732, 1116);
+    ctx.fillRect(1060, 0, 732, 1116);
 
-  ctx.fillStyle = "white";
-  ctx.fillRect(1057, 0, 2, 1116);
-  window.terminal.render(elapsedTime, ctx);
+    ctx.fillStyle = "white";
+    ctx.fillRect(1057, 0, 2, 1116);
+    window.terminal.render(elapsedTime, ctx);
 
-  gui.render(elapsedTime, ctx);
+    gui.render(elapsedTime, ctx);
 }
 
 /**
@@ -703,82 +712,83 @@ function render(elapsedTime, ctx) {
   * Proccesses one turn, updating the states of all entities.
   */
 function processTurn() {
-  window.entityManager.processTurn(input);
+    window.entityManager.processTurn(input);
 }
 
 function nextLevel(fadeOut) {
-  player.level++;
-  var init = function () {
-    // clear terminal
-    window.terminal.clear();
-    var msg = "---===| LEVEL " + player.level + " |===---";
-    var padSpace = Math.floor((80 - msg.length) / 2);
-    window.terminal.log(Array(padSpace).join(' ') + msg);
+    player.level++;
+    var init = function () {
+        // clear terminal
+        window.terminal.clear();
+        var msg = "---===| LEVEL " + player.level + " |===---";
+        var padSpace = Math.floor((80 - msg.length) / 2);
+        window.terminal.log(Array(padSpace).join(' ') + msg);
 
-    // reset entities
-    window.entityManager.reset();
+        // reset entities
+        window.entityManager.reset();
 
-    var regen = false;
+        var regen = false;
 
-    do {
-      //reset the regen flag
-      regen = false;
+        do {
+            //reset the regen flag
+            regen = false;
 
-      //gen new map
-      tilemap.changeTileset();
-      tilemap.generateMap();
+            //gen new map
+            tilemap.changeTileset();
+            tilemap.generateMap();
 
-      //move player to valid location
-      var pos = tilemap.findOpenSpace();
-      player.position = { x: pos.x, y: pos.y };
-      tilemap.moveTo({ x: pos.x - 5, y: pos.y - 5 });
+            //move player to valid location
+            var pos = tilemap.findOpenSpace();
+            player.position = { x: pos.x, y: pos.y };
+            tilemap.moveTo({ x: pos.x - 5, y: pos.y - 5 });
 
-      // allow player to move
-      player.shouldProcessTurn = true;
+            // allow player to move
+            player.shouldProcessTurn = true;
 
-      // Find stairs location that is at least 8 away.
-      var pos;
-      var dist;
-      var iterations = 0;
-      do {
-        pos = tilemap.findOpenSpace();
-        dist = pathfinder.findPath(player.position, pos).length
-        iterations++;
-        if (iterations > 20) {
-          regen = true;
-          break;
-        }
-      } while (dist == 0 && dist < 8);
+            // Find stairs location that is at least 8 away.
+            var pos;
+            var dist;
+            var iterations = 0;
+            do {
+                pos = tilemap.findOpenSpace();
+                dist = pathfinder.findPath(player.position, pos).length
+                iterations++;
+                if (iterations > 20) {
+                    regen = true;
+                    break;
+                }
+            } while (dist == 0 && dist < 8);
 
-    } while (regen);
+        } while (regen);
 
-    // add player
-    window.entityManager.addEntity(player);
-    // add stairs
-    window.entityManager.addEntity(new Stairs(pos, tilemap, function () { nextLevel(true) }));
-    //place new entities
-    EntitySpawner.spawn(player, tilemap, 30, [20, 20, 20, 20, 20, 0, 0, 0]);
+        // add player
+        window.entityManager.addEntity(player);
+        // add stairs
+        stairs = new Stairs(pos, tilemap, function () { nextLevel(true) });
+        window.entityManager.addEntity(stairs);
+        //place new entities
+        EntitySpawner.spawn(player, tilemap, 30, [20, 20, 20, 20, 20, 0, 0, 0]);
 
-    unfadeFromBlack();
+        unfadeFromBlack();
 
-  };
+    };
 
-  (fadeOut) ? fadeToBlack(init) : init()
+    (fadeOut) ? fadeToBlack(init) : init()
 }
 
 function fadeToBlack(completion) {
-  isFadeOut = true;
-  fadeAnimationProgress = new ProgressManager(1000, completion);
-  fadeAnimationProgress.isActive = true;
+    isFadeOut = true;
+    fadeAnimationProgress = new ProgressManager(1000, completion);
+    fadeAnimationProgress.isActive = true;
 }
 
 function unfadeFromBlack() {
-  isFadeOut = false;
-  fadeAnimationProgress = new ProgressManager(1000, function () { });
-  fadeAnimationProgress.isActive = true;
+    isFadeOut = false;
+    fadeAnimationProgress = new ProgressManager(1000, function () { });
+    fadeAnimationProgress.isActive = true;
 }
 
-},{"../tilemaps/tiledef.json":26,"./click":6,"./combat_controller":8,"./entity_manager":10,"./entity_spawner":11,"./game":12,"./gui":13,"./pathfinder.js":16,"./player":17,"./progress_manager":19,"./stairs":21,"./terminal.js":22,"./tilemap":23,"./vector":24}],5:[function(require,module,exports){
+},{"../tilemaps/tiledef.json":27,"./click":6,"./combat_controller":8,"./entity_manager":10,"./entity_spawner":11,"./game":12,"./gui":13,"./pathfinder.js":16,"./player":17,"./progress_manager":19,"./sfx":21,"./stairs":22,"./terminal.js":23,"./tilemap":24,"./vector":25}],5:[function(require,module,exports){
 "use strict";
 
 module.exports = exports = Armor;
@@ -863,6 +873,10 @@ Armor.prototype.render = function (time, ctx) {
     var position = window.tilemap.toScreenCoords(this.position);
     ctx.drawImage(this.spritesheet, 305, 225, 75, 75, (position.x * this.size.width), (position.y * this.size.height) + this.currY, 96, 96);
 
+}
+
+Armor.prototype.toString = function () {
+    return `Level ${this.level} ${this.name} with ${this.defense} defense`;
 }
 
 },{}],6:[function(require,module,exports){
@@ -1069,7 +1083,7 @@ function CombatClass(aName) {
 }
 
 
-},{"./armor":5,"./tilemap":23,"./vector":24,"./weapon":25}],8:[function(require,module,exports){
+},{"./armor":5,"./tilemap":24,"./vector":25,"./weapon":26}],8:[function(require,module,exports){
 "use strict";
 
 module.exports = exports = CombatController;
@@ -1241,7 +1255,7 @@ CombatController.prototype.randomDrop = function(aPosition) {
 }
 
 
-},{"./armor":5,"./combat_class":7,"./rng":20,"./weapon":25}],9:[function(require,module,exports){
+},{"./armor":5,"./combat_class":7,"./rng":20,"./weapon":26}],9:[function(require,module,exports){
 "use strict";
 
 const Tilemap = require('./tilemap');
@@ -1307,7 +1321,7 @@ Enemy.prototype.render = function(elapsedTime, ctx) {
 }
 
 
-},{"./combat_class":7,"./tilemap":23}],10:[function(require,module,exports){
+},{"./combat_class":7,"./tilemap":24}],10:[function(require,module,exports){
 "use strict";
 
 /**
@@ -1917,6 +1931,8 @@ function Inventory(weapon, armor) {
     this.inventory = [];
     this.inventory.push(weapon);
     this.inventory.push(armor);
+    window.terminal.addCommand("weapon", "Get your current weapon stats", this.weaponCommand.bind(this));
+    window.terminal.addCommand("armor", "Get your current armor atats", this.armorCommand.bind(this));
 }
 
 /**
@@ -2010,6 +2026,14 @@ Inventory.prototype.addItem = function (item) {
  */
 Inventory.prototype.removeItem = function (item) {
     this.inventory.remove(this.inventory.indexOf(item));
+}
+
+Inventory.prototype.weaponCommand = function () {
+    window.terminal.log(this.inventory[0].toString());
+}
+
+Inventory.prototype.armorCommand = function () {
+    window.terminal.log(this.inventory[1].toString());
 }
 
 /**
@@ -2556,7 +2580,7 @@ function hasUserInput(input) {
     return input.up || input.down || input.right || input.left;
 }
 
-},{"./armor.js":5,"./combat_class":7,"./inventory.js":14,"./tilemap":23,"./vector":24,"./weapon.js":25}],18:[function(require,module,exports){
+},{"./armor.js":5,"./combat_class":7,"./inventory.js":14,"./tilemap":24,"./vector":25,"./weapon.js":26}],18:[function(require,module,exports){
 "use strict";
 
 const Tilemap = require('./tilemap');
@@ -2566,17 +2590,6 @@ const RNG = require("./rng");
  * @module exports the Powerup class
  */
 module.exports = exports = Powerup;
-
-//declare sound files
-//declare sound files
-var healthPickupSound = new Audio('sounds/Powerup3.wav');
-healthPickupSound.volume = 0.1;
-var attackPowerupSound = new Audio('sounds/Powerup4.wav');
-attackPowerupSound.volume = 0.1;
-var damageBonusPowerupSound = new Audio('sounds/Powerup1.wav');
-damageBonusPowerupSound.volume = 0.1;
-var defensePowerupSound = new Audio('sounds/Powerup2.wav');
-defensePowerupSound.volume = 0.4;
 
 /**
  * @constructor Powerup
@@ -2618,14 +2631,16 @@ Powerup.prototype.collided = function (entity) {
     //Update player's health/strength/item
     switch (this.currPower) {
       case 1:
-        damageBonusPowerupSound.play();
+        // damageBonusPowerupSound.play();
+        window.sfx.play("damagePickup");
         entity.combat.damageBonus += 0.2;
         window.terminal.log("The crystal radiates a bright blue and you feel its energy course through you.");
         if (window.debug) console.log(entity.combat.damageBonus);
         this.used = true;
         break;
       case 2:
-        healthPickupSound.play();
+        // healthPickupSound.play();
+        window.sfx.play("healthPickup");
         var potionValue = RNG.rollMultiple(3, 6, entity.level);
         entity.combat.health += potionValue;
         window.terminal.log("You quaff the large crimson potion and feel rejuvenated.");
@@ -2633,14 +2648,16 @@ Powerup.prototype.collided = function (entity) {
         this.used = true;
         break;
       case 3:
-        defensePowerupSound.play();
+        // defensePowerupSound.play();
+        window.sfx.play("defensePickup");
         entity.combat.defenseBonus += 0.2;
         window.terminal.log("As you finish the potion a faint ward forms around you.");
         if (window.debug) console.log(entity.combat.defenseBonus);
         this.used = true;
         break;
       case 4:
-        attackPowerupSound.play();
+        // attackPowerupSound.play();
+        window.sfx.play("attackPickup");
         entity.combat.attackBonus += 0.2;
         window.terminal.log("The very smell of the verdant green potion awakens you and you feel more agile.");
         if (window.debug) console.log(entity.combat.attackBonus);
@@ -2680,7 +2697,7 @@ Powerup.prototype.render = function (elapsedTime, ctx) {
     //ctx.drawImage(this.power,0,25,25,25,position.x*this.size.width, position.y*this.size.height,96,96);
     //ctx.drawImage(this.power,25,50,25,25,position.x*this.size.width, position.y*this.size.height,96,96);
 
-},{"./rng":20,"./tilemap":23}],19:[function(require,module,exports){
+},{"./rng":20,"./tilemap":24}],19:[function(require,module,exports){
 "use strict";
 
 module.exports = exports = ProgressManager;
@@ -2782,6 +2799,70 @@ function oneIn(x) {
 
 
 },{}],21:[function(require,module,exports){
+"use strict;"
+
+module.exports = exports = SFX;
+
+var background = new Audio();
+var healthPickup = new Audio();
+var attackPowerup = new Audio();
+var damageBonusPowerup = new Audio();
+var defensePowerup = new Audio();
+var click = new Audio();
+
+function SFX() {
+    background.src = encodeURI('sounds/tempBGMusic.wav');
+    background.volume = 0.3;
+    background.addEventListener('ended', function() {
+        var backgroundMusicOnLoop = new Audio('sounds/tempBGMusicLoop.wav');
+        backgroundMusicOnLoop.volume = 0.3;
+        backgroundMusicOnLoop.loop = true;
+        backgroundMusicOnLoop.play();
+    }, false);
+    background.play();
+
+    healthPickup.src = encodeURI('sounds/Powerup3.wav');
+    healthPickup.volume = 0.1;
+
+    attackPowerup.src = encodeURI('sounds/Powerup4.wav');
+    attackPowerup.volume = 0.1;
+
+    damageBonusPowerup.src = encodeURI('sounds/Powerup1.wav');
+    damageBonusPowerup.volume = 0.1;
+
+    defensePowerup.src = encodeURI('sounds/Powerup2.wav');
+    defensePowerup.volume = 0.4;
+
+    click.src = encodeURI("sounds/click.wav");
+    click.volume = 0.4;
+}
+
+SFX.prototype.play = function(aSound) {
+    switch (aSound) {
+        case "healthPickup":
+            healthPickup.play();
+            break;
+
+        case "attackPickup":
+            attackPowerup.play();
+            break;
+
+        case "damagePickup":
+            damageBonusPowerup.play();
+            break;
+
+        case "defensePickup":
+            defensePowerup.play();
+            break;
+
+        case "click":
+            click.play();
+            break;
+    }
+}
+
+
+},{}],22:[function(require,module,exports){
 "use strict";
 
 /**
@@ -2850,7 +2931,7 @@ Stairs.prototype.render = function (elapsedTime, ctx) {
   ctx.drawImage(this.spritesheet, 75 + this.spriteOff, 0, 75, 75, (position.x * this.size.width), (position.y * this.size.height), 96, 96);
 }
 
-},{}],22:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 "use strict";
 
 const MAX_MSG_COUNT = 62;
@@ -2865,7 +2946,7 @@ function Terminal() {
     this.input = "";
     this.commands = {};
 
-    this.addCommand("help", "Print out all commands", this.helpCommand.bind(this));
+    this.addCommand("help", "Print out all available commands", this.helpCommand.bind(this));
 }
 
 Terminal.prototype.log = function (message, color) {
@@ -2988,7 +3069,7 @@ function splitMessage(message, messages, color) {
 
 }
 
-},{}],23:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 "use strict";
 
 const MapGenerator = require('./map_generator');
@@ -3213,7 +3294,7 @@ Tilemap.prototype.getRandomAdjacent = function (aTile) {
   }
 }
 
-},{"./map_generator":15,"./vector":24}],24:[function(require,module,exports){
+},{"./map_generator":15,"./vector":25}],25:[function(require,module,exports){
 "use strict";
 
 /**
@@ -3321,7 +3402,7 @@ function equals(a, b){
   return a.x == b.x && a.y == b.y;
 }
 
-},{}],25:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 "use strict";
 
 module.exports = exports = Weapon;
@@ -3529,7 +3610,11 @@ Weapon.prototype.render = function (time, ctx) {
     ctx.drawImage(this.spritesheet, spriteSource.x, spriteSource.y, 75, 75, (position.x * this.size.width), (position.y * this.size.height) + this.currY, 96, 96);
 }
 
-},{}],26:[function(require,module,exports){
+Weapon.prototype.toString = function () {
+    return `Level ${this.level} ${this.name} with damage range ${this.damageMin}-${this.damageMax}, with ${this.properties}`
+}
+
+},{}],27:[function(require,module,exports){
 module.exports={
  "tileheight":96,
  "tilewidth":96,

@@ -12,7 +12,7 @@ function Terminal() {
     this.input = "";
     this.commands = {};
 
-    this.addCommand("help", "Print out all commands", this.helpCommand.bind(this));
+    this.addCommand("help", "Print out all available commands", this.helpCommand.bind(this));
 }
 
 Terminal.prototype.log = function (message, color) {
