@@ -139,29 +139,10 @@ CombatController.prototype.randomDrop = function(aPosition) {
     var level = window.player.level + RNG.rollWeighted(50, 40, 10);
 
     if (lRand > 17) {                           // spawn armor
+        var armorArray = getArmors();
         var robesChance = (window.player.class == "Mage") ? 30 : 10;
         var armorRand = RNG.rollWeighted(robesChance, 35, 35, 10, 5);
-        switch (armorRand) {
-            case 0:
-                lDrop = new Armor("Robes", level);
-                break;
-
-            case 1:
-                lDrop = new Armor("Hide Armor", level);
-                break;
-
-            case 2:
-                lDrop = new Armor("Leather Armor", level);
-                break;
-
-            case 3:
-                lDrop = new Armor("Chainmail", level);
-                break;
-
-            case 4:
-                lDrop = new Armor("Plate Armor", level);
-                break;
-        }
+        lDrop = new Armor(armorArray[armorRand], level);
     } else if (lRand > 1 && lRand < 17) {       // spawn weapon
         var weaponArray = getWeapons(window.player.class); // TODO > Can spawn other classes weapons for fluff once invalid check is implemented
         var weaponRand = RNG.rollRandom(0, weaponArray.length - 1);
@@ -171,6 +152,10 @@ CombatController.prototype.randomDrop = function(aPosition) {
     }
     lDrop.position = aPosition;
     return lDrop;
+}
+
+function getArmors() {
+    return ["Robes", "Hide Armor", "Leather Armor", "Chainmail", "Plate Armor"];
 }
 
 function getWeapons(aClass) {
