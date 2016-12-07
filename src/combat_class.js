@@ -56,7 +56,7 @@ function CombatClass(aName) {
             this.status = { effect: "None", timer: 0 }
             this.senseRange = 5;
 
-            this.turnAI = function (aEnemy) {
+            this.turnAI = function(aEnemy) {
                 var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
                 if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
                     combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
@@ -70,7 +70,7 @@ function CombatClass(aName) {
             }
             break;
 
-        case "EnemyRanged":
+        case "Skeletal Bowman":
             this.health = 10;
             this.attackBonus = 0;
             this.damageBonus = 0;
@@ -80,7 +80,7 @@ function CombatClass(aName) {
             this.status = { effect: "None", timer: 0 }
             this.senseRange = 10;
 
-            this.turnAI = function (aEnemy) {
+            this.turnAI = function(aEnemy) {
                 var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
                 if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
                     combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
@@ -104,7 +104,7 @@ function CombatClass(aName) {
             this.status = { effect: "None", timer: 0 }
             this.senseRange = 15;
 
-            this.turnAI = function (aEnemy) {
+            this.turnAI = function(aEnemy) {
                 var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
                 if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
                     combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
@@ -127,20 +127,38 @@ function CombatClass(aName) {
             this.armor = new Armor("Robes", 1);
             this.status = { effect: "None", timer: 0 }
             this.senseRange = 10;
+            var prefDist = 5;
 
-            this.turnAI = function (aEnemy) {
+            this.turnAI = function(aEnemy) {
                 var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
-                if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
-                    combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
-                } else if (distance.x <= aEnemy.combat.senseRange && distance.y <= aEnemy.combat.senseRange) {
-                    var path = pathfinder.findPath(aEnemy.position, aEnemy.target.position);
-                    if (path.length > 1) aEnemy.position = { x: path[1].x, y: path[1].y };
-                } else {
+
+                // Move
+                if (distance.x > aEnemy.combat.senseRange && distance.y > aEnemy.combat.senseRange) {
                     var nextTile = aEnemy.tilemap.getRandomAdjacent(aEnemy.position);
                     aEnemy.position = { x: nextTile.x, y: nextTile.y };
+                } else {
+                    // Check preferred engagement distance
+                    if (distance.x < prefDist && distance.y < prefDist) {
+                        moveBack(aEnemy.position, aEnemy.target.position);
+                    } else if (distance.x > prefDist && distance.y > prefDist) {
+                        moveToward(aEnemy.position, aEnemy.target.position);
+                    }
+                }
+
+                // Attack
+                if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
+                    combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
                 }
             }
             break;
     }
+}
+
+function moveBack(a, b) {
+
+}
+
+function moveToward(a, b) {
+
 }
 

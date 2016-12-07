@@ -52,7 +52,7 @@ CombatController.prototype.handleAttack = function(aAttackerClass, aDefenderClas
         } else { // attacker is enemy
             message = `The ${attacker} critically fails its attack and takes ${lSelfDamage} damage.`;
         }
-    } else if (lAttackRoll == 20 || (lAttackRoll == 19 && (aAttackerClass.weapon.attackType == "Ranged" || aAttackerClass.weapon.name == "Battleaxe"))) {
+    } else if (lAttackRoll == 20 || (lAttackRoll >= 18 && (aAttackerClass.weapon.attackType == "Ranged" || aAttackerClass.weapon.name == "Battleaxe"))) {
         lDamageTotal += lDamageMax;
         aDefenderClass.health -= lDamageTotal;
         // defender hit, play defender hit sound

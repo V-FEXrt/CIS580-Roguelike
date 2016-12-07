@@ -48,24 +48,24 @@ function Weapon(aName, aLevel) {
         case "Halberd":
             this.attackType = "Melee";
             this.damageMax = 8
-            this.damageMin = 2;
-            this.damageType = "s";
+            this.damageMin = 1;
+            this.damageType = "sp";
             this.range = 2;
-            this.hitBonus = 0;
+            this.hitBonus = 1;
             this.attackEffect = "";
-            this.properties = "+1 Range, +1 Min Damage";
+            this.properties = "+1 Range, +1 to Hit";
             this.spriteIdx = 4;
             break;
 
         case "Battleaxe":
             this.attackType = "Melee";
             this.damageMax = 12
-            this.damageMin = 4;
+            this.damageMin = 1;
             this.damageType = "sb";
             this.range = 1;
             this.hitBonus = 1;
             this.attackEffect = "";
-            this.properties = "+3 Min Damage, +1 Crit Chance";
+            this.properties = "+2 Crit Chance";
             this.spriteIdx = 4;
             break;
 
@@ -87,7 +87,7 @@ function Weapon(aName, aLevel) {
             this.damageMax = 4
             this.damageMin = 1;
             this.damageType = "p";
-            this.range = 5;
+            this.range = 4;
             this.hitBonus = 3;
             this.attackEffect = "";
             this.properties = "+3 to Hit";
@@ -99,7 +99,7 @@ function Weapon(aName, aLevel) {
             this.damageMax = 6
             this.damageMin = 2;
             this.damageType = "p";
-            this.range = 5;
+            this.range = 4;
             this.hitBonus = 0;
             this.attackEffect = "";
             this.properties = "+1 Min Damage";
@@ -111,7 +111,7 @@ function Weapon(aName, aLevel) {
             this.damageMax = 4
             this.damageMin = 1;
             this.damageType = "p";
-            this.range = 5;
+            this.range = 4;
             this.hitBonus = 0;
             this.attackEffect = "Poisoned";
             this.properties = "50% Poison Chance";
@@ -126,7 +126,7 @@ function Weapon(aName, aLevel) {
             this.range = 3;
             this.hitBonus = 0;
             this.attackEffect = "";
-            this.properties = "+3 Min Damage, -2 Range";
+            this.properties = "+3 Min Damage, -1 Range";
             this.spriteIdx = 1;
             break;
 
@@ -136,7 +136,7 @@ function Weapon(aName, aLevel) {
             this.damageMax = 4
             this.damageMin = 1;
             this.damageType = "m";
-            this.range = 255;
+            this.range = 6;
             this.hitBonus = 255;
             this.attackEffect = "";
             this.properties = "Unerring Accuracy";
@@ -148,7 +148,7 @@ function Weapon(aName, aLevel) {
             this.damageMax = 4
             this.damageMin = 1;
             this.damageType = "m";
-            this.range = 255;
+            this.range = 6;
             this.hitBonus = 0;
             this.attackEffect = "Burned";
             this.properties = "50% Burn Chance, Explodes on Contact";
@@ -160,7 +160,7 @@ function Weapon(aName, aLevel) {
             this.damageMax = 4
             this.damageMin = 1;
             this.damageType = "m";
-            this.range = 255;
+            this.range = 6;
             this.hitBonus = 0;
             this.attackEffect = "Frozen";
             this.properties = "50% Freeze Chance";
@@ -172,7 +172,7 @@ function Weapon(aName, aLevel) {
             this.damageMax = 10
             this.damageMin = 1;
             this.damageType = "m";
-            this.range = 255;
+            this.range = 6;
             this.hitBonus = -2;
             this.attackEffect = "";
             this.properties = "-2 to Hit";
