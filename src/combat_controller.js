@@ -135,11 +135,10 @@ CombatController.prototype.handleStatus = function(aCombatClass) {
 
 CombatController.prototype.randomDrop = function(aPosition) {
     var lDrop = new Object();
-    var lRand = RNG.rollRandom(1, 20); // need to set up weighted rands
-
+    var lRand = RNG.rollRandom(1, 20);
     var level = window.player.level + RNG.rollWeighted(50, 40, 10);
 
-    if (lRand > 1) {                           // spawn armor
+    if (lRand > 17) {                           // spawn armor
         var robesChance = (window.player.class == "Mage") ? 30 : 10;
         var armorRand = RNG.rollWeighted(robesChance, 35, 35, 10, 5);
         switch (armorRand) {
@@ -163,28 +162,10 @@ CombatController.prototype.randomDrop = function(aPosition) {
                 lDrop = new Armor("Plate Armor", level);
                 break;
         }
-    } else if (lRand >= 1 && lRand < 17) {      // spawn weapon
-        lDrop.type = "Weapon";
-        var playerClass = window.player.class;
-        // var level = RNG.rollRandom(window.player.level, window.player.level + 2); // need to set up weighted rands
-        switch (lRand % 4) {
-            // this is awful, why is this still here?
-            case 0:
-                lDrop = (playerClass == "Knight") ? new Weapon("Longsword", level) : (playerClass == "Archer") ? new Weapon("Bodkin", level) : new Weapon("Magic Missile", level);
-                break;
-
-            case 1:
-                lDrop = (playerClass == "Knight") ? new Weapon("Morning Star", level) : (playerClass == "Archer") ? new Weapon("Broadhead", level) : new Weapon("Fireball", level);
-                break;
-
-            case 2:
-                lDrop = (playerClass == "Knight") ? new Weapon("Halberd", level) : (playerClass == "Archer") ? new Weapon("Poison-Tipped", level) : new Weapon("Frostbolt", level);
-                break;
-
-            case 3:
-                lDrop = (playerClass == "Knight") ? new Weapon("Battleaxe", level) : (playerClass == "Archer") ? new Weapon("Heavy Bolts", level) : new Weapon("Eldritch Blast", level);
-                break;
-        }
+    } else if (lRand > 1 && lRand < 17) {       // spawn weapon
+        var weaponArray = getWeapons(window.player.class); // TODO > Can spawn other classes weapons for fluff once invalid check is implemented
+        var weaponRand = RNG.rollRandom(0, weaponArray.length - 1);
+        lDrop = new Weapon(weaponArray[weaponRand], level);
     } else {                                    // dont spawn anything
         lDrop.type = "None";
     }
@@ -192,3 +173,15 @@ CombatController.prototype.randomDrop = function(aPosition) {
     return lDrop;
 }
 
+function getWeapons(aClass) {
+    switch (aClass) {
+        case "Knight":
+            return ["Longsword", "Morning Star", "Halberd", "Battleaxe"];
+
+        case "Archer":
+            return ["Bodkin", "Broadhead", "Poison-Tipped", "Heavy Bolts"];
+
+        case "Mage":
+            return ["Magic Missile", "Fireball", "Frostbolt", "Eldritch Blast"];
+    }
+}
