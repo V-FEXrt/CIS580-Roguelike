@@ -50,6 +50,7 @@ function rollWeighted() {
     weightSum = 0;
     for (var i = 0; i < argLength; i++) {
         weightSum += arguments[i];
+        if (!arguments[i]) continue;
         if (roll <= weightSum) return i;
     }
 }
