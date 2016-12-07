@@ -21,7 +21,7 @@ function Inventory(weapon, armor) {
  */
 Inventory.prototype.addWeapon = function(weapon) {
     checkWeapon(weapon);
-    if (checkInvalidArmor(window.player.class, weapon.attackType)) return;
+    if (checkInvalidWeapon(window.player.class, weapon.attackType)) return;
 
     window.terminal.log(`Picked up a level ${weapon.level} ${weapon.name} with damage range ${weapon.damageMin}-${weapon.damageMax}, with ${weapon.properties}.`);
     var weaponToDrop = this.inventory[0];
