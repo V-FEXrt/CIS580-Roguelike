@@ -136,14 +136,37 @@ CombatController.prototype.handleStatus = function(aCombatClass) {
 CombatController.prototype.randomDrop = function(aPosition) {
     var lDrop = new Object();
     var lRand = RNG.rollRandom(1, 20); // need to set up weighted rands
-    if (lRand > 17) {                           // spawn armor
-        lDrop.type = "Armor";
-        // TODO > properly implement...
-        lDrop = new Armor("Leather Armor", RNG.rollRandom(window.player.level, window.player.level + 2));
+
+    var level = window.player.level + RNG.rollWeighted(50, 40, 10);
+
+    if (lRand > 1) {                           // spawn armor
+        var robesChance = (window.player.class == "Mage") ? 30 : 10;
+        var armorRand = RNG.rollWeighted(robesChance, 35, 35, 10, 5);
+        switch (armorRand) {
+            case 0:
+                lDrop = new Armor("Robes", level);
+                break;
+
+            case 1:
+                lDrop = new Armor("Hide Armor", level);
+                break;
+
+            case 2:
+                lDrop = new Armor("Leather Armor", level);
+                break;
+
+            case 3:
+                lDrop = new Armor("Chainmail", level);
+                break;
+
+            case 4:
+                lDrop = new Armor("Plate Armor", level);
+                break;
+        }
     } else if (lRand >= 1 && lRand < 17) {      // spawn weapon
         lDrop.type = "Weapon";
         var playerClass = window.player.class;
-        var level = RNG.rollRandom(window.player.level, window.player.level + 2); // need to set up weighted rands
+        // var level = RNG.rollRandom(window.player.level, window.player.level + 2); // need to set up weighted rands
         switch (lRand % 4) {
             // this is awful, why is this still here?
             case 0:
