@@ -27,7 +27,8 @@ CombatController.prototype.handleAttack = function(aAttackerClass, aDefenderClas
     var lDamageMin = aAttackerClass.weapon.damageMin;
     var lDamageRoll = RNG.rollRandom(lDamageMin, lDamageMax);
     var lDamageBonus = Math.floor(aAttackerClass.damageBonus);
-    var lDamageTotal = lDamageBase + lDamageBonus + lDamageRoll;
+    var lDamageResist = aDefenderClass.armor.level;
+    var lDamageTotal = Math.max(lDamageBase + lDamageBonus + lDamageRoll - lDamageResist, 0); // DR shouldnt deal zero or negative damage
 
     var lApplyEffect = false;
 
@@ -138,7 +139,7 @@ CombatController.prototype.randomDrop = function(aPosition) {
     if (lRand > 17) {                           // spawn armor
         lDrop.type = "Armor";
         // TODO > properly implement...
-        lDrop = new Armor("Leather Armor");
+        lDrop = new Armor("Leather Armor", RNG.rollRandom(window.player.level, window.player.level + 2));
     } else if (lRand >= 1 && lRand < 17) {      // spawn weapon
         lDrop.type = "Weapon";
         var playerClass = window.player.class;
