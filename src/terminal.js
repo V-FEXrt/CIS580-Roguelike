@@ -13,6 +13,7 @@ function Terminal() {
     this.commands = {};
 
     this.addCommand("help", "Print out all available commands", this.helpCommand.bind(this));
+    this.addCommand("clear", "Clear the terminal", this.clear.bind(this));
 }
 
 Terminal.prototype.log = function (message, color) {

@@ -1,6 +1,7 @@
 "use strict";
 
 window.debug = false;
+window.gameDebug = false;
 
 /* Classes and Libraries */
 const Game = require('./game');
@@ -36,7 +37,11 @@ window.terminal.log("Welcome to Roguelike");
 window.terminal.log("Good luck!");
 window.terminal.addCommand("debug", "Toggle debug",
     function () {
-        window.debug = !window.debug;
+        window.gameDebug = !window.gameDebug;
+    });
+window.terminal.addCommand("kill", "Kill yourself",
+    function () {
+        window.player.combat.health = 0;
     });
 
 var gui = new GUI(screenSize);
@@ -214,7 +219,7 @@ function update(elapsedTime) {
     window.entityManager.update(elapsedTime);
     fadeAnimationProgress.progress(elapsedTime);
     window.terminal.update(elapsedTime);
-    if (window.debug) {
+    if (window.gameDebug) {
         window.terminal.addCommand("door", "Get the coordinates of the exit door",
             function () {
                 window.terminal.log("The coordinates of the exit door are x: " + stairs.position.x + " y: " + stairs.position.y);
@@ -222,6 +227,16 @@ function update(elapsedTime) {
         window.terminal.addCommand("godmode", "Make yourself invincible",
             function () {
                 window.player.combat.health = Number.POSITIVE_INFINITY;
+            });
+        window.terminal.addCommand("tp", "Teleport to the specified coordinates",
+            function (args) {
+                if(args == 1) {
+                    // Invalid command
+                }
+                else {
+                    window.player.position.x = args[1];
+                    window.player.position.y = args[2];
+                }
             });
     }
     else {
