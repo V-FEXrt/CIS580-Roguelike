@@ -22,6 +22,7 @@ function Weapon(aName, aLevel) {
     switch (aName) {
         // Melee
         case "Longsword":
+            this.attackType = "Melee";
             this.damageMax = 10
             this.damageMin = 2;
             this.damageType = "s";
@@ -33,6 +34,7 @@ function Weapon(aName, aLevel) {
             break;
 
         case "Morning Star":
+            this.attackType = "Melee";
             this.damageMax = 8
             this.damageMin = 1;
             this.damageType = "b";
@@ -44,6 +46,7 @@ function Weapon(aName, aLevel) {
             break;
 
         case "Halberd":
+            this.attackType = "Melee";
             this.damageMax = 8
             this.damageMin = 2;
             this.damageType = "s";
@@ -55,6 +58,7 @@ function Weapon(aName, aLevel) {
             break;
 
         case "Battleaxe":
+            this.attackType = "Melee";
             this.damageMax = 12
             this.damageMin = 4;
             this.damageType = "sb";
@@ -66,6 +70,7 @@ function Weapon(aName, aLevel) {
             break;
 
         case "Claw":
+            this.attackType = "Melee";
             this.damageMax = 4
             this.damageMin = 2;
             this.damageType = "s";
@@ -78,6 +83,7 @@ function Weapon(aName, aLevel) {
 
         // Ranged
         case "Bodkin":
+            this.attackType = "Ranged";
             this.damageMax = 4
             this.damageMin = 1;
             this.damageType = "p";
@@ -89,6 +95,7 @@ function Weapon(aName, aLevel) {
             break;
 
         case "Broadhead":
+            this.attackType = "Ranged";
             this.damageMax = 6
             this.damageMin = 2;
             this.damageType = "p";
@@ -100,6 +107,7 @@ function Weapon(aName, aLevel) {
             break;
 
         case "Poison-Tipped":
+            this.attackType = "Ranged";
             this.damageMax = 4
             this.damageMin = 1;
             this.damageType = "p";
@@ -111,6 +119,7 @@ function Weapon(aName, aLevel) {
             break;
 
         case "Heavy Bolts":
+            this.attackType = "Ranged";
             this.damageMax = 10
             this.damageMin = 4;
             this.damageType = "b";
@@ -123,6 +132,7 @@ function Weapon(aName, aLevel) {
 
         // Spells
         case "Magic Missile":
+            this.attackType = "Magic";
             this.damageMax = 4
             this.damageMin = 1;
             this.damageType = "m";
@@ -134,6 +144,7 @@ function Weapon(aName, aLevel) {
             break;
 
         case "Fireball":
+            this.attackType = "Magic";
             this.damageMax = 4
             this.damageMin = 1;
             this.damageType = "m";
@@ -145,6 +156,7 @@ function Weapon(aName, aLevel) {
             break;
 
         case "Frostbolt":
+            this.attackType = "Magic";
             this.damageMax = 4
             this.damageMin = 1;
             this.damageType = "m";
@@ -156,6 +168,7 @@ function Weapon(aName, aLevel) {
             break;
 
         case "Eldritch Blast":
+            this.attackType = "Magic";
             this.damageMax = 10
             this.damageMin = 1;
             this.damageType = "m";

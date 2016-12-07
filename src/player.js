@@ -69,8 +69,14 @@ Player.prototype.changeClass = function(chosenClass) {
     }
 };
 
-Player.prototype.getClass = function(){
-    window.terminal.log("Class: " + this.class, "lime");
+Player.prototype.getClass = function(args){
+  if(args.length > 1){
+    // we have args
+    this.changeClass(args[1]);
+    window.terminal.log("Changing class to " + this.class, "lime");
+    return;
+  }
+  window.terminal.log("Class: " + this.class, "lime");
 }
 
 /**

@@ -21,8 +21,7 @@ function CombatClass(aName) {
             this.damageBonus = 0;
             this.defenseBonus = 0;
             this.weapon = new Weapon("Longsword", 1);
-            this.armor = new Armor("Hide Armor"); // No restrictions on Armor types
-            this.attackType = "Melee";
+            this.armor = new Armor("Hide Armor", 1);
             this.status = { effect: "None", timer: 0 }
             break;
 
@@ -32,8 +31,7 @@ function CombatClass(aName) {
             this.damageBonus = 0;
             this.defenseBonus = 0;
             this.weapon = new Weapon("Broadhead", 1);
-            this.armor = new Armor("Hide Armor"); // Can't wear Chain or Plate
-            this.attackType = "Ranged";
+            this.armor = new Armor("Hide Armor", 1);
             this.status = { effect: "None", timer: 0 }
             break;
 
@@ -43,8 +41,7 @@ function CombatClass(aName) {
             this.damageBonus = 0;
             this.defenseBonus = 0;
             this.weapon = new Weapon("Eldritch Blast", 1);
-            this.armor = new Armor("Robes"); // Can only wear Robes, nothing else
-            this.attackType = "Magic";
+            this.armor = new Armor("Robes", 1);
             this.status = { effect: "None", timer: 0 }
             break;
 
@@ -55,8 +52,7 @@ function CombatClass(aName) {
             this.damageBonus = 0;
             this.defenseBonus = 0;
             this.weapon = new Weapon("Claw", 1);
-            this.armor = new Armor("Flesh");
-            this.attackType = "Melee";
+            this.armor = new Armor("Flesh", 1);
             this.status = { effect: "None", timer: 0 }
             this.senseRange = 5;
 
@@ -80,8 +76,7 @@ function CombatClass(aName) {
             this.damageBonus = 0;
             this.defenseBonus = 0;
             this.weapon = new Weapon("Broadhead", 1);
-            this.armor = new Armor("Hide Armor");
-            this.attackType = "Ranged";
+            this.armor = new Armor("Hide Armor", 1);
             this.status = { effect: "None", timer: 0 }
             this.senseRange = 10;
 
@@ -105,8 +100,7 @@ function CombatClass(aName) {
             this.damageBonus = 0;
             this.defenseBonus = 0;
             this.weapon = new Weapon("Battleaxe", 1);
-            this.armor = new Armor("Chainmail");
-            this.attackType = "Melee";
+            this.armor = new Armor("Chainmail", 1);
             this.status = { effect: "None", timer: 0 }
             this.senseRange = 15;
 
@@ -130,8 +124,7 @@ function CombatClass(aName) {
             this.damageBonus = 0;
             this.defenseBonus = 0;
             this.weapon = new Weapon("Eldritch Blast", 1);
-            this.armor = new Armor("Robes");
-            this.attackType = "Magic";
+            this.armor = new Armor("Robes", 1);
             this.status = { effect: "None", timer: 0 }
             this.senseRange = 10;
 
