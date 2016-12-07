@@ -21,7 +21,7 @@ function Inventory(weapon, armor) {
  */
 Inventory.prototype.addWeapon = function(weapon) {
     checkWeapon(weapon);
-    if (checkInvalidArmor(window.player.class, weapon.name)) return;
+    if (checkInvalidArmor(window.player.class, weapon.attackType)) return;
 
     window.terminal.log(`Picked up a level ${weapon.level} ${weapon.name} with damage range ${weapon.damageMin}-${weapon.damageMax}, with ${weapon.properties}.`);
     var weaponToDrop = this.inventory[0];
@@ -146,19 +146,37 @@ function failArmor() {
     throw new Error("Item doesn't match type definition for 'Armor'");
 }
 
-function checkInvalidWeapon(aClass, aWeaponName) { // class just for cleanliness
+function checkInvalidWeapon(aClass, aWeaponType) { // class just for cleanliness
     var lResult = false;
     switch (aClass) {
         case "Knight":
-
+            if (aWeaponType == "Ranged") {
+                lResult = true;
+                window.terminal.log("These sharp feathery sticks will make nice kindling for my feast tonight.");
+            } else if (aWeaponType == "Magic") {
+                lResult = true;
+                window.terminal.log("Oh look, a stick with a shiny rock attached. So mystical, much power.");
+            }
             break;
 
         case "Archer":
-
+            if (aWeaponType == "Melee") {
+                lResult = true;
+                window.terminal.log("This won't fit in my bow; perhaps if I can find a crossbow though?");
+            } else if (aWeaponType == "Magic") {
+                lResult = true;
+                window.terminal.log("I am not in need of a walking stick.");
+            }
             break;
 
         case "Mage":
-
+            if (aWeaponType == "Ranged") {
+                lResult = true;
+                window.terminal.log("Me, use a bow? How plebian.");
+            } else if (aWeaponType == "Melee") {
+                lResult = true;
+                window.terminal.log("That is far too heavy for me to concern myself with.");
+            }
             break;
     }
     return lResult;
