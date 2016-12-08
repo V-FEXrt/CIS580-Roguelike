@@ -3,15 +3,6 @@
 window.debug = false;
 window.gameDebug = false;
 
-window.colors = {
-    cmd: "yellow",
-    cmdResponse: "LawnGreen",
-    invalid: "red",
-    combat: "Orchid",
-    pickup: "SkyBlue",
-    
-}
-
 /* Classes and Libraries */
 const Game = require('./game');
 const EntityManager = require('./entity_manager');

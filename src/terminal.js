@@ -1,5 +1,14 @@
 "use strict";
 
+window.colors = {
+    cmd: "yellow",
+    cmdResponse: "LawnGreen",
+    invalid: "red",
+    combat: "Orchid",
+    pickup: "SkyBlue",
+
+}
+
 const MAX_MSG_COUNT = 62;
 const MAX_MSG_LENGTH = 80;
 

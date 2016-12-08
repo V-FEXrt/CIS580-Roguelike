@@ -12,7 +12,7 @@ var backgroundMusicOnLoop = new Audio('sounds/tempBGMusicLoop.wav');
 var volume = 3;
 
 var volumeMatrix = [
-    // bg, bgOnLoop, health, attack, damage, defense, click 
+    // bg, bgOnLoop, health, attack, damage, defense, click
     [ 0.0,      0.0,    0.0,    0.0,    0.0,     0.0,   0.0], // Volume 0
     [ 0.1,      0.1,    0.1,    0.1,    0.1,     0.1,   0.1], // Volume 1
     [ 0.2,      0.2,    0.2,    0.2,    0.2,     0.2,   0.2], // Volume 2
@@ -66,18 +66,18 @@ SFX.prototype.play = function(aSound) {
 
 SFX.prototype.setVolume = function(args){
     if(args.length <= 1){
-        window.terminal.log("Please provide volume level (0-3)", "red");
+        window.terminal.log("Please provide volume level (0-3)", window.colors.invalid);
         return;
     }
 
     var temp = parseInt(args[1]);
     if(isNaN(temp)){
-        window.terminal.log("Volume level must be a value 0-3", "red");
+        window.terminal.log("Volume level must be a value 0-3", window.colors.invalid);
         return;
     }
 
     if(temp < 0 || temp > 3){
-        window.terminal.log("Please provide volume level between 0-3", "red");
+        window.terminal.log("Please provide volume level between 0-3", window.colors.invalid);
         return;
     }
     volume = temp;
@@ -92,4 +92,3 @@ SFX.prototype.setVolume = function(args){
     defensePowerup.volume = lvls[5];
     click.volume = lvls[6];
 }
-
