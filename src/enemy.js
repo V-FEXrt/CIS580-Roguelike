@@ -17,11 +17,9 @@ function Enemy(position, tilemap, combatClass, target, onDeathCB) {
     this.combat = new CombatClass(this.class);
     this.target = target;
     this.onDeathCB = onDeathCB;
-
-    // console.log(this.position.x + " " + this.position.y);
 }
 
-Enemy.prototype.processTurn = function() {
+Enemy.prototype.processTurn = function () {
     if (this.combat.status.effect != "None") window.combatController.handleStatus(this.combat);
     if (this.combat.health <= 0) this.state = "dead";
     if (this.state == "dead" || this.combat.status.effect == "Frozen") return;
@@ -29,18 +27,18 @@ Enemy.prototype.processTurn = function() {
     this.combat.turnAI(this);
 }
 
-Enemy.prototype.update = function(time) {
+Enemy.prototype.update = function (time) {
     // if we're dead, we should probably do something
     if (this.combat.health <= 0) {
         this.state = "dead";
     }
 }
 
-Enemy.prototype.collided = function(entity) {
+Enemy.prototype.collided = function (entity) {
 
 }
 
-Enemy.prototype.retain = function() {
+Enemy.prototype.retain = function () {
     if (this.combat.health <= 0) {
         this.onDeathCB(this.position, this.tilemap);
         return false;
@@ -49,7 +47,7 @@ Enemy.prototype.retain = function() {
     }
 }
 
-Enemy.prototype.render = function(elapsedTime, ctx) {
+Enemy.prototype.render = function (elapsedTime, ctx) {
     if (this.state == "dead") return; // shouldnt be necessary
 
     var position = this.tilemap.toScreenCoords(this.position);
