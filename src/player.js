@@ -59,11 +59,12 @@ Player.prototype.debugModeChanged = function () {
             });
         window.terminal.addCommand("tp", "Teleport to the specified coordinates", this.teleportCommand.bind(this));
         window.terminal.addCommand("spawn", "Spawn an entity at a given location", this.spawnCommand.bind(this));
+        window.terminal.addCommand("health", "Set the Player's health", this.healthCommand.bind(this));
     }
     else {
         window.terminal.removeCommand("godmode");
         window.terminal.removeCommand("tp");
-        window.terminal.removeCommand("spawn");
+        window.terminal.removeCommand("health");
     }
 }
 
@@ -114,6 +115,10 @@ Player.prototype.teleportCommand = function (args) {
     }
 }
 
+Player.prototype.healthCommand = function(args)
+{
+  this.combat.health = args[1];
+}
 Player.prototype.walkPath = function (path, completion) {
     if (this.state == "dead") return; // shouldnt be necessary
 
