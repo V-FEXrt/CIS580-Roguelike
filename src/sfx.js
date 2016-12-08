@@ -8,32 +8,27 @@ var attackPowerup = new Audio();
 var damageBonusPowerup = new Audio();
 var defensePowerup = new Audio();
 var click = new Audio();
+var backgroundMusicOnLoop = new Audio('sounds/tempBGMusicLoop.wav');
+var volume = 0.3;
 
 function SFX() {
     background.src = encodeURI('sounds/tempBGMusic.wav');
-    background.volume = 0.3;
     background.addEventListener('ended', function() {
-        var backgroundMusicOnLoop = new Audio('sounds/tempBGMusicLoop.wav');
-        backgroundMusicOnLoop.volume = 0.3;
+        backgroundMusicOnLoop = new Audio('sounds/tempBGMusicLoop.wav');
+        backgroundMusicOnLoop.volume = volume;
         backgroundMusicOnLoop.loop = true;
         backgroundMusicOnLoop.play();
     }, false);
     background.play();
 
     healthPickup.src = encodeURI('sounds/Powerup3.wav');
-    healthPickup.volume = 0.1;
-
     attackPowerup.src = encodeURI('sounds/Powerup4.wav');
-    attackPowerup.volume = 0.1;
-
     damageBonusPowerup.src = encodeURI('sounds/Powerup1.wav');
-    damageBonusPowerup.volume = 0.1;
-
     defensePowerup.src = encodeURI('sounds/Powerup2.wav');
-    defensePowerup.volume = 0.4;
-
     click.src = encodeURI("sounds/click.wav");
-    click.volume = 0.4;
+
+    this.setVolume(["volume", "3"]);
+    window.terminal.addCommand("volume", "Set the volume", this.setVolume.bind(this));
 }
 
 SFX.prototype.play = function(aSound) {
@@ -58,5 +53,40 @@ SFX.prototype.play = function(aSound) {
             click.play();
             break;
     }
+}
+
+SFX.prototype.setVolume = function(args){
+    if(args.length <= 1){
+        window.terminal.log("Please provide volume level (0-3)", "red");
+        return;
+    }
+
+    switch(args[1]){
+        case "0":
+            volume = 0;
+            break;
+        case "1":
+            volume = 0.1;
+            break;
+        case "2":
+            volume = 0.2;
+            break;
+        case "3":
+            volume = 0.3;
+            break;
+        default:
+            window.terminal.log(args[1] + " is not a valid volume. Please enter between 0-3.", "red");
+            return;
+    }
+
+    background.volume = volume;
+    click.volume = volume;
+    backgroundMusicOnLoop.volume = volume;
+
+    var v = volume / 3;
+
+    healthPickup.volume = v;
+    attackPowerup.volume = v;
+    defensePowerup.volume = v;
 }
 
