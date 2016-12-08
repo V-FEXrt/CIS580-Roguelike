@@ -191,10 +191,6 @@ function Weapon(aName, aLevel) {
 }
 
 Weapon.prototype.collided = function (aEntity) {
-    if (aEntity.type == "Player") {
-        aEntity.inventory.addWeapon(this);
-        this.shouldRetain = false;
-    }
 }
 
 Weapon.prototype.processTurn = function () {

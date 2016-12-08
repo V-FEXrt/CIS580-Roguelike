@@ -34,6 +34,7 @@ function Player(position, tilemap, combatClass) {
     window.terminal.addCommand("class", "Get your player class", this.getClass.bind(this));
     window.terminal.addCommand("kill", "Kill yourself", this.killPlayer.bind(this));
     window.terminal.addCommand("look", "Get info about the item at your feet", this.lookCommand.bind(this));
+    window.terminal.addCommand("take", "Get the item at your feet", this.takeCommand.bind(this));
 }
 
 /**
@@ -103,12 +104,24 @@ Player.prototype.changeClass = function(chosenClass) {
 };
 
 Player.prototype.lookCommand = function(){
-    if(typeof this.collidingWith == 'undefined'){
+    if(typeof this.collidingWith == "undefined"){
         window.terminal.log("Nothing at your feet", "red");
         return;
     }
 
-    window.terminal.log(this.collidingWith.type, "lime");
+    window.terminal.log(this.collidingWith.toString(), "lime");
+}
+
+Player.prototype.takeCommand = function(){
+    if(typeof this.collidingWith == "undefined"){
+        window.terminal.log("Nothing to take", "red");
+        return;
+    }
+    if(this.collidingWith.type == "Weapon"){
+        this.inventory.addWeapon(this.collidingWith);
+    }else if(this.collidingWith.type == "Armor"){
+        this.inventory.addArmor(this.collidingWith);
+    }
 }
 
 Player.prototype.getClass = function(args){
@@ -127,6 +140,7 @@ Player.prototype.getClass = function(args){
  */
 Player.prototype.processTurn = function (input) {
     if (!this.shouldProcessTurn) return;
+    this.collidingWith = undefined;
     if (this.combat.status.effect != "None") window.combatController.handleStatus(this.combat);
     if (this.state == "dead" || this.combat.status.effect == "Frozen") return;
 
@@ -177,7 +191,9 @@ Player.prototype.collided = function (entity) {
     if (entity.type == "Stairs") {
         this.shouldProcessTurn = false;
     }
-    this.collidingWith= entity;
+    if(entity.type == "Weapon" || entity.type == "Armor"){
+        this.collidingWith= entity;
+    }
 }
 
 
