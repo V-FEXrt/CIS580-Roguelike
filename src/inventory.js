@@ -13,6 +13,8 @@ function Inventory(weapon, armor) {
     this.inventory = [];
     this.inventory.push(weapon);
     this.inventory.push(armor);
+    window.terminal.addCommand("weapon", "Get your current weapon stats", this.weaponCommand.bind(this));
+    window.terminal.addCommand("armor", "Get your current armor atats", this.armorCommand.bind(this));
 }
 
 /**
@@ -23,7 +25,7 @@ Inventory.prototype.addWeapon = function(weapon) {
     checkWeapon(weapon);
     if (checkInvalidWeapon(window.player.class, weapon.attackType)) return;
 
-    window.terminal.log(`Picked up a level ${weapon.level} ${weapon.name} with damage range ${weapon.damageMin}-${weapon.damageMax}, with ${weapon.properties}.`);
+    window.terminal.log("Picked up a " + weapon.toString(), window.colors.pickup);
     var weaponToDrop = this.inventory[0];
     this.inventory[0] = weapon;
     window.player.combat.weapon = weapon;
@@ -51,7 +53,7 @@ Inventory.prototype.addArmor = function(armor) {
     checkArmor(armor);
     if (checkInvalidArmor(window.player.class, armor.name)) return;
 
-    window.terminal.log(`Picked up level ${armor.level} ${armor.name}.`);
+    window.terminal.log("Picked up " + armor.toString(), window.colors.pickup);
     var armorToDrop = this.inventory[1];
     this.inventory[1] = armor;
     window.player.combat.armor = armor;
@@ -102,6 +104,14 @@ Inventory.prototype.addItem = function(item) {
  */
 Inventory.prototype.removeItem = function(item) {
     this.inventory.remove(this.inventory.indexOf(item));
+}
+
+Inventory.prototype.weaponCommand = function () {
+    window.terminal.log(this.inventory[0].toString(), window.colors.cmdResponse);
+}
+
+Inventory.prototype.armorCommand = function () {
+    window.terminal.log(this.inventory[1].toString(), window.colors.cmdResponse);
 }
 
 /**

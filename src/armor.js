@@ -89,3 +89,7 @@ Armor.prototype.render = function(time, ctx) {
     ctx.drawImage(this.spritesheet, 305, 225, 75, 75, (position.x * this.size.width), (position.y * this.size.height) + this.currY, 96, 96);
 
 }
+
+Armor.prototype.toString = function () {
+    return `Level ${this.level} ${this.name} with ${this.defense} defense`;
+}

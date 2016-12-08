@@ -32,21 +32,47 @@ function Player(position, tilemap, combatClass) {
     this.shouldEndGame = false;
 
     window.terminal.addCommand("class", "Get your player class", this.getClass.bind(this));
+    window.terminal.addCommand("kill", "Kill yourself", this.killPlayer.bind(this));
 }
 
 /**
  * @function updates the player object
  * {DOMHighResTimeStamp} time the elapsed time since the last frame
  */
-Player.prototype.update = function(time) {
-    // if we're dead, we should probably do something
+Player.prototype.update = function (time) {
     if (this.combat.health <= 0 && this.state != "dead"){
       this.state = "dead";
       this.shouldEndGame = true;
     }
 }
 
-Player.prototype.walkPath = function(path, completion) {
+Player.prototype.debugModeChanged = function(){
+    if (window.gameDebug) {
+        window.terminal.addCommand("godmode", "Make yourself invincible",
+            function () {
+                window.terminal.log("You are now invincible", window.colors.cmdResponse);
+                window.player.combat.health = Number.POSITIVE_INFINITY;
+            });
+        window.terminal.addCommand("tp", "Teleport to the specified coordinates",
+            function (args) {
+                if (args == 1) {
+                    window.terminal.log("Must include parameters x and y", window.colors.invalid);
+                }
+                else {
+                    window.terminal.log(`Teleporting player to x: ${args[1]} y: ${args[2]}`, window.colors.cmdResponse);
+                    window.player.position.x = args[1];
+                    window.player.position.y = args[2];
+                    tilemap.moveTo({ x: args[1] - 5, y: args[2] - 5 });
+                }
+            });
+    }
+    else {
+        window.terminal.removeCommand("godmode");
+        window.terminal.removeCommand("tp");
+    }
+}
+
+Player.prototype.walkPath = function (path, completion) {
     if (this.state == "dead") return; // shouldnt be necessary
 
     path.shift();
@@ -75,21 +101,21 @@ Player.prototype.changeClass = function(chosenClass) {
     }
 };
 
-Player.prototype.getClass = function(args){
-  if(args.length > 1){
-    // we have args
-    this.changeClass(args[1]);
-    window.terminal.log("Changing class to " + this.class, "lime");
-    return;
-  }
-  window.terminal.log("Class: " + this.class, "lime");
+Player.prototype.getClass = function (args) {
+    if (args.length > 1) {
+        // we have args
+        this.changeClass(args[1]);
+        window.terminal.log("Changing class to " + this.class, "lime");
+        return;
+    }
+    window.terminal.log("Class: " + this.class, "lime");
 }
 
 /**
  *@function handles the players turn
  *{input} keyboard input given for this turn
  */
-Player.prototype.processTurn = function(input) {
+Player.prototype.processTurn = function (input) {
     if (!this.shouldProcessTurn) return;
     if (this.combat.status.effect != "None") window.combatController.handleStatus(this.combat);
     if (this.state == "dead" || this.combat.status.effect == "Frozen") return;
@@ -137,11 +163,12 @@ Player.prototype.processTurn = function(input) {
     }
 }
 
-Player.prototype.collided = function(entity) {
+Player.prototype.collided = function (entity) {
     if (entity.type == "Stairs") {
         this.shouldProcessTurn = false;
     }
 }
+
 
 Player.prototype.retain = function() {
     return !this.shouldEndGame;
@@ -151,7 +178,7 @@ Player.prototype.retain = function() {
  * @function renders the player into the provided context
  * {CanvasRenderingContext2D} ctx the context to render into
  */
-Player.prototype.render = function(elapsedTime, ctx) {
+Player.prototype.render = function (elapsedTime, ctx) {
     if (this.state == "dead") return; // shouldnt be necessary
 
     var position = this.tilemap.toScreenCoords(this.position);
@@ -163,6 +190,10 @@ Player.prototype.render = function(elapsedTime, ctx) {
         position.x * this.size.width, position.y * this.size.height,
         96, 96
     );
+}
+
+Player.prototype.killPlayer = function () {
+    this.combat.health = 0;
 }
 
 function hasUserInput(input) {
