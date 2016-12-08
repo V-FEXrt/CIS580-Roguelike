@@ -2545,7 +2545,7 @@ Player.prototype.debugModeChanged = function () {
         window.terminal.addCommand("godmode", "Make yourself invincible",
             function () {
                 window.terminal.log("You are now invincible", window.colors.cmdResponse);
-                this.combat.health = Number.POSITIVE_INFINITY;
+                this.combat.health = 999999999;
             });
         window.terminal.addCommand("tp", "Teleport to the specified coordinates", this.teleportCommand.bind(this));
         window.terminal.addCommand("spawn", "Spawn an entity at a given location", this.spawnCommand.bind(this));
