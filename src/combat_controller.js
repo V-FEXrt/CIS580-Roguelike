@@ -114,10 +114,10 @@ CombatController.prototype.handleStatus = function(aCombatClass) {
         case "Frozen":
             if (aCombatClass.status.timer > 1) {
                 aCombatClass.status.timer--;
-                    window.terminal.log("Frozen", window.colors.combat);
+                window.terminal.log(`The ${aCombatClass.name} is Frozen solid!`, window.colors.combat);
             } else if (aCombatClass.status.timer == 1) {
                 if (RNG.rollWeighted(50, 50)) aCombatClass.status.timer--;
-                    else window.terminal.log("Frozen", window.colors.combat);
+                else window.terminal.log(`The ${aCombatClass.name} is Frozen solid!`, window.colors.combat);
             } else {
                 aCombatClass.status.effect = "None";
             }
