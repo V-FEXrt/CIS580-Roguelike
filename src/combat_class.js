@@ -54,7 +54,7 @@ function CombatClass(aName) {
             this.weapon = new Weapon("Claw", 1);
             this.armor = new Armor("Flesh", 1);
             this.status = { effect: "None", timer: 0 }
-            this.senseRange = 5;
+            var senseRange = 5;
 
             this.turnAI = function (aEnemy) {
                 var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
@@ -76,20 +76,30 @@ function CombatClass(aName) {
             this.damageBonus = 0;
             this.defenseBonus = 0;
             this.weapon = new Weapon("Broadhead", 1);
-            this.armor = new Armor("Hide Armor", 1);
+            this.armor = new Armor("Bones", 1);
             this.status = { effect: "None", timer: 0 }
-            this.senseRange = 10;
+            var senseRange = 10;
+            var prefDist = 3;
 
             this.turnAI = function (aEnemy) {
                 var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
-                if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
-                    combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
-                } else if (distance.x <= aEnemy.combat.senseRange && distance.y <= aEnemy.combat.senseRange) {
-                    var path = pathfinder.findPath(aEnemy.position, aEnemy.target.position);
-                    if (path.length > 1) aEnemy.position = { x: path[1].x, y: path[1].y };
-                } else {
+
+                // Move
+                if (distance.x > aEnemy.combat.senseRange && distance.y > aEnemy.combat.senseRange) {
                     var nextTile = aEnemy.tilemap.getRandomAdjacent(aEnemy.position);
                     aEnemy.position = { x: nextTile.x, y: nextTile.y };
+                } else {
+                    // Check preferred engagement distance
+                    if (distance.x < prefDist && distance.y < prefDist) {
+                        aEnemy.position = moveBack(aEnemy.position, aEnemy.target.position);
+                    } else if (distance.x > prefDist && distance.y > prefDist) {
+                        aEnemy.position = moveToward(aEnemy.position, aEnemy.target.position);
+                    }
+                }
+
+                // Attack
+                if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
+                    combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
                 }
             }
             break;
@@ -102,7 +112,7 @@ function CombatClass(aName) {
             this.weapon = new Weapon("Battleaxe", 1);
             this.armor = new Armor("Chainmail", 1);
             this.status = { effect: "None", timer: 0 }
-            this.senseRange = 15;
+            var senseRange = 15;
 
             this.turnAI = function (aEnemy) {
                 var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
