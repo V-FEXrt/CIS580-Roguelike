@@ -63,10 +63,6 @@ function Armor(aName, aLevel) {
 }
 
 Armor.prototype.collided = function(aEntity) {
-    if (aEntity.type == "Player") {
-        aEntity.inventory.addArmor(this);
-        this.shouldRetain = false;
-    }
 }
 
 Armor.prototype.processTurn = function() {
