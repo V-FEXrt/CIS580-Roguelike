@@ -56,7 +56,7 @@ function CombatClass(aName) {
             this.status = { effect: "None", timer: 0 }
             this.senseRange = 5;
 
-            this.turnAI = function(aEnemy) {
+            this.turnAI = function (aEnemy) {
                 var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
                 if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
                     combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
@@ -80,7 +80,7 @@ function CombatClass(aName) {
             this.status = { effect: "None", timer: 0 }
             this.senseRange = 10;
 
-            this.turnAI = function(aEnemy) {
+            this.turnAI = function (aEnemy) {
                 var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
                 if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
                     combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
@@ -104,7 +104,7 @@ function CombatClass(aName) {
             this.status = { effect: "None", timer: 0 }
             this.senseRange = 15;
 
-            this.turnAI = function(aEnemy) {
+            this.turnAI = function (aEnemy) {
                 var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
                 if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
                     combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
@@ -126,10 +126,10 @@ function CombatClass(aName) {
             this.weapon = new Weapon("Eldritch Blast", 1);
             this.armor = new Armor("Robes", 1);
             this.status = { effect: "None", timer: 0 }
-            this.senseRange = 10;
+            var senseRange = 10;
             var prefDist = 5;
 
-            this.turnAI = function(aEnemy) {
+            this.turnAI = function (aEnemy) {
                 var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
 
                 // Move
@@ -139,9 +139,9 @@ function CombatClass(aName) {
                 } else {
                     // Check preferred engagement distance
                     if (distance.x < prefDist && distance.y < prefDist) {
-                        moveBack(aEnemy.position, aEnemy.target.position);
+                        aEnemy.position = moveBack(aEnemy.position, aEnemy.target.position);
                     } else if (distance.x > prefDist && distance.y > prefDist) {
-                        moveToward(aEnemy.position, aEnemy.target.position);
+                        aEnemy.position = moveToward(aEnemy.position, aEnemy.target.position);
                     }
                 }
 
@@ -155,10 +155,28 @@ function CombatClass(aName) {
 }
 
 function moveBack(a, b) {
+    var newPos = new Object();
+    if (a.x > b.x) newPos.x = a.x + 1;
+    else if (a.x < b.x) newPos.x = a.x - 1;
+    else newPos.x = a.x;
 
+    if (a.y > b.y) newPos.y = a.y + 1;
+    else if (a.y < b.y) newPos.y = a.y - 1;
+    else newPos.y = a.y;
+
+    return newPos;
 }
 
 function moveToward(a, b) {
+    var newPos = new Object();
+    if (a.x > b.x) newPos.x = a.x - 1;
+    else if (a.x < b.x) newPos.x = a.x + 1;
+    else newPos.x = a.x;
 
+    if (a.y > b.y) newPos.y = a.y - 1;
+    else if (a.y < b.y) newPos.y = a.y + 1;
+    else newPos.y = a.y;
+
+    return newPos;
 }
 
