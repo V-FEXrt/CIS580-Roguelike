@@ -151,7 +151,18 @@ CombatController.prototype.randomDrop = function(aPosition) {
 
 CombatController.prototype.getPercentArray = function() {
     // damage, health, defense, attack, zombie, skele, cap, shaman
-    return [20, 20, 20, 20, 20, 0, 0, 0, 5];
+    var damageWeight = 20;
+    var healthWeight = 20;
+    var defenseWeight = 20;
+    var attackWeight = 20;
+    var zombieWeight = 20;
+    var skeletonWeight = 0;
+    var captainWeight = 0;
+    var shamanWeight = 0;
+    var emptyWeight = 5;
+
+    return [damageWeight, healthWeight, defenseWeight, attackWeight,
+        zombieWeight, skeletonWeight, captainWeight, shamanWeight, emptyWeight];
 }
 
 function getArmors() {
