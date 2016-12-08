@@ -6,6 +6,7 @@ const CombatClass = require("./combat_class");
 const Inventory = require('./inventory.js');
 const Weapon = require('./weapon.js');
 const Armor = require('./armor.js');
+const Powerup = require('./powerup.js');
 
 /**
  * @module exports the Player class
@@ -35,6 +36,7 @@ function Player(position, tilemap, combatClass) {
     window.terminal.addCommand("kill", "Kill yourself", this.killPlayer.bind(this));
     window.terminal.addCommand("look", "Get info about the item at your feet", this.lookCommand.bind(this));
     window.terminal.addCommand("take", "Get the item at your feet", this.takeCommand.bind(this));
+    window.terminal.addCommand("coords", "Get your current coordinates", this.coordsCommand.bind(this));
 }
 
 /**
@@ -53,13 +55,43 @@ Player.prototype.debugModeChanged = function () {
         window.terminal.addCommand("godmode", "Make yourself invincible",
             function () {
                 window.terminal.log("You are now invincible", window.colors.cmdResponse);
-                window.player.combat.health = Number.POSITIVE_INFINITY;
+                this.combat.health = Number.POSITIVE_INFINITY;
             });
         window.terminal.addCommand("tp", "Teleport to the specified coordinates", this.teleportCommand.bind(this));
+        window.terminal.addCommand("spawn", "Spawn an entity at a given location", this.spawnCommand.bind(this));
     }
     else {
         window.terminal.removeCommand("godmode");
         window.terminal.removeCommand("tp");
+    }
+}
+
+Player.prototype.spawnCommand = function (args) {
+    if(args.length == 1) window.terminal.log("Requires parameters", window.colors.invalid);
+    else {
+        switch(args[1]) {
+            case "weapon":
+                if(args[2] == "MorningStar") args[2] = "Morning Star";
+                if(args[2] == "HeavyBolts") args[2] = "Heavy Bolts";
+                if(args[2] == "MagicMissile") args[2] = "Magic Missile";
+                if(args[2] == "EldritchBlast") args[2] = "Eldritch Blast";
+                var weapon = new Weapon(args[2], args[3]);
+                weapon.position.x = args[4];
+                weapon.position.y = args[5];
+                window.entityManager.addEntity(weapon);
+                break;
+            case "armor":
+                if(args[2] == "HideArmor") args[2] = "Hide Armor";
+                if(args[2] == "LeatherArmor") args[2] = "Leather Armor";
+                if(args[2] == "PlateArmor") args[2] = "Plate Armor";
+                var armor = new Armor(args[2], args[3]);
+                armor.position.x = args[4];
+                armor.position.y = args[5];
+                window.entityManager.addEntity(armor);
+                break;
+            default:
+                window.terminal.log("Invalid entity name", window.colors.invalid);
+        }
     }
 }
 
@@ -129,6 +161,10 @@ Player.prototype.takeCommand = function () {
     } else if (this.collidingWith.type == "Armor") {
         this.inventory.addArmor(this.collidingWith);
     }
+}
+
+Player.prototype.coordsCommand = function () {
+    window.terminal.log(`You are at x: ${this.position.x} y: ${this.position.y}`, window.colors.cmdResponse);
 }
 
 Player.prototype.getClass = function (args) {
