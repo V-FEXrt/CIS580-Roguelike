@@ -3166,8 +3166,12 @@ function splitMessage(message, messages, color) {
         messages.unshift({ text: message, color: color });
     }
     else {
-        messages.unshift({ text: message.slice(0, MAX_MSG_LENGTH), color: color });
-        splitMessage(message.slice(MAX_MSG_LENGTH, message.length), messages, color);
+        var index = MAX_MSG_LENGTH;
+        for(var i = 0; i < MAX_MSG_LENGTH; i++) {
+            if(message.charAt(i) == ' ') index = i + 1;
+        }
+        messages.unshift({ text: message.slice(0, index), color: color });
+        splitMessage(message.slice(index, message.length), messages, color);
     }
 }
 
