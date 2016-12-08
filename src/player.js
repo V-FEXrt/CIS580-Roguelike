@@ -33,6 +33,7 @@ function Player(position, tilemap, combatClass) {
 
     window.terminal.addCommand("class", "Get your player class", this.getClass.bind(this));
     window.terminal.addCommand("kill", "Kill yourself", this.killPlayer.bind(this));
+    window.terminal.addCommand("look", "Get info about the item at your feet", this.lookCommand.bind(this));
 }
 
 /**
@@ -101,14 +102,23 @@ Player.prototype.changeClass = function(chosenClass) {
     }
 };
 
-Player.prototype.getClass = function (args) {
-    if (args.length > 1) {
-        // we have args
-        this.changeClass(args[1]);
-        window.terminal.log("Changing class to " + this.class, "lime");
+Player.prototype.lookCommand = function(){
+    if(typeof this.collidingWith == 'undefined'){
+        window.terminal.log("Nothing at your feet", "red");
         return;
     }
-    window.terminal.log("Class: " + this.class, "lime");
+
+    window.terminal.log(this.collidingWith.type, "lime");
+}
+
+Player.prototype.getClass = function(args){
+  if(args.length > 1){
+    // we have args
+    this.changeClass(args[1]);
+    window.terminal.log("Changing class to " + this.class, "lime");
+    return;
+  }
+  window.terminal.log("Class: " + this.class, "lime");
 }
 
 /**
@@ -167,6 +177,7 @@ Player.prototype.collided = function (entity) {
     if (entity.type == "Stairs") {
         this.shouldProcessTurn = false;
     }
+    this.collidingWith= entity;
 }
 
 
