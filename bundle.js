@@ -452,15 +452,6 @@ function pickAdjacent(room) {
 window.debug = false;
 window.gameDebug = false;
 
-window.colors = {
-    cmd: "yellow",
-    cmdResponse: "LawnGreen",
-    invalid: "red",
-    combat: "Orchid",
-    pickup: "SkyBlue",
-    
-}
-
 /* Classes and Libraries */
 const Game = require('./game');
 const EntityManager = require('./entity_manager');
@@ -479,6 +470,18 @@ const Terminal = require('./terminal.js');
 const SFX = require("./sfx");
 
 /* Global variables */
+// Terminal MUST be defined first so that anyone can add commands at any point
+window.terminal = new Terminal();
+window.terminal.log("Welcome to Roguelike");
+window.terminal.log("Good luck!");
+window.terminal.addCommand("debug", "Toggle debug",
+                           function () {
+                               window.gameDebug = !window.gameDebug;
+                               window.terminal.log(`Debug mode = ${window.gameDebug}`, window.colors.cmdResponse);
+                               player.debugModeChanged();
+                           });
+
+
 var canvas = document.getElementById('screen');
 var game = new Game(canvas, update, render);
 window.sfx = new SFX();
@@ -489,15 +492,6 @@ var screenSize = { width: 1056, height: 1056 };
 var stairs;
 
 window.combatController = new CombatController();
-
-window.terminal = new Terminal();
-window.terminal.log("Welcome to Roguelike");
-window.terminal.log("Good luck!");
-window.terminal.addCommand("debug", "Toggle debug",
-    function () {
-        window.gameDebug = !window.gameDebug;
-        window.terminal.log(`Debug mode = ${window.gameDebug}`, window.colors.cmdResponse);
-    });
 
 var gui = new GUI(screenSize);
 
@@ -663,6 +657,13 @@ var masterLoop = function (timestamp) {
  * the number of milliseconds passed since the last frame.
  */
 function update(elapsedTime) {
+
+    if(player.shouldEndGame){
+      player.shouldEndGame = false;
+      gui.state = "start";
+      gui.chosenClass = "";
+    }
+
     gui.update(elapsedTime);
     if (input.left || input.right || input.up || input.down || autoTurn) {
         turnTimer += elapsedTime;
@@ -854,10 +855,6 @@ function Armor(aName, aLevel) {
 }
 
 Armor.prototype.collided = function(aEntity) {
-    if (aEntity.type == "Player") {
-        aEntity.inventory.addArmor(this);
-        this.shouldRetain = false;
-    }
 }
 
 Armor.prototype.processTurn = function() {
@@ -1177,7 +1174,7 @@ CombatController.prototype.handleAttack = function(aAttackerClass, aDefenderClas
     window.terminal.log(message, window.colors.combat);
     if (lApplyEffect) {
         aDefenderClass.status.effect = lAttackEffect;
-        aDefenderClass.status.timer = 2;
+        aDefenderClass.status.timer = 3;
         window.terminal.log(`The ${defender} is now ${lAttackEffect}.`, window.colors.combat);
     }
 }
@@ -1197,19 +1194,14 @@ CombatController.prototype.handleStatus = function(aCombatClass) {
             break;
 
         case "Frozen":
-            switch (aCombatClass.status.timer) {
-                case 2:
-                    aCombatClass.status.timer--;
-                    window.terminal.log("Frozen", window.colors.combat);
-                    return;
-
-                case 1:
-                    if (RNG.rollWeighted(50, 50)) aCombatClass.status.timer--;
-                    else window.terminal.log("Frozen", window.colors.combat);
-
-                case 0:
-                    aCombatClass.status.effect = "None";
-                    break;
+            if (aCombatClass.status.timer > 1) {
+                aCombatClass.status.timer--;
+                window.terminal.log(`The ${aCombatClass.name} is Frozen solid!`, window.colors.combat);
+            } else if (aCombatClass.status.timer == 1) {
+                if (RNG.rollWeighted(50, 50)) aCombatClass.status.timer--;
+                else window.terminal.log(`The ${aCombatClass.name} is Frozen solid!`, window.colors.combat);
+            } else {
+                aCombatClass.status.effect = "None";
             }
             break;
 
@@ -1334,7 +1326,7 @@ module.exports = exports = EntityManager;
  * Creates a new EntityManager object
  */
 function EntityManager() {
-  this.entities = [];
+    this.entities = [];
 }
 
 EntityManager.prototype.addEntity = function(entity) {
@@ -1428,9 +1420,17 @@ EntityManager.prototype.update = function(elapsedTime) {
 }
 
 EntityManager.prototype.render = function(elapsedTime, ctx) {
+  var player;
   this.entities.forEach(function(entity){
+    if(entity.type == "Player"){
+        player = entity;
+        return; // because this is a function return is the same as continue
+    }
     entity.render(elapsedTime, ctx);
   });
+
+  // render player last so that it is rendered on top of items
+  if(typeof player != "undefined") player.render(elapsedTime, ctx);
 }
 
 EntityManager.prototype.processTurn = function(input) {
@@ -1540,7 +1540,6 @@ function spawn(aPlayer, tmap, count, percents) {
       percents[6],
       percents[7]
     );
-    //window.terminal.log(""+idx, 'lime');
     spawnArray[idx]()
   }
   if(window.debug){
@@ -1943,11 +1942,12 @@ Inventory.prototype.addWeapon = function(weapon) {
     checkWeapon(weapon);
     if (checkInvalidWeapon(window.player.class, weapon.attackType)) return;
 
+    weapon.shouldRetain = false;
     window.terminal.log("Picked up a " + weapon.toString(), window.colors.pickup);
     var weaponToDrop = this.inventory[0];
     this.inventory[0] = weapon;
     window.player.combat.weapon = weapon;
-    weaponToDrop.position = window.player.tilemap.getRandomAdjacent(weapon.position);
+    weaponToDrop.position = window.player.position;
     weaponToDrop.shouldRetain = true;
     window.entityManager.addEntity(weaponToDrop);
 
@@ -1971,11 +1971,12 @@ Inventory.prototype.addArmor = function(armor) {
     checkArmor(armor);
     if (checkInvalidArmor(window.player.class, armor.name)) return;
 
+    armor.shouldRetain = false;
     window.terminal.log("Picked up " + armor.toString(), window.colors.pickup);
     var armorToDrop = this.inventory[1];
     this.inventory[1] = armor;
     window.player.combat.armor = armor;
-    armorToDrop.position = window.player.tilemap.getRandomAdjacent(armor.position);
+    armorToDrop.position = window.player.position;
     armorToDrop.shouldRetain = true;
     window.entityManager.addEntity(armorToDrop);
 
@@ -2514,9 +2515,12 @@ function Player(position, tilemap, combatClass) {
     this.changeClass(combatClass);
     this.level = 0;
     this.shouldProcessTurn = true;
+    this.shouldEndGame = false;
 
     window.terminal.addCommand("class", "Get your player class", this.getClass.bind(this));
     window.terminal.addCommand("kill", "Kill yourself", this.killPlayer.bind(this));
+    window.terminal.addCommand("look", "Get info about the item at your feet", this.lookCommand.bind(this));
+    window.terminal.addCommand("take", "Get the item at your feet", this.takeCommand.bind(this));
 }
 
 /**
@@ -2524,31 +2528,42 @@ function Player(position, tilemap, combatClass) {
  * {DOMHighResTimeStamp} time the elapsed time since the last frame
  */
 Player.prototype.update = function (time) {
-    // if we're dead, we should probably do something
-    if (this.combat.health <= 0) this.state = "dead";
+    if (this.combat.health <= 0 && this.state != "dead") {
+        this.state = "dead";
+        this.shouldEndGame = true;
+    }
+}
 
+Player.prototype.debugModeChanged = function () {
     if (window.gameDebug) {
         window.terminal.addCommand("godmode", "Make yourself invincible",
             function () {
                 window.terminal.log("You are now invincible", window.colors.cmdResponse);
                 window.player.combat.health = Number.POSITIVE_INFINITY;
             });
-        window.terminal.addCommand("tp", "Teleport to the specified coordinates",
-            function (args) {
-                if (args == 1) {
-                    window.terminal.log("Must include parameters x and y", window.colors.invalid);
-                }
-                else {
-                    window.terminal.log(`Teleporting player to x: ${args[1]} y: ${args[2]}`, window.colors.cmdResponse);
-                    window.player.position.x = args[1];
-                    window.player.position.y = args[2];
-                    tilemap.moveTo({ x: args[1] - 5, y: args[2] - 5 });
-                }
-            });
+        window.terminal.addCommand("tp", "Teleport to the specified coordinates", this.teleportCommand.bind(this));
     }
     else {
         window.terminal.removeCommand("godmode");
         window.terminal.removeCommand("tp");
+    }
+}
+
+Player.prototype.teleportCommand = function (args) {
+    if (args == 1) {
+        window.terminal.log("Must include parameters x and y", window.colors.invalid);
+    }
+    else {
+        var x = 0;
+        var y = 0;
+        if (args[1].charAt(0) == "*") x = parseInt(args[1].slice(1)) + parseInt(this.position.x);
+        else x = args[1];
+        if (args[2].charAt(0) == "*") y = parseInt(args[2].slice(1)) + parseInt(this.position.y);
+        else y = args[2];
+        window.terminal.log(`Teleporting player to x: ${x} y: ${y}`, window.colors.cmdResponse);
+        window.player.position.x = x;
+        window.player.position.y = y;
+        tilemap.moveTo({ x: x - 5, y: y - 5 });
     }
 }
 
@@ -2566,9 +2581,11 @@ Player.prototype.walkPath = function (path, completion) {
 //rely on player being created before class is actually chosen.
 //Potentially change this
 Player.prototype.changeClass = function (chosenClass) {
+    this.level = 0;
     this.class = chosenClass;
     this.combat = new CombatClass(chosenClass);
     this.inventory = new Inventory(this.combat.weapon, this.combat.armor);
+    this.state = "idle";
 
     if (this.class == "Knight") {
         this.spritesheetPos = { x: 1, y: 5 };
@@ -2579,14 +2596,35 @@ Player.prototype.changeClass = function (chosenClass) {
     }
 };
 
+Player.prototype.lookCommand = function () {
+    if (typeof this.collidingWith == "undefined") {
+        window.terminal.log("Nothing at your feet", window.colors.invalid);
+        return;
+    }
+
+    window.terminal.log(this.collidingWith.toString(), window.colors.cmdResponse);
+}
+
+Player.prototype.takeCommand = function () {
+    if (typeof this.collidingWith == "undefined") {
+        window.terminal.log("Nothing to take", window.colors.invalid);
+        return;
+    }
+    if (this.collidingWith.type == "Weapon") {
+        this.inventory.addWeapon(this.collidingWith);
+    } else if (this.collidingWith.type == "Armor") {
+        this.inventory.addArmor(this.collidingWith);
+    }
+}
+
 Player.prototype.getClass = function (args) {
     if (args.length > 1) {
         // we have args
         this.changeClass(args[1]);
-        window.terminal.log("Changing class to " + this.class, "lime");
+        window.terminal.log("Changing class to " + this.class, window.colors.cmdResponse);
         return;
     }
-    window.terminal.log("Class: " + this.class, "lime");
+    window.terminal.log("Class: " + this.class, window.colors.cmdResponse);
 }
 
 /**
@@ -2595,8 +2633,8 @@ Player.prototype.getClass = function (args) {
  */
 Player.prototype.processTurn = function (input) {
     if (!this.shouldProcessTurn) return;
+    this.collidingWith = undefined;
     if (this.combat.status.effect != "None") window.combatController.handleStatus(this.combat);
-    if (this.combat.health <= 0) this.state = "dead";
     if (this.state == "dead" || this.combat.status.effect == "Frozen") return;
 
     if (hasUserInput(input)) {
@@ -2646,10 +2684,14 @@ Player.prototype.collided = function (entity) {
     if (entity.type == "Stairs") {
         this.shouldProcessTurn = false;
     }
+    if (entity.type == "Weapon" || entity.type == "Armor") {
+        this.collidingWith = entity;
+    }
 }
 
+
 Player.prototype.retain = function () {
-    return this.combat.health > 0;
+    return !this.shouldEndGame;
 }
 
 /**
@@ -2908,32 +2950,36 @@ var attackPowerup = new Audio();
 var damageBonusPowerup = new Audio();
 var defensePowerup = new Audio();
 var click = new Audio();
+var backgroundMusicOnLoop = new Audio('sounds/tempBGMusicLoop.wav');
+var volume = 3;
+
+var volumeMatrix = [
+    // bg, bgOnLoop, health, attack, damage, defense, click
+    [ 0.0,      0.0,    0.0,    0.0,    0.0,     0.0,   0.0], // Volume 0
+    [ 0.1,      0.1,    0.1,    0.1,    0.1,     0.1,   0.1], // Volume 1
+    [ 0.2,      0.2,    0.2,    0.2,    0.2,     0.2,   0.2], // Volume 2
+    [ 0.3,      0.3,    0.3,    0.3,    0.3,     0.3,   0.3]  // Volume 3
+];
+
 
 function SFX() {
     background.src = encodeURI('sounds/tempBGMusic.wav');
-    background.volume = 0.3;
     background.addEventListener('ended', function() {
-        var backgroundMusicOnLoop = new Audio('sounds/tempBGMusicLoop.wav');
-        backgroundMusicOnLoop.volume = 0.3;
+        backgroundMusicOnLoop = new Audio('sounds/tempBGMusicLoop.wav');
+        backgroundMusicOnLoop.volume = volumeMatrix[volume][1];
         backgroundMusicOnLoop.loop = true;
         backgroundMusicOnLoop.play();
     }, false);
     background.play();
 
     healthPickup.src = encodeURI('sounds/Powerup3.wav');
-    healthPickup.volume = 0.1;
-
     attackPowerup.src = encodeURI('sounds/Powerup4.wav');
-    attackPowerup.volume = 0.1;
-
     damageBonusPowerup.src = encodeURI('sounds/Powerup1.wav');
-    damageBonusPowerup.volume = 0.1;
-
     defensePowerup.src = encodeURI('sounds/Powerup2.wav');
-    defensePowerup.volume = 0.4;
-
     click.src = encodeURI("sounds/click.wav");
-    click.volume = 0.4;
+
+    this.setVolume(["volume", "3"]);
+    window.terminal.addCommand("volume", "Set the volume", this.setVolume.bind(this));
 }
 
 SFX.prototype.play = function(aSound) {
@@ -2960,6 +3006,34 @@ SFX.prototype.play = function(aSound) {
     }
 }
 
+SFX.prototype.setVolume = function(args){
+    if(args.length <= 1){
+        window.terminal.log("Please provide volume level (0-3)", window.colors.invalid);
+        return;
+    }
+
+    var temp = parseInt(args[1]);
+    if(isNaN(temp)){
+        window.terminal.log("Volume level must be a value 0-3", window.colors.invalid);
+        return;
+    }
+
+    if(temp < 0 || temp > 3){
+        window.terminal.log("Please provide volume level between 0-3", window.colors.invalid);
+        return;
+    }
+    volume = temp;
+
+    var lvls = volumeMatrix[volume];
+
+    background.volume = lvls[0];
+    backgroundMusicOnLoop.volume = lvls[1];
+    healthPickup.volume = lvls[2];
+    attackPowerup.volume = lvls[3];
+    damageBonusPowerup.volume = lvls[4];
+    defensePowerup.volume = lvls[5];
+    click.volume = lvls[6];
+}
 
 },{}],22:[function(require,module,exports){
 "use strict";
@@ -3032,6 +3106,15 @@ Stairs.prototype.render = function (elapsedTime, ctx) {
 
 },{}],23:[function(require,module,exports){
 "use strict";
+
+window.colors = {
+    cmd: "yellow",
+    cmdResponse: "LawnGreen",
+    invalid: "red",
+    combat: "Orchid",
+    pickup: "SkyBlue",
+
+}
 
 const MAX_MSG_COUNT = 62;
 const MAX_MSG_LENGTH = 80;
@@ -3702,10 +3785,6 @@ function Weapon(aName, aLevel) {
 }
 
 Weapon.prototype.collided = function (aEntity) {
-    if (aEntity.type == "Player") {
-        aEntity.inventory.addWeapon(this);
-        this.shouldRetain = false;
-    }
 }
 
 Weapon.prototype.processTurn = function () {

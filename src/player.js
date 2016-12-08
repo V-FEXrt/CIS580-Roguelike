@@ -42,35 +42,42 @@ function Player(position, tilemap, combatClass) {
  * {DOMHighResTimeStamp} time the elapsed time since the last frame
  */
 Player.prototype.update = function (time) {
-    if (this.combat.health <= 0 && this.state != "dead"){
-      this.state = "dead";
-      this.shouldEndGame = true;
+    if (this.combat.health <= 0 && this.state != "dead") {
+        this.state = "dead";
+        this.shouldEndGame = true;
     }
 }
 
-Player.prototype.debugModeChanged = function(){
+Player.prototype.debugModeChanged = function () {
     if (window.gameDebug) {
         window.terminal.addCommand("godmode", "Make yourself invincible",
             function () {
                 window.terminal.log("You are now invincible", window.colors.cmdResponse);
                 window.player.combat.health = Number.POSITIVE_INFINITY;
             });
-        window.terminal.addCommand("tp", "Teleport to the specified coordinates",
-            function (args) {
-                if (args == 1) {
-                    window.terminal.log("Must include parameters x and y", window.colors.invalid);
-                }
-                else {
-                    window.terminal.log(`Teleporting player to x: ${args[1]} y: ${args[2]}`, window.colors.cmdResponse);
-                    window.player.position.x = args[1];
-                    window.player.position.y = args[2];
-                    tilemap.moveTo({ x: args[1] - 5, y: args[2] - 5 });
-                }
-            });
+        window.terminal.addCommand("tp", "Teleport to the specified coordinates", this.teleportCommand.bind(this));
     }
     else {
         window.terminal.removeCommand("godmode");
         window.terminal.removeCommand("tp");
+    }
+}
+
+Player.prototype.teleportCommand = function (args) {
+    if (args == 1) {
+        window.terminal.log("Must include parameters x and y", window.colors.invalid);
+    }
+    else {
+        var x = 0;
+        var y = 0;
+        if (args[1].charAt(0) == "*") x = parseInt(args[1].slice(1)) + parseInt(this.position.x);
+        else x = args[1];
+        if (args[2].charAt(0) == "*") y = parseInt(args[2].slice(1)) + parseInt(this.position.y);
+        else y = args[2];
+        window.terminal.log(`Teleporting player to x: ${x} y: ${y}`, window.colors.cmdResponse);
+        window.player.position.x = x;
+        window.player.position.y = y;
+        tilemap.moveTo({ x: x - 5, y: y - 5 });
     }
 }
 
@@ -87,7 +94,7 @@ Player.prototype.walkPath = function (path, completion) {
 //Changes the player class, used because right now things
 //rely on player being created before class is actually chosen.
 //Potentially change this
-Player.prototype.changeClass = function(chosenClass) {
+Player.prototype.changeClass = function (chosenClass) {
     this.level = 0;
     this.class = chosenClass;
     this.combat = new CombatClass(chosenClass);
@@ -103,8 +110,8 @@ Player.prototype.changeClass = function(chosenClass) {
     }
 };
 
-Player.prototype.lookCommand = function(){
-    if(typeof this.collidingWith == "undefined"){
+Player.prototype.lookCommand = function () {
+    if (typeof this.collidingWith == "undefined") {
         window.terminal.log("Nothing at your feet", window.colors.invalid);
         return;
     }
@@ -112,26 +119,26 @@ Player.prototype.lookCommand = function(){
     window.terminal.log(this.collidingWith.toString(), window.colors.cmdResponse);
 }
 
-Player.prototype.takeCommand = function(){
-    if(typeof this.collidingWith == "undefined"){
+Player.prototype.takeCommand = function () {
+    if (typeof this.collidingWith == "undefined") {
         window.terminal.log("Nothing to take", window.colors.invalid);
         return;
     }
-    if(this.collidingWith.type == "Weapon"){
+    if (this.collidingWith.type == "Weapon") {
         this.inventory.addWeapon(this.collidingWith);
-    }else if(this.collidingWith.type == "Armor"){
+    } else if (this.collidingWith.type == "Armor") {
         this.inventory.addArmor(this.collidingWith);
     }
 }
 
-Player.prototype.getClass = function(args){
-  if(args.length > 1){
-    // we have args
-    this.changeClass(args[1]);
-    window.terminal.log("Changing class to " + this.class, window.colors.cmdResponse);
-    return;
-  }
-  window.terminal.log("Class: " + this.class, window.colors.cmdResponse);
+Player.prototype.getClass = function (args) {
+    if (args.length > 1) {
+        // we have args
+        this.changeClass(args[1]);
+        window.terminal.log("Changing class to " + this.class, window.colors.cmdResponse);
+        return;
+    }
+    window.terminal.log("Class: " + this.class, window.colors.cmdResponse);
 }
 
 /**
@@ -191,13 +198,13 @@ Player.prototype.collided = function (entity) {
     if (entity.type == "Stairs") {
         this.shouldProcessTurn = false;
     }
-    if(entity.type == "Weapon" || entity.type == "Armor"){
-        this.collidingWith= entity;
+    if (entity.type == "Weapon" || entity.type == "Armor") {
+        this.collidingWith = entity;
     }
 }
 
 
-Player.prototype.retain = function() {
+Player.prototype.retain = function () {
     return !this.shouldEndGame;
 }
 
