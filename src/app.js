@@ -38,7 +38,7 @@ window.terminal.addCommand("debug", "Toggle debug",
                            function () {
                                window.gameDebug = !window.gameDebug;
                                window.terminal.log(`Debug mode = ${window.gameDebug}`, window.colors.cmdResponse);
-                               player.godModeChanged();
+                               player.debugModeChanged();
                            });
 
 
