@@ -8,36 +8,37 @@ const RNG = require('./rng');
  * @module EntitySpawner
  * A class representing a EntitySpawner
  */
- module.exports = exports = {
-   spawn: spawn,
-   drop: spawnDrop
- }
+module.exports = exports = {
+  spawn: spawn,
+  drop: spawnDrop
+}
 
- var pu = 0;
- var en = 0;
+var pu = 0;
+var en = 0;
 /**
  * @constructor EntitySpawner
  * Creates a EntitySpawner
  */
 var spawnArray = [
-  function(){ spawnPowerup(1); },
-  function(){ spawnPowerup(2); },
-  function(){ spawnPowerup(3); },
-  function(){ spawnPowerup(4); },
-  function(){ spawnEnemy("Zombie"); },
-  function(){ spawnEnemy("EnemyRanged"); },
-  function(){ spawnEnemy("Captain"); },
-  function(){ spawnEnemy("Shaman"); },
+  function () { spawnPowerup(1); },
+  function () { spawnPowerup(2); },
+  function () { spawnPowerup(3); },
+  function () { spawnPowerup(4); },
+  function () { spawnEnemy("Zombie"); },
+  function () { spawnEnemy("EnemyRanged"); },
+  function () { spawnEnemy("Captain"); },
+  function () { spawnEnemy("Shaman"); },
+  function () { }
 ]
 
 var tilemap;
 var player;
- // percents should be an array of the percent everything should be spawned. in this format
- // [ crystal, red potion, blue potion, green potion, Zombie, EnemyRanged, Captain, Shaman ]
+// percents should be an array of the percent everything should be spawned. in this format
+// [ crystal, red potion, blue potion, green potion, Zombie, EnemyRanged, Captain, Shaman ]
 function spawn(aPlayer, tmap, count, percents) {
   tilemap = tmap;
   player = aPlayer;
-  for(var i = 0; i < count; i++){
+  for (var i = 0; i < count; i++) {
     var idx = RNG.rollWeighted(
       percents[0],
       percents[1],
@@ -46,28 +47,29 @@ function spawn(aPlayer, tmap, count, percents) {
       percents[4],
       percents[5],
       percents[6],
-      percents[7]
+      percents[7],
+      percents[8]
     );
     spawnArray[idx]()
   }
-  if(window.debug){
+  // if (window.debug) {
     console.log(pu + " powerups spawned");
     console.log(en + " enemies spawned");
-  }
+  // }
 }
 
-function spawnPowerup(pType){
+function spawnPowerup(pType) {
   pu++;
   window.entityManager.addEntity(new Powerup(tilemap.findOpenSpace(), tilemap, pType));
 }
 
-function spawnEnemy(eType){
+function spawnEnemy(eType) {
   en++;
   window.entityManager.addEntity(new Enemy(tilemap.findOpenSpace(), tilemap, eType, player, spawnDrop))
 }
 
-function spawnDrop(position){
+function spawnDrop(position) {
   pu++;
   var drop = window.combatController.randomDrop(position);
-  if(drop.type != "None") window.entityManager.addEntity(drop);
+  if (drop.type != "None") window.entityManager.addEntity(drop);
 }

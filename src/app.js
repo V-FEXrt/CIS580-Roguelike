@@ -329,7 +329,7 @@ function nextLevel(fadeOut) {
         stairs = new Stairs(pos, tilemap, function() { nextLevel(true) });
         window.entityManager.addEntity(stairs);
         //place new entities
-        EntitySpawner.spawn(player, tilemap, 30, [20, 20, 20, 20, 20, 0, 0, 0]);
+        EntitySpawner.spawn(player, tilemap, 30, combatController.getPercentArray());
 
         unfadeFromBlack();
 

@@ -149,6 +149,11 @@ CombatController.prototype.randomDrop = function(aPosition) {
     return lDrop;
 }
 
+CombatController.prototype.getPercentArray = function() {
+    // damage, health, defense, attack, zombie, skele, cap, shaman
+    return [20, 20, 20, 20, 20, 0, 0, 0, 5];
+}
+
 function getArmors() {
     return ["Robes", "Hide Armor", "Leather Armor", "Chainmail", "Plate Armor"];
 }
