@@ -105,16 +105,16 @@ Player.prototype.changeClass = function(chosenClass) {
 
 Player.prototype.lookCommand = function(){
     if(typeof this.collidingWith == "undefined"){
-        window.terminal.log("Nothing at your feet", "red");
+        window.terminal.log("Nothing at your feet", window.colors.invalid);
         return;
     }
 
-    window.terminal.log(this.collidingWith.toString(), "lime");
+    window.terminal.log(this.collidingWith.toString(), window.colors.cmdResponse);
 }
 
 Player.prototype.takeCommand = function(){
     if(typeof this.collidingWith == "undefined"){
-        window.terminal.log("Nothing to take", "red");
+        window.terminal.log("Nothing to take", window.colors.invalid);
         return;
     }
     if(this.collidingWith.type == "Weapon"){
@@ -128,10 +128,10 @@ Player.prototype.getClass = function(args){
   if(args.length > 1){
     // we have args
     this.changeClass(args[1]);
-    window.terminal.log("Changing class to " + this.class, "lime");
+    window.terminal.log("Changing class to " + this.class, window.colors.cmdResponse);
     return;
   }
-  window.terminal.log("Class: " + this.class, "lime");
+  window.terminal.log("Class: " + this.class, window.colors.cmdResponse);
 }
 
 /**

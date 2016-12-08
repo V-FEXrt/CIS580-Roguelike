@@ -3,15 +3,6 @@
 window.debug = false;
 window.gameDebug = false;
 
-window.colors = {
-    cmd: "yellow",
-    cmdResponse: "LawnGreen",
-    invalid: "red",
-    combat: "Orchid",
-    pickup: "SkyBlue",
-    
-}
-
 /* Classes and Libraries */
 const Game = require('./game');
 const EntityManager = require('./entity_manager');
@@ -38,7 +29,7 @@ window.terminal.addCommand("debug", "Toggle debug",
                            function () {
                                window.gameDebug = !window.gameDebug;
                                window.terminal.log(`Debug mode = ${window.gameDebug}`, window.colors.cmdResponse);
-                               player.godModeChanged();
+                               player.debugModeChanged();
                            });
 
 
