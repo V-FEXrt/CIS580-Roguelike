@@ -63,6 +63,7 @@ Player.prototype.debugModeChanged = function () {
     else {
         window.terminal.removeCommand("godmode");
         window.terminal.removeCommand("tp");
+        window.terminal.removeCommand("spawn");
     }
 }
 
