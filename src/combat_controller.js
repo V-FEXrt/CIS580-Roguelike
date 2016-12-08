@@ -28,7 +28,7 @@ CombatController.prototype.handleAttack = function(aAttackerClass, aDefenderClas
     var lDamageRoll = RNG.rollRandom(lDamageMin, lDamageMax);
     var lDamageBonus = Math.floor(aAttackerClass.damageBonus);
     var lDamageResist = aDefenderClass.armor.level;
-    var lDamageTotal = Math.max(lDamageBase + lDamageBonus + lDamageRoll - lDamageResist, 0); // DR shouldnt deal zero or negative damage
+    var lDamageTotal = Math.max(lDamageBase + lDamageBonus + lDamageRoll - lDamageResist, 1); // DR shouldnt deal zero or negative damage
 
     var lApplyEffect = false;
 

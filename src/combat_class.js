@@ -85,7 +85,7 @@ function CombatClass(aName) {
                 var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
 
                 // Move
-                if (distance.x > aEnemy.combat.senseRange && distance.y > aEnemy.combat.senseRange) {
+                if (distance.x > senseRange && distance.y > senseRange) {
                     var nextTile = aEnemy.tilemap.getRandomAdjacent(aEnemy.position);
                     aEnemy.position = { x: nextTile.x, y: nextTile.y };
                 } else {
@@ -118,7 +118,7 @@ function CombatClass(aName) {
                 var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
                 if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
                     combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
-                } else if (distance.x <= aEnemy.combat.senseRange && distance.y <= aEnemy.combat.senseRange) {
+                } else if (distance.x <= senseRange && distance.y <= senseRange) {
                     var path = pathfinder.findPath(aEnemy.position, aEnemy.target.position);
                     if (path.length > 1) aEnemy.position = { x: path[1].x, y: path[1].y };
                 } else {
@@ -143,7 +143,7 @@ function CombatClass(aName) {
                 var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
 
                 // Move
-                if (distance.x > aEnemy.combat.senseRange && distance.y > aEnemy.combat.senseRange) {
+                if (distance.x > senseRange && distance.y > senseRange) {
                     var nextTile = aEnemy.tilemap.getRandomAdjacent(aEnemy.position);
                     aEnemy.position = { x: nextTile.x, y: nextTile.y };
                 } else {
