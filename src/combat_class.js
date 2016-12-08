@@ -56,11 +56,11 @@ function CombatClass(aName) {
             this.status = { effect: "None", timer: 0 }
             var senseRange = 5;
 
-            this.turnAI = function (aEnemy) {
+            this.turnAI = function(aEnemy) {
                 var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
                 if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
                     combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
-                } else if (distance.x <= aEnemy.combat.senseRange && distance.y <= aEnemy.combat.senseRange) {
+                } else if (distance.x <= senseRange && distance.y <= senseRange) {
                     var path = pathfinder.findPath(aEnemy.position, aEnemy.target.position);
                     if (path.length > 1) aEnemy.position = { x: path[1].x, y: path[1].y };
                 } else {
@@ -81,7 +81,7 @@ function CombatClass(aName) {
             var senseRange = 10;
             var prefDist = 3;
 
-            this.turnAI = function (aEnemy) {
+            this.turnAI = function(aEnemy) {
                 var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
 
                 // Move
@@ -114,7 +114,7 @@ function CombatClass(aName) {
             this.status = { effect: "None", timer: 0 }
             var senseRange = 15;
 
-            this.turnAI = function (aEnemy) {
+            this.turnAI = function(aEnemy) {
                 var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
                 if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
                     combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
@@ -139,7 +139,7 @@ function CombatClass(aName) {
             var senseRange = 10;
             var prefDist = 5;
 
-            this.turnAI = function (aEnemy) {
+            this.turnAI = function(aEnemy) {
                 var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
 
                 // Move
