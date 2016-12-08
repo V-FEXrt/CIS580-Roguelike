@@ -22,17 +22,23 @@ function GUI(size) {
   this.startBackground.src = './spritesheets/start_background.png';
   this.swordHighlights = [0, 0, 0];
   this.swordYPos = [480, 576, 672];
-  
+
   this.playerHighlights = [0, 0, 0];
   this.playerXPos = [705, 849, 993];
-  
+
   this.titleMinY = 267;
   this.titleY = 267;
   this.titleMaxY = 272;
   this.titleDirection = 1;
-  
+
   this.chosenClass = "";
 }
+
+//declare gui elements
+var crest = new Image();
+var pow = new Image();
+crest.src = encodeURI('healthbar/crest.png');
+pow.src = encodeURI('healthbar/pow.png');
 
 var x, y;
 GUI.prototype.onmousemove = function(event)
@@ -136,7 +142,7 @@ GUI.prototype.update = function (time) {
 		{
 			this.titleDirection = 1;
 		}
-		
+
 		this.titleY += this.titleDirection/10;
 	}
 }
@@ -160,7 +166,7 @@ GUI.prototype.render = function (elapsedTime, ctx) {
 		1788,
 		1116
 	);
-	
+
 	//Shadow
 	ctx.drawImage(
 		this.startSprites,
@@ -169,7 +175,7 @@ GUI.prototype.render = function (elapsedTime, ctx) {
 		654, 288, //369, 192
 		480, 480
 	);
-	
+
 	//Title
 	ctx.drawImage(
 		this.startSprites,
@@ -178,7 +184,7 @@ GUI.prototype.render = function (elapsedTime, ctx) {
 		649, this.titleY,
 		576, 288
 	);
-	
+
 	//Start Game
 	ctx.drawImage(
 		this.startSprites,
@@ -187,7 +193,7 @@ GUI.prototype.render = function (elapsedTime, ctx) {
 		753 - this.swordHighlights[0]/2, 480 - this.swordHighlights[0]/2,
 		288 +this.swordHighlights[0], 96 + this.swordHighlights[0]
 	);
-	
+
 	//Controls
 	ctx.drawImage(
 		this.startSprites,
@@ -196,7 +202,7 @@ GUI.prototype.render = function (elapsedTime, ctx) {
 		753 - this.swordHighlights[1]/2, 576 - this.swordHighlights[1]/2,
 		288 +this.swordHighlights[1], 96 + this.swordHighlights[1]
 	);
-	
+
 	//Credits
 	ctx.drawImage(
 		this.startSprites,
@@ -218,7 +224,7 @@ GUI.prototype.render = function (elapsedTime, ctx) {
       1788,
       1116
     );
-	
+
     //Shadow
     ctx.drawImage(
         this.startSprites,
@@ -227,7 +233,7 @@ GUI.prototype.render = function (elapsedTime, ctx) {
         657, 357,
         480, 384
     );
-    
+
     //Nameplates
     ctx.drawImage(
       this.startSprites,
@@ -236,8 +242,8 @@ GUI.prototype.render = function (elapsedTime, ctx) {
       561, 288,
       672, 480
     );
-	
-	ctx.fillStyle = "lightgrey";   
+
+	ctx.fillStyle = "lightgrey";
     ctx.strokeStyle = "grey";
     ctx.lineWidth =  10;
 
@@ -247,7 +253,7 @@ GUI.prototype.render = function (elapsedTime, ctx) {
     var y = this.size.height/3;
     ctx.font = "20px Arial"
     ctx.fillStyle = "black"
-	
+
 	//Knight
     ctx.drawImage(
       this.playerSprites,
@@ -256,7 +262,7 @@ GUI.prototype.render = function (elapsedTime, ctx) {
       this.playerXPos[0] - this.playerHighlights[0]/2, 474 - this.playerHighlights[0]/2,
       96 + this.playerHighlights[0], 96 + this.playerHighlights[0]
     );
-    
+
 	//Archer
     ctx.drawImage(
       this.playerSprites,
@@ -265,7 +271,7 @@ GUI.prototype.render = function (elapsedTime, ctx) {
       this.playerXPos[1]  - this.playerHighlights[1]/2, 474  - this.playerHighlights[1]/2,
 	  96 + this.playerHighlights[1], 96 + this.playerHighlights[1]
     );
-    
+
 	//Mage
     ctx.drawImage(
       this.playerSprites,
@@ -277,14 +283,62 @@ GUI.prototype.render = function (elapsedTime, ctx) {
   }
   else if(this.state == "paused")
   {
-    
+
   }
   else if(this.state == "playing")
   {
-    
-  }
+    ctx.save();
+
+    ctx.fillStyle = "black";
+    ctx.fillRect(0, 1056, 1057, 60);
+
+    ctx.fillStyle = "white";
+    ctx.fillRect(0, 1056, 1057, 2);
+
+    ctx.fillStyle = "red";
+    ctx.fillRect(6, 1078, 40, 20);
+    ctx.fillRect(16, 1068, 20, 40);
+
+    ctx.font = "55px Arial black";
+    ctx.fillStyle = "red"
+    if(window.player.combat.health < 1000) ctx.fillText(window.player.combat.health, 50, 1107);
+    else ctx.fillText(999, 50, 1107);
+
+    ctx.drawImage(crest, 180, 1061);
+
+    ctx.font = "25px Arial Black";
+    ctx.fillStyle = "green";
+    if(window.player.combat.armor.defense < 10) ctx.fillText(window.player.combat.armor.defense, 192.5, 1093);
+    else ctx.fillText(window.player.combat.armor.defense, 184.5, 1093);
+
+    ctx.beginPath();
+    ctx.lineWidth = "1";
+    ctx.strokeStyle = "white";
+    ctx.rect(235, 1066, 340, 40);
+    ctx.stroke();
+
+    ctx.fillStyle = "white";
+    ctx.fillText(window.player.combat.armor.name, 242.5, 1094.5)
+
+    ctx.fillStyle = "green";
+    ctx.drawImage(pow, 580, 1061);
+    if(window.player.combat.weapon.level < 10) ctx.fillText(window.player.combat.weapon.level, 607, 1095);
+    else ctx.fillText(window.player.combat.weapon.level, 600, 1095)
+
+    ctx.beginPath();
+    ctx.lineWidth = "1";
+    ctx.strokeStyle = "white";
+    ctx.rect(658, 1066, 391, 40);
+    ctx.stroke();
+
+    ctx.font = "14px Arial Black";
+    ctx.fillStyle = "white";
+    ctx.fillText(window.player.combat.weapon.name + " -- Damage Range: " + window.player.combat.weapon.damageMin + "-" + window.player.combat.weapon.damageMax, 665.5, 1082);
+    ctx.fillText(window.player.combat.weapon.properties, 665.5, 1099);
+
+    }
   else if(this.state == "game over")
   {
-    
+
   }
 }
