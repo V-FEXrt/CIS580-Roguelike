@@ -198,6 +198,13 @@ var masterLoop = function(timestamp) {
  * the number of milliseconds passed since the last frame.
  */
 function update(elapsedTime) {
+
+    if(player.shouldEndGame){
+      player.shouldEndGame = false;
+      gui.state = "start";
+      gui.chosenClass = "";
+    }
+
     gui.update(elapsedTime);
     if (input.left || input.right || input.up || input.down || autoTurn) {
         turnTimer += elapsedTime;
