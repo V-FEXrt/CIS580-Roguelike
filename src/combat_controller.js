@@ -92,7 +92,7 @@ CombatController.prototype.handleAttack = function(aAttackerClass, aDefenderClas
     window.terminal.log(message, window.colors.combat);
     if (lApplyEffect) {
         aDefenderClass.status.effect = lAttackEffect;
-        aDefenderClass.status.timer = 2;
+        aDefenderClass.status.timer = 3;
         window.terminal.log(`The ${defender} is now ${lAttackEffect}.`, window.colors.combat);
     }
 }
@@ -112,19 +112,14 @@ CombatController.prototype.handleStatus = function(aCombatClass) {
             break;
 
         case "Frozen":
-            switch (aCombatClass.status.timer) {
-                case 2:
-                    aCombatClass.status.timer--;
-                    window.terminal.log("Frozen", window.colors.combat);
-                    return;
-
-                case 1:
-                    if (RNG.rollWeighted(50, 50)) aCombatClass.status.timer--;
-                    else window.terminal.log("Frozen", window.colors.combat);
-
-                case 0:
-                    aCombatClass.status.effect = "None";
-                    break;
+            if (aCombatClass.status.timer > 1) {
+                aCombatClass.status.timer--;
+                window.terminal.log(`The ${aCombatClass.name} is Frozen solid!`, window.colors.combat);
+            } else if (aCombatClass.status.timer == 1) {
+                if (RNG.rollWeighted(50, 50)) aCombatClass.status.timer--;
+                else window.terminal.log(`The ${aCombatClass.name} is Frozen solid!`, window.colors.combat);
+            } else {
+                aCombatClass.status.effect = "None";
             }
             break;
 

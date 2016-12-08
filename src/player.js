@@ -29,6 +29,7 @@ function Player(position, tilemap, combatClass) {
     this.changeClass(combatClass);
     this.level = 0;
     this.shouldProcessTurn = true;
+    this.shouldEndGame = false;
 
     window.terminal.addCommand("class", "Get your player class", this.getClass.bind(this));
     window.terminal.addCommand("kill", "Kill yourself", this.killPlayer.bind(this));
@@ -39,9 +40,13 @@ function Player(position, tilemap, combatClass) {
  * {DOMHighResTimeStamp} time the elapsed time since the last frame
  */
 Player.prototype.update = function (time) {
-    // if we're dead, we should probably do something
-    if (this.combat.health <= 0) this.state = "dead";
+    if (this.combat.health <= 0 && this.state != "dead"){
+      this.state = "dead";
+      this.shouldEndGame = true;
+    }
+}
 
+Player.prototype.debugModeChanged = function(){
     if (window.gameDebug) {
         window.terminal.addCommand("godmode", "Make yourself invincible",
             function () {
@@ -80,10 +85,12 @@ Player.prototype.walkPath = function (path, completion) {
 //Changes the player class, used because right now things
 //rely on player being created before class is actually chosen.
 //Potentially change this
-Player.prototype.changeClass = function (chosenClass) {
+Player.prototype.changeClass = function(chosenClass) {
+    this.level = 0;
     this.class = chosenClass;
     this.combat = new CombatClass(chosenClass);
     this.inventory = new Inventory(this.combat.weapon, this.combat.armor);
+    this.state = "idle";
 
     if (this.class == "Knight") {
         this.spritesheetPos = { x: 1, y: 5 };
@@ -111,7 +118,6 @@ Player.prototype.getClass = function (args) {
 Player.prototype.processTurn = function (input) {
     if (!this.shouldProcessTurn) return;
     if (this.combat.status.effect != "None") window.combatController.handleStatus(this.combat);
-    if (this.combat.health <= 0) this.state = "dead";
     if (this.state == "dead" || this.combat.status.effect == "Frozen") return;
 
     if (hasUserInput(input)) {
@@ -163,8 +169,9 @@ Player.prototype.collided = function (entity) {
     }
 }
 
-Player.prototype.retain = function () {
-    return this.combat.health > 0;
+
+Player.prototype.retain = function() {
+    return !this.shouldEndGame;
 }
 
 /**
