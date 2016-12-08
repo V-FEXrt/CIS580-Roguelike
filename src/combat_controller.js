@@ -89,11 +89,11 @@ CombatController.prototype.handleAttack = function(aAttackerClass, aDefenderClas
     }
 
     if (aDefenderClass.health <= 0) message = message.replace(".", ", killing it.");
-    window.terminal.log(message);
+    window.terminal.log(message, window.colors.combat);
     if (lApplyEffect) {
         aDefenderClass.status.effect = lAttackEffect;
         aDefenderClass.status.timer = 2;
-        window.terminal.log(`The ${defender} is now ${lAttackEffect}.`);
+        window.terminal.log(`The ${defender} is now ${lAttackEffect}.`, window.colors.combat);
     }
 }
 
@@ -105,7 +105,7 @@ CombatController.prototype.handleStatus = function(aCombatClass) {
                 aCombatClass.status.timer--;
                 var damage = RNG.rollMultiple(1, 5, window.player.level);
                 aCombatClass.health -= damage;
-                window.terminal.log(`${damage} ${aCombatClass.status.effect.substring(0, aCombatClass.status.effect.length - 2)} damage.`);
+                window.terminal.log(`${damage} ${aCombatClass.status.effect.substring(0, aCombatClass.status.effect.length - 2)} damage.`, window.colors.combat);
             } else {
                 aCombatClass.status.effect == "None";
             }
@@ -115,12 +115,12 @@ CombatController.prototype.handleStatus = function(aCombatClass) {
             switch (aCombatClass.status.timer) {
                 case 2:
                     aCombatClass.status.timer--;
-                    window.terminal.log("Frozen");
+                    window.terminal.log("Frozen", window.colors.combat);
                     return;
 
                 case 1:
                     if (RNG.rollWeighted(50, 50)) aCombatClass.status.timer--;
-                    else window.terminal.log("Frozen");
+                    else window.terminal.log("Frozen", window.colors.combat);
 
                 case 0:
                     aCombatClass.status.effect = "None";
