@@ -20,6 +20,11 @@ const Terminal = require('./terminal.js');
 const SFX = require("./sfx");
 
 /* Global variables */
+// Terminal MUST be defined first so that anyone can add commands at any point
+window.terminal = new Terminal();
+window.terminal.log("Welcome to Roguelike");
+window.terminal.log("Good luck!");
+
 var canvas = document.getElementById('screen');
 var game = new Game(canvas, update, render);
 window.sfx = new SFX();
@@ -29,10 +34,6 @@ var isFadeOut = true;
 var screenSize = { width: 1056, height: 1056 };
 
 window.combatController = new CombatController();
-
-window.terminal = new Terminal();
-window.terminal.log("Welcome to Roguelike");
-window.terminal.log("Good luck!");
 
 var gui = new GUI(screenSize);
 
@@ -198,6 +199,13 @@ var masterLoop = function(timestamp) {
  * the number of milliseconds passed since the last frame.
  */
 function update(elapsedTime) {
+
+    if(player.shouldEndGame){
+      player.shouldEndGame = false;
+      gui.state = "start";
+      gui.chosenClass = "";
+    }
+
     gui.update(elapsedTime);
     if (input.left || input.right || input.up || input.down || autoTurn) {
         turnTimer += elapsedTime;

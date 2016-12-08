@@ -69,7 +69,8 @@ Terminal.prototype.onkeydown = function (event) {
       this.input = "";
       this.active = false;
     default:
-      if(this.active) this.input = this.input.concat(event.key);
+      if(event.key.length > 1) return;
+      if(this.active) this.input = this.input.concat(event.key)
   }
 
   return this.active;
@@ -96,10 +97,11 @@ Terminal.prototype.helpCommand = function(){
 }
 
 Terminal.prototype.processInput = function () {
-    this.log(this.input, "yellow");
+    var args = this.input.split(' ');
+    this.log(args[0], "yellow");
 
-    if(this.input in this.commands){
-        this.commands[this.input].callback();
+    if(args[0] in this.commands){
+        this.commands[args[0]].callback(args);
         return;
     }
 
