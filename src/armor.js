@@ -86,6 +86,6 @@ Armor.prototype.render = function(time, ctx) {
 
 }
 
-Armor.prototype.toString = function () {
+Armor.prototype.toString = function() {
     return `Level ${this.level} ${this.name} with ${this.defense} defense`;
 }

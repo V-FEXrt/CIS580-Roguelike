@@ -33,17 +33,6 @@ Inventory.prototype.addWeapon = function(weapon) {
     weaponToDrop.position = window.player.position;
     weaponToDrop.shouldRetain = true;
     window.entityManager.addEntity(weaponToDrop);
-
-
-    // Commented out until we figure out what to do...
-    // if(this.inventory.length >= 17) { /* Tell GUI that inventory is full */ }
-    // if(weapon.type.damageMax > this.inventory[0].type.damageMax) { // This needs to be changed to prompting the user, I'll wait until there's a working GUI class to do that
-    //     this.inventory.push(this.inventory[0]);
-    //     this.inventory[0] = weapon;
-    // }
-    // else {
-    //     this.inventory.push(weapon);
-    // }
 }
 
 /**
@@ -62,33 +51,6 @@ Inventory.prototype.addArmor = function(armor) {
     armorToDrop.position = window.player.position;
     armorToDrop.shouldRetain = true;
     window.entityManager.addEntity(armorToDrop);
-
-
-    // Commented out until we figure out what to do...
-    // if(this.inventory.length >= 17) { /* Tell GUI that inventory is full */ }
-    // if(armor.type.defense > this.inventory[1].type.defense) { // See line 25
-    //     this.inventory.push(this.inventory[1]);
-    //     this.inventory[1] = armor;
-    // }
-    // else {
-    //     this.inventory.push(armor);
-    // }
-}
-
-/**
- * @function power up the equipped weapon
- *
- */
-Inventory.prototype.powerupWeapon = function(damage) {
-    this.inventory[0].type.damageMax += damage;
-}
-
-/**
- * @function power up the equipped armor
- *
- */
-Inventory.prototype.powerupArmor = function(defense) {
-    this.inventory[1].type.defense += defense;
 }
 
 /**
@@ -108,11 +70,11 @@ Inventory.prototype.removeItem = function(item) {
     this.inventory.remove(this.inventory.indexOf(item));
 }
 
-Inventory.prototype.weaponCommand = function () {
+Inventory.prototype.weaponCommand = function() {
     window.terminal.log(this.inventory[0].toString(), window.colors.cmdResponse);
 }
 
-Inventory.prototype.armorCommand = function () {
+Inventory.prototype.armorCommand = function() {
     window.terminal.log(this.inventory[1].toString(), window.colors.cmdResponse);
 }
 

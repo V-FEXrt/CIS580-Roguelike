@@ -165,3 +165,4 @@ function getWeapons(aClass) {
             return ["Magic Missile", "Fireball", "Frostbolt", "Eldritch Blast"];
     }
 }
+
