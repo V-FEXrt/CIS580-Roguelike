@@ -475,11 +475,15 @@ window.terminal = new Terminal();
 window.terminal.log("Welcome to Roguelike");
 window.terminal.log("Good luck!");
 window.terminal.addCommand("debug", "Toggle debug",
-                           function () {
-                               window.gameDebug = !window.gameDebug;
-                               window.terminal.log(`Debug mode = ${window.gameDebug}`, window.colors.cmdResponse);
-                               player.debugModeChanged();
-                           });
+    function (args) {
+        if (args.length == 1) window.terminal.log("You do not have permission to use this command", window.colors.invalid);
+        else if (args[1] != 4747) window.terminal.log("Nice try, but that's incorrect", window.colors.invalid);
+        else {
+            window.gameDebug = !window.gameDebug;
+            window.terminal.log(`Debug mode set to ${window.gameDebug}`, window.colors.cmdResponse);
+            player.debugModeChanged();
+        }
+    });
 
 
 var canvas = document.getElementById('screen');
@@ -658,10 +662,10 @@ var masterLoop = function (timestamp) {
  */
 function update(elapsedTime) {
 
-    if(player.shouldEndGame){
-      player.shouldEndGame = false;
-      gui.state = "start";
-      gui.chosenClass = "";
+    if (player.shouldEndGame) {
+        player.shouldEndGame = false;
+        gui.state = "start";
+        gui.chosenClass = "";
     }
 
     gui.update(elapsedTime);
@@ -2561,8 +2565,8 @@ Player.prototype.teleportCommand = function (args) {
         if (args[2].charAt(0) == "*") y = parseInt(args[2].slice(1)) + parseInt(this.position.y);
         else y = args[2];
         window.terminal.log(`Teleporting player to x: ${x} y: ${y}`, window.colors.cmdResponse);
-        window.player.position.x = x;
-        window.player.position.y = y;
+        window.player.position.x = parseInt(x);
+        window.player.position.y = parseInt(y);
         tilemap.moveTo({ x: x - 5, y: y - 5 });
     }
 }

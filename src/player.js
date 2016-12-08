@@ -75,8 +75,8 @@ Player.prototype.teleportCommand = function (args) {
         if (args[2].charAt(0) == "*") y = parseInt(args[2].slice(1)) + parseInt(this.position.y);
         else y = args[2];
         window.terminal.log(`Teleporting player to x: ${x} y: ${y}`, window.colors.cmdResponse);
-        window.player.position.x = x;
-        window.player.position.y = y;
+        window.player.position.x = parseInt(x);
+        window.player.position.y = parseInt(y);
         tilemap.moveTo({ x: x - 5, y: y - 5 });
     }
 }
