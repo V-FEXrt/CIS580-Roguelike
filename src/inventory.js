@@ -25,11 +25,12 @@ Inventory.prototype.addWeapon = function(weapon) {
     checkWeapon(weapon);
     if (checkInvalidWeapon(window.player.class, weapon.attackType)) return;
 
+    weapon.shouldRetain = false;
     window.terminal.log("Picked up a " + weapon.toString(), window.colors.pickup);
     var weaponToDrop = this.inventory[0];
     this.inventory[0] = weapon;
     window.player.combat.weapon = weapon;
-    weaponToDrop.position = window.player.tilemap.getRandomAdjacent(weapon.position);
+    weaponToDrop.position = window.player.position;
     weaponToDrop.shouldRetain = true;
     window.entityManager.addEntity(weaponToDrop);
 
@@ -53,11 +54,12 @@ Inventory.prototype.addArmor = function(armor) {
     checkArmor(armor);
     if (checkInvalidArmor(window.player.class, armor.name)) return;
 
+    armor.shouldRetain = false;
     window.terminal.log("Picked up " + armor.toString(), window.colors.pickup);
     var armorToDrop = this.inventory[1];
     this.inventory[1] = armor;
     window.player.combat.armor = armor;
-    armorToDrop.position = window.player.tilemap.getRandomAdjacent(armor.position);
+    armorToDrop.position = window.player.position;
     armorToDrop.shouldRetain = true;
     window.entityManager.addEntity(armorToDrop);
 

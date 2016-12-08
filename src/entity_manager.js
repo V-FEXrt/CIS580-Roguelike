@@ -10,7 +10,7 @@ module.exports = exports = EntityManager;
  * Creates a new EntityManager object
  */
 function EntityManager() {
-  this.entities = [];
+    this.entities = [];
 }
 
 EntityManager.prototype.addEntity = function(entity) {
@@ -104,9 +104,17 @@ EntityManager.prototype.update = function(elapsedTime) {
 }
 
 EntityManager.prototype.render = function(elapsedTime, ctx) {
+  var player;
   this.entities.forEach(function(entity){
+    if(entity.type == "Player"){
+        player = entity;
+        return; // because this is a function return is the same as continue
+    }
     entity.render(elapsedTime, ctx);
   });
+
+  // render player last so that it is rendered on top of items
+  if(typeof player != "undefined") player.render(elapsedTime, ctx);
 }
 
 EntityManager.prototype.processTurn = function(input) {
