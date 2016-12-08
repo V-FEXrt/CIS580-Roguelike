@@ -3,6 +3,15 @@
 window.debug = false;
 window.gameDebug = false;
 
+window.colors = {
+    cmd: "yellow",
+    cmdResponse: "LawnGreen",
+    invalid: "red",
+    combat: "Orchid",
+    pickup: "SkyBlue",
+    
+}
+
 /* Classes and Libraries */
 const Game = require('./game');
 const EntityManager = require('./entity_manager');
@@ -38,10 +47,7 @@ window.terminal.log("Good luck!");
 window.terminal.addCommand("debug", "Toggle debug",
     function () {
         window.gameDebug = !window.gameDebug;
-    });
-window.terminal.addCommand("kill", "Kill yourself",
-    function () {
-        window.player.combat.health = 0;
+        window.terminal.log(`Debug mode = ${window.gameDebug}`, window.colors.cmdResponse);
     });
 
 var gui = new GUI(screenSize);
@@ -222,26 +228,11 @@ function update(elapsedTime) {
     if (window.gameDebug) {
         window.terminal.addCommand("door", "Get the coordinates of the exit door",
             function () {
-                window.terminal.log("The coordinates of the exit door are x: " + stairs.position.x + " y: " + stairs.position.y);
-            });
-        window.terminal.addCommand("godmode", "Make yourself invincible",
-            function () {
-                window.player.combat.health = Number.POSITIVE_INFINITY;
-            });
-        window.terminal.addCommand("tp", "Teleport to the specified coordinates",
-            function (args) {
-                if(args == 1) {
-                    // Invalid command
-                }
-                else {
-                    window.player.position.x = args[1];
-                    window.player.position.y = args[2];
-                }
+                window.terminal.log(`The coordinates of the exit door are x: ${stairs.position.x} y: ${stairs.position.y}`, window.colors.cmdResponse);
             });
     }
     else {
         window.terminal.removeCommand("door");
-        window.terminal.removeCommand("godmode");
     }
 }
 

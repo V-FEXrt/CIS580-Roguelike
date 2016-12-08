@@ -452,6 +452,15 @@ function pickAdjacent(room) {
 window.debug = false;
 window.gameDebug = false;
 
+window.colors = {
+    cmd: "yellow",
+    cmdResponse: "LawnGreen",
+    invalid: "red",
+    combat: "Orchid",
+    pickup: "SkyBlue",
+    
+}
+
 /* Classes and Libraries */
 const Game = require('./game');
 const EntityManager = require('./entity_manager');
@@ -487,10 +496,7 @@ window.terminal.log("Good luck!");
 window.terminal.addCommand("debug", "Toggle debug",
     function () {
         window.gameDebug = !window.gameDebug;
-    });
-window.terminal.addCommand("kill", "Kill yourself",
-    function () {
-        window.player.combat.health = 0;
+        window.terminal.log(`Debug mode = ${window.gameDebug}`, window.colors.cmdResponse);
     });
 
 var gui = new GUI(screenSize);
@@ -671,26 +677,11 @@ function update(elapsedTime) {
     if (window.gameDebug) {
         window.terminal.addCommand("door", "Get the coordinates of the exit door",
             function () {
-                window.terminal.log("The coordinates of the exit door are x: " + stairs.position.x + " y: " + stairs.position.y);
-            });
-        window.terminal.addCommand("godmode", "Make yourself invincible",
-            function () {
-                window.player.combat.health = Number.POSITIVE_INFINITY;
-            });
-        window.terminal.addCommand("tp", "Teleport to the specified coordinates",
-            function (args) {
-                if(args == 1) {
-                    // Invalid command
-                }
-                else {
-                    window.player.position.x = args[1];
-                    window.player.position.y = args[2];
-                }
+                window.terminal.log(`The coordinates of the exit door are x: ${stairs.position.x} y: ${stairs.position.y}`, window.colors.cmdResponse);
             });
     }
     else {
         window.terminal.removeCommand("door");
-        window.terminal.removeCommand("godmode");
     }
 }
 
@@ -808,10 +799,10 @@ function unfadeFromBlack() {
 
 module.exports = exports = Armor;
 
-function Armor(aName) {
+function Armor(aName, aLevel) {
     this.type = "Armor";
     this.name = aName;
-    this.level = 0;
+    this.level = aLevel;
     this.shouldRetain = true;
 
     switch (aName) {
@@ -862,29 +853,29 @@ function Armor(aName) {
     this.movingUp = true;
 }
 
-Armor.prototype.collided = function (aEntity) {
+Armor.prototype.collided = function(aEntity) {
     if (aEntity.type == "Player") {
         aEntity.inventory.addArmor(this);
         this.shouldRetain = false;
     }
 }
 
-Armor.prototype.processTurn = function () {
+Armor.prototype.processTurn = function() {
 
 }
 
-Armor.prototype.retain = function () {
+Armor.prototype.retain = function() {
     return this.shouldRetain;
 }
 
-Armor.prototype.update = function () {
+Armor.prototype.update = function() {
     if (this.currY >= 5) this.movingUp = false;
     else if (this.currY <= -5) this.movingUp = true;
     if (this.movingUp) this.currY += .2;
     else this.currY -= .2;
 }
 
-Armor.prototype.render = function (time, ctx) {
+Armor.prototype.render = function(time, ctx) {
     var position = window.tilemap.toScreenCoords(this.position);
     ctx.drawImage(this.spritesheet, 305, 225, 75, 75, (position.x * this.size.width), (position.y * this.size.height) + this.currY, 96, 96);
 
@@ -967,8 +958,7 @@ function CombatClass(aName) {
             this.damageBonus = 0;
             this.defenseBonus = 0;
             this.weapon = new Weapon("Longsword", 1);
-            this.armor = new Armor("Hide Armor"); // No restrictions on Armor types
-            this.attackType = "Melee";
+            this.armor = new Armor("Hide Armor", 1);
             this.status = { effect: "None", timer: 0 }
             break;
 
@@ -978,8 +968,7 @@ function CombatClass(aName) {
             this.damageBonus = 0;
             this.defenseBonus = 0;
             this.weapon = new Weapon("Broadhead", 1);
-            this.armor = new Armor("Hide Armor"); // Can't wear Chain or Plate
-            this.attackType = "Ranged";
+            this.armor = new Armor("Hide Armor", 1);
             this.status = { effect: "None", timer: 0 }
             break;
 
@@ -989,8 +978,7 @@ function CombatClass(aName) {
             this.damageBonus = 0;
             this.defenseBonus = 0;
             this.weapon = new Weapon("Eldritch Blast", 1);
-            this.armor = new Armor("Robes"); // Can only wear Robes, nothing else
-            this.attackType = "Magic";
+            this.armor = new Armor("Robes", 1);
             this.status = { effect: "None", timer: 0 }
             break;
 
@@ -1001,8 +989,7 @@ function CombatClass(aName) {
             this.damageBonus = 0;
             this.defenseBonus = 0;
             this.weapon = new Weapon("Claw", 1);
-            this.armor = new Armor("Flesh");
-            this.attackType = "Melee";
+            this.armor = new Armor("Flesh", 1);
             this.status = { effect: "None", timer: 0 }
             this.senseRange = 5;
 
@@ -1026,8 +1013,7 @@ function CombatClass(aName) {
             this.damageBonus = 0;
             this.defenseBonus = 0;
             this.weapon = new Weapon("Broadhead", 1);
-            this.armor = new Armor("Hide Armor");
-            this.attackType = "Ranged";
+            this.armor = new Armor("Hide Armor", 1);
             this.status = { effect: "None", timer: 0 }
             this.senseRange = 10;
 
@@ -1051,8 +1037,7 @@ function CombatClass(aName) {
             this.damageBonus = 0;
             this.defenseBonus = 0;
             this.weapon = new Weapon("Battleaxe", 1);
-            this.armor = new Armor("Chainmail");
-            this.attackType = "Melee";
+            this.armor = new Armor("Chainmail", 1);
             this.status = { effect: "None", timer: 0 }
             this.senseRange = 15;
 
@@ -1076,8 +1061,7 @@ function CombatClass(aName) {
             this.damageBonus = 0;
             this.defenseBonus = 0;
             this.weapon = new Weapon("Eldritch Blast", 1);
-            this.armor = new Armor("Robes");
-            this.attackType = "Magic";
+            this.armor = new Armor("Robes", 1);
             this.status = { effect: "None", timer: 0 }
             this.senseRange = 10;
 
@@ -1128,7 +1112,8 @@ CombatController.prototype.handleAttack = function(aAttackerClass, aDefenderClas
     var lDamageMin = aAttackerClass.weapon.damageMin;
     var lDamageRoll = RNG.rollRandom(lDamageMin, lDamageMax);
     var lDamageBonus = Math.floor(aAttackerClass.damageBonus);
-    var lDamageTotal = lDamageBase + lDamageBonus + lDamageRoll;
+    var lDamageResist = aDefenderClass.armor.level;
+    var lDamageTotal = Math.max(lDamageBase + lDamageBonus + lDamageRoll - lDamageResist, 0); // DR shouldnt deal zero or negative damage
 
     var lApplyEffect = false;
 
@@ -1152,7 +1137,7 @@ CombatController.prototype.handleAttack = function(aAttackerClass, aDefenderClas
         } else { // attacker is enemy
             message = `The ${attacker} critically fails its attack and takes ${lSelfDamage} damage.`;
         }
-    } else if (lAttackRoll == 20 || (lAttackRoll == 19 && (aAttackerClass.attackType == "Ranged" || aAttackerClass.weapon.name == "Battleaxe"))) {
+    } else if (lAttackRoll == 20 || (lAttackRoll == 19 && (aAttackerClass.weapon.attackType == "Ranged" || aAttackerClass.weapon.name == "Battleaxe"))) {
         lDamageTotal += lDamageMax;
         aDefenderClass.health -= lDamageTotal;
         // defender hit, play defender hit sound
@@ -1189,11 +1174,11 @@ CombatController.prototype.handleAttack = function(aAttackerClass, aDefenderClas
     }
 
     if (aDefenderClass.health <= 0) message = message.replace(".", ", killing it.");
-    window.terminal.log(message);
+    window.terminal.log(message, window.colors.combat);
     if (lApplyEffect) {
         aDefenderClass.status.effect = lAttackEffect;
         aDefenderClass.status.timer = 2;
-        window.terminal.log(`The ${defender} is now ${lAttackEffect}.`);
+        window.terminal.log(`The ${defender} is now ${lAttackEffect}.`, window.colors.combat);
     }
 }
 
@@ -1205,7 +1190,7 @@ CombatController.prototype.handleStatus = function(aCombatClass) {
                 aCombatClass.status.timer--;
                 var damage = RNG.rollMultiple(1, 5, window.player.level);
                 aCombatClass.health -= damage;
-                window.terminal.log(`${damage} ${aCombatClass.status.effect.substring(0, aCombatClass.status.effect.length - 2)} damage.`);
+                window.terminal.log(`${damage} ${aCombatClass.status.effect.substring(0, aCombatClass.status.effect.length - 2)} damage.`, window.colors.combat);
             } else {
                 aCombatClass.status.effect == "None";
             }
@@ -1215,12 +1200,12 @@ CombatController.prototype.handleStatus = function(aCombatClass) {
             switch (aCombatClass.status.timer) {
                 case 2:
                     aCombatClass.status.timer--;
-                    window.terminal.log("Frozen");
+                    window.terminal.log("Frozen", window.colors.combat);
                     return;
 
                 case 1:
                     if (RNG.rollWeighted(50, 50)) aCombatClass.status.timer--;
-                    else window.terminal.log("Frozen");
+                    else window.terminal.log("Frozen", window.colors.combat);
 
                 case 0:
                     aCombatClass.status.effect = "None";
@@ -1235,33 +1220,18 @@ CombatController.prototype.handleStatus = function(aCombatClass) {
 
 CombatController.prototype.randomDrop = function(aPosition) {
     var lDrop = new Object();
-    var lRand = RNG.rollRandom(1, 20); // need to set up weighted rands
+    var lRand = RNG.rollRandom(1, 20);
+    var level = window.player.level + RNG.rollWeighted(50, 40, 10);
+
     if (lRand > 17) {                           // spawn armor
-        lDrop.type = "Armor";
-        // TODO > properly implement...
-        lDrop = new Armor("Leather Armor");
-    } else if (lRand >= 1 && lRand < 17) {      // spawn weapon
-        lDrop.type = "Weapon";
-        var playerClass = window.player.class;
-        var level = RNG.rollRandom(window.player.level, window.player.level + 2); // need to set up weighted rands
-        switch (lRand % 4) {
-            // this is awful, why is this still here?
-            case 0:
-                lDrop = (playerClass == "Knight") ? new Weapon("Longsword", level) : (playerClass == "Archer") ? new Weapon("Bodkin", level) : new Weapon("Magic Missile", level);
-                break;
-
-            case 1:
-                lDrop = (playerClass == "Knight") ? new Weapon("Morning Star", level) : (playerClass == "Archer") ? new Weapon("Broadhead", level) : new Weapon("Fireball", level);
-                break;
-
-            case 2:
-                lDrop = (playerClass == "Knight") ? new Weapon("Halberd", level) : (playerClass == "Archer") ? new Weapon("Poison-Tipped", level) : new Weapon("Frostbolt", level);
-                break;
-
-            case 3:
-                lDrop = (playerClass == "Knight") ? new Weapon("Battleaxe", level) : (playerClass == "Archer") ? new Weapon("Heavy Bolts", level) : new Weapon("Eldritch Blast", level);
-                break;
-        }
+        var armorArray = getArmors();
+        var robesChance = (window.player.class == "Mage") ? 30 : 10;
+        var armorRand = RNG.rollWeighted(robesChance, 35, 35, 10, 5);
+        lDrop = new Armor(armorArray[armorRand], level);
+    } else if (lRand > 1 && lRand < 17) {       // spawn weapon
+        var weaponArray = getWeapons(window.player.class); // TODO > Can spawn other classes weapons for fluff once invalid check is implemented
+        var weaponRand = RNG.rollRandom(0, weaponArray.length - 1);
+        lDrop = new Weapon(weaponArray[weaponRand], level);
     } else {                                    // dont spawn anything
         lDrop.type = "None";
     }
@@ -1269,7 +1239,22 @@ CombatController.prototype.randomDrop = function(aPosition) {
     return lDrop;
 }
 
+function getArmors() {
+    return ["Robes", "Hide Armor", "Leather Armor", "Chainmail", "Plate Armor"];
+}
 
+function getWeapons(aClass) {
+    switch (aClass) {
+        case "Knight":
+            return ["Longsword", "Morning Star", "Halberd", "Battleaxe"];
+
+        case "Archer":
+            return ["Bodkin", "Broadhead", "Poison-Tipped", "Heavy Bolts"];
+
+        case "Mage":
+            return ["Magic Missile", "Fireball", "Frostbolt", "Eldritch Blast"];
+    }
+}
 },{"./armor":5,"./combat_class":7,"./rng":20,"./weapon":26}],9:[function(require,module,exports){
 "use strict";
 
@@ -1954,11 +1939,11 @@ function Inventory(weapon, armor) {
  * @function processes a new weapon item
  *
  */
-Inventory.prototype.addWeapon = function (weapon) {
+Inventory.prototype.addWeapon = function(weapon) {
     checkWeapon(weapon);
-    // check for invalids
+    if (checkInvalidWeapon(window.player.class, weapon.attackType)) return;
 
-    window.terminal.log(`Picked up a level ${weapon.level} ${weapon.name} with damage range ${weapon.damageMin}-${weapon.damageMax}, with ${weapon.properties}.`);
+    window.terminal.log("Picked up a " + weapon.toString(), window.colors.pickup);
     var weaponToDrop = this.inventory[0];
     this.inventory[0] = weapon;
     window.player.combat.weapon = weapon;
@@ -1982,15 +1967,11 @@ Inventory.prototype.addWeapon = function (weapon) {
  * @function processes a new armor item
  *
  */
-Inventory.prototype.addArmor = function (armor) {
+Inventory.prototype.addArmor = function(armor) {
     checkArmor(armor);
-    // check for invalids
-    if (player.class == "Mage" && armor.name != "Robes") {
-        window.terminal.log("Mages don't wear armor...");
-        return;
-    }
+    if (checkInvalidArmor(window.player.class, armor.name)) return;
 
-    window.terminal.log(`Picked up level ${armor.level} ${armor.name}.`);
+    window.terminal.log("Picked up " + armor.toString(), window.colors.pickup);
     var armorToDrop = this.inventory[1];
     this.inventory[1] = armor;
     window.player.combat.armor = armor;
@@ -2014,7 +1995,7 @@ Inventory.prototype.addArmor = function (armor) {
  * @function power up the equipped weapon
  *
  */
-Inventory.prototype.powerupWeapon = function (damage) {
+Inventory.prototype.powerupWeapon = function(damage) {
     this.inventory[0].type.damageMax += damage;
 }
 
@@ -2022,7 +2003,7 @@ Inventory.prototype.powerupWeapon = function (damage) {
  * @function power up the equipped armor
  *
  */
-Inventory.prototype.powerupArmor = function (defense) {
+Inventory.prototype.powerupArmor = function(defense) {
     this.inventory[1].type.defense += defense;
 }
 
@@ -2030,7 +2011,7 @@ Inventory.prototype.powerupArmor = function (defense) {
  * @function add item to inventory
  *
  */
-Inventory.prototype.addItem = function (item) {
+Inventory.prototype.addItem = function(item) {
     if (this.inventory.length >= 17) { /* Tell GUI inventory is full */ }
     this.inventory.push(item);
 }
@@ -2039,16 +2020,16 @@ Inventory.prototype.addItem = function (item) {
  * @function remove item from inventory
  *
  */
-Inventory.prototype.removeItem = function (item) {
+Inventory.prototype.removeItem = function(item) {
     this.inventory.remove(this.inventory.indexOf(item));
 }
 
 Inventory.prototype.weaponCommand = function () {
-    window.terminal.log(this.inventory[0].toString());
+    window.terminal.log(this.inventory[0].toString(), window.colors.cmdResponse);
 }
 
 Inventory.prototype.armorCommand = function () {
-    window.terminal.log(this.inventory[1].toString());
+    window.terminal.log(this.inventory[1].toString(), window.colors.cmdResponse);
 }
 
 /**
@@ -2092,6 +2073,73 @@ function failWeapon() {
 function failArmor() {
     throw new Error("Item doesn't match type definition for 'Armor'");
 }
+
+function checkInvalidWeapon(aClass, aWeaponType) { // class just for cleanliness
+    var lResult = false;
+    switch (aClass) {
+        case "Knight":
+            if (aWeaponType == "Ranged") {
+                lResult = true;
+                window.terminal.log("These sharp feathery sticks will make nice kindling for my feast tonight.");
+            } else if (aWeaponType == "Magic") {
+                lResult = true;
+                window.terminal.log("Oh look, a stick with a shiny rock attached. So mystical, much power.");
+            }
+            break;
+
+        case "Archer":
+            if (aWeaponType == "Melee") {
+                lResult = true;
+                window.terminal.log("This won't fit in my bow; perhaps if I can find a crossbow though?");
+            } else if (aWeaponType == "Magic") {
+                lResult = true;
+                window.terminal.log("I am not in need of a walking stick.");
+            }
+            break;
+
+        case "Mage":
+            if (aWeaponType == "Ranged") {
+                lResult = true;
+                window.terminal.log("Me, use a bow? How plebian.");
+            } else if (aWeaponType == "Melee") {
+                lResult = true;
+                window.terminal.log("That is far too heavy for me to concern myself with.");
+            }
+            break;
+    }
+    return lResult;
+}
+
+function checkInvalidArmor(aClass, aArmorName) { // class just for cleanliness
+    var lResult = false;
+    switch (aClass) {
+        case "Knight":
+            if (aArmorName == "Robes") {
+                lResult = true;
+                window.terminal.log("When was the last time you saw a Knight wearing silly frilly robes?");
+            }
+            break;
+
+        case "Archer":
+            if (aArmorName == "Robes") {
+                window.terminal.log("While you are sure these wizard-pajamas are comfortable, it isn't bedtime.");
+                lResult = true;
+            } else if (aArmorName == "Chainmail" || aArmorName == "Plate Armor") {
+                lResult = true;
+                window.terminal.log("Oh! Big, heavy armor! That is just what I need for the dance off! Said no archer ever.");
+            }
+            break;
+
+        case "Mage":
+            if (aArmorName != "Robes") {
+                lResult = true;
+                window.terminal.log("Real Mages don't need to compensate for something with big shiny armor.");
+            }
+            break;
+    }
+    return lResult;
+}
+
 
 },{}],15:[function(require,module,exports){
 "use strict";
@@ -2468,18 +2516,43 @@ function Player(position, tilemap, combatClass) {
     this.shouldProcessTurn = true;
 
     window.terminal.addCommand("class", "Get your player class", this.getClass.bind(this));
+    window.terminal.addCommand("kill", "Kill yourself", this.killPlayer.bind(this));
 }
 
 /**
  * @function updates the player object
  * {DOMHighResTimeStamp} time the elapsed time since the last frame
  */
-Player.prototype.update = function(time) {
+Player.prototype.update = function (time) {
     // if we're dead, we should probably do something
     if (this.combat.health <= 0) this.state = "dead";
+
+    if (window.gameDebug) {
+        window.terminal.addCommand("godmode", "Make yourself invincible",
+            function () {
+                window.terminal.log("You are now invincible", window.colors.cmdResponse);
+                window.player.combat.health = Number.POSITIVE_INFINITY;
+            });
+        window.terminal.addCommand("tp", "Teleport to the specified coordinates",
+            function (args) {
+                if (args == 1) {
+                    window.terminal.log("Must include parameters x and y", window.colors.invalid);
+                }
+                else {
+                    window.terminal.log(`Teleporting player to x: ${args[1]} y: ${args[2]}`, window.colors.cmdResponse);
+                    window.player.position.x = args[1];
+                    window.player.position.y = args[2];
+                    tilemap.moveTo({ x: args[1] - 5, y: args[2] - 5 });
+                }
+            });
+    }
+    else {
+        window.terminal.removeCommand("godmode");
+        window.terminal.removeCommand("tp");
+    }
 }
 
-Player.prototype.walkPath = function(path, completion) {
+Player.prototype.walkPath = function (path, completion) {
     if (this.state == "dead") return; // shouldnt be necessary
 
     path.shift();
@@ -2492,7 +2565,7 @@ Player.prototype.walkPath = function(path, completion) {
 //Changes the player class, used because right now things
 //rely on player being created before class is actually chosen.
 //Potentially change this
-Player.prototype.changeClass = function(chosenClass) {
+Player.prototype.changeClass = function (chosenClass) {
     this.class = chosenClass;
     this.combat = new CombatClass(chosenClass);
     this.inventory = new Inventory(this.combat.weapon, this.combat.armor);
@@ -2506,7 +2579,13 @@ Player.prototype.changeClass = function(chosenClass) {
     }
 };
 
-Player.prototype.getClass = function(){
+Player.prototype.getClass = function (args) {
+    if (args.length > 1) {
+        // we have args
+        this.changeClass(args[1]);
+        window.terminal.log("Changing class to " + this.class, "lime");
+        return;
+    }
     window.terminal.log("Class: " + this.class, "lime");
 }
 
@@ -2514,7 +2593,7 @@ Player.prototype.getClass = function(){
  *@function handles the players turn
  *{input} keyboard input given for this turn
  */
-Player.prototype.processTurn = function(input) {
+Player.prototype.processTurn = function (input) {
     if (!this.shouldProcessTurn) return;
     if (this.combat.status.effect != "None") window.combatController.handleStatus(this.combat);
     if (this.combat.health <= 0) this.state = "dead";
@@ -2563,13 +2642,13 @@ Player.prototype.processTurn = function(input) {
     }
 }
 
-Player.prototype.collided = function(entity) {
+Player.prototype.collided = function (entity) {
     if (entity.type == "Stairs") {
         this.shouldProcessTurn = false;
     }
 }
 
-Player.prototype.retain = function() {
+Player.prototype.retain = function () {
     return this.combat.health > 0;
 }
 
@@ -2577,7 +2656,7 @@ Player.prototype.retain = function() {
  * @function renders the player into the provided context
  * {CanvasRenderingContext2D} ctx the context to render into
  */
-Player.prototype.render = function(elapsedTime, ctx) {
+Player.prototype.render = function (elapsedTime, ctx) {
     if (this.state == "dead") return; // shouldnt be necessary
 
     var position = this.tilemap.toScreenCoords(this.position);
@@ -2589,6 +2668,10 @@ Player.prototype.render = function(elapsedTime, ctx) {
         position.x * this.size.width, position.y * this.size.height,
         96, 96
     );
+}
+
+Player.prototype.killPlayer = function () {
+    this.combat.health = 0;
 }
 
 function hasUserInput(input) {
@@ -2649,7 +2732,7 @@ Powerup.prototype.collided = function (entity) {
         // damageBonusPowerupSound.play();
         window.sfx.play("damagePickup");
         entity.combat.damageBonus += 0.2;
-        window.terminal.log("The crystal radiates a bright blue and you feel its energy course through you.");
+        window.terminal.log("The crystal radiates a bright blue and you feel its energy course through you.", window.colors.pickup);
         if (window.debug) console.log(entity.combat.damageBonus);
         this.used = true;
         break;
@@ -2658,7 +2741,7 @@ Powerup.prototype.collided = function (entity) {
         window.sfx.play("healthPickup");
         var potionValue = RNG.rollMultiple(3, 6, entity.level);
         entity.combat.health += potionValue;
-        window.terminal.log("You quaff the large crimson potion and feel rejuvenated.");
+        window.terminal.log("You quaff the large crimson potion and feel rejuvenated.", window.colors.pickup);
         if (window.debug) console.log("+" + potionValue + " health = " + entity.combat.health);
         this.used = true;
         break;
@@ -2666,7 +2749,7 @@ Powerup.prototype.collided = function (entity) {
         // defensePowerupSound.play();
         window.sfx.play("defensePickup");
         entity.combat.defenseBonus += 0.2;
-        window.terminal.log("As you finish the potion a faint ward forms around you.");
+        window.terminal.log("As you finish the potion a faint ward forms around you.", window.colors.pickup);
         if (window.debug) console.log(entity.combat.defenseBonus);
         this.used = true;
         break;
@@ -2674,7 +2757,7 @@ Powerup.prototype.collided = function (entity) {
         // attackPowerupSound.play();
         window.sfx.play("attackPickup");
         entity.combat.attackBonus += 0.2;
-        window.terminal.log("The very smell of the verdant green potion awakens you and you feel more agile.");
+        window.terminal.log("The very smell of the verdant green potion awakens you and you feel more agile.", window.colors.pickup);
         if (window.debug) console.log(entity.combat.attackBonus);
         this.used = true;
         break;
@@ -2799,6 +2882,7 @@ function rollWeighted() {
     weightSum = 0;
     for (var i = 0; i < argLength; i++) {
         weightSum += arguments[i];
+        if (!arguments[i]) continue;
         if (roll <= weightSum) return i;
     }
 }
@@ -2990,70 +3074,73 @@ Terminal.prototype.render = function (elapsedTime, ctx) {
         ctx.fillText(message.text, self.startPos.x, self.startPos.y - 18 * i);
     });
 
+    ctx.fillStyle = "white";
     ctx.fillText(">", 1063, 1111);
 
-    if (this.active){
-      ctx.fillStyle = "white";
-      ctx.fillText(this.input, 1078, 1111)
-    } else{
-      ctx.fillStyle = "#d3d3d3";
-      ctx.fillText("Press / to type", 1078, 1111);
+    if (this.active) {
+        ctx.fillStyle = "white";
+        ctx.fillText(this.input, 1078, 1111)
+    } else {
+        ctx.fillStyle = "#d3d3d3";
+        ctx.fillText("Press / to type", 1078, 1111);
     }
 }
 
 Terminal.prototype.onkeydown = function (event) {
-  switch (event.key) {
-    case "/":
-      this.active = true;
-      break;
-    case "Enter":
-      if(!this.active) return;
-      this.processInput();
-      this.input = "";
-      this.active = false;
-      break;
-    case "Backspace":
-      this.input = this.input.substr(0, this.input.length - 1);
-      break;
-    case "Escape":
-      this.input = "";
-      this.active = false;
-    default:
-      if(this.active) this.input = this.input.concat(event.key);
-  }
+    switch (event.key) {
+        case "/":
+            this.active = true;
+            break;
+        case "Enter":
+            if (!this.active) return;
+            this.processInput();
+            this.input = "";
+            this.active = false;
+            break;
+        case "Backspace":
+            this.input = this.input.substr(0, this.input.length - 1);
+            break;
+        case "Escape":
+            this.input = "";
+            this.active = false;
+        default:
+            if (event.key.length > 1) return;
+            if (this.active) this.input = this.input.concat(event.key)
+    }
 
-  return this.active;
+    return this.active;
 }
 
 // Callback should accept a string and return true if it handles the Command
 // else it should return false
-Terminal.prototype.addCommand = function(command, description, callback){
-  this.commands[command] = {command: command, description: description, callback: callback};
+Terminal.prototype.addCommand = function (command, description, callback) {
+    this.commands[command] = { command: command, description: description, callback: callback };
 }
 
-Terminal.prototype.removeCommand = function(command){
-  if(command in this.commands){
-      delete this.commands[command];
-  }
+Terminal.prototype.removeCommand = function (command) {
+    if (command in this.commands) {
+        delete this.commands[command];
+    }
 }
 
-Terminal.prototype.helpCommand = function(){
-  var self = this;
-  Object.keys(self.commands).forEach(function(command){
-    var c = self.commands[command];
-    self.log(c.command + " " + c.description);
-  });
+Terminal.prototype.helpCommand = function () {
+    var self = this;
+    Object.keys(self.commands).forEach(function (command) {
+        var c = self.commands[command];
+        self.log(c.command + " " + c.description, window.colors.cmdResponse);
+    });
 }
 
 Terminal.prototype.processInput = function () {
-    this.log(this.input, "yellow");
+    var args = this.input.split(' ');
+    this.log(args[0], window.colors.cmd);
 
-    if(this.input in this.commands){
-        this.commands[this.input].callback();
+    if (args[0] in this.commands) {
+        this.commands[args[0]].callback(args);
         return;
     }
 
-    this.log("Command not found", "red");
+    this.log("Command not found", window.colors.invalid);
     /*switch (this.input) {
         case "/stats":
             window.terminal.log("Here are your current stats:");
@@ -3075,14 +3162,13 @@ Terminal.prototype.processInput = function () {
 }
 
 function splitMessage(message, messages, color) {
-    if (message.length < 29) {
+    if (message.length < MAX_MSG_LENGTH) {
         messages.unshift({ text: message, color: color });
     }
     else {
         messages.unshift({ text: message.slice(0, MAX_MSG_LENGTH), color: color });
         splitMessage(message.slice(MAX_MSG_LENGTH, message.length), messages, color);
     }
-
 }
 
 },{}],24:[function(require,module,exports){
@@ -3443,6 +3529,7 @@ function Weapon(aName, aLevel) {
     switch (aName) {
         // Melee
         case "Longsword":
+            this.attackType = "Melee";
             this.damageMax = 10
             this.damageMin = 2;
             this.damageType = "s";
@@ -3454,6 +3541,7 @@ function Weapon(aName, aLevel) {
             break;
 
         case "Morning Star":
+            this.attackType = "Melee";
             this.damageMax = 8
             this.damageMin = 1;
             this.damageType = "b";
@@ -3465,6 +3553,7 @@ function Weapon(aName, aLevel) {
             break;
 
         case "Halberd":
+            this.attackType = "Melee";
             this.damageMax = 8
             this.damageMin = 2;
             this.damageType = "s";
@@ -3476,6 +3565,7 @@ function Weapon(aName, aLevel) {
             break;
 
         case "Battleaxe":
+            this.attackType = "Melee";
             this.damageMax = 12
             this.damageMin = 4;
             this.damageType = "sb";
@@ -3487,6 +3577,7 @@ function Weapon(aName, aLevel) {
             break;
 
         case "Claw":
+            this.attackType = "Melee";
             this.damageMax = 4
             this.damageMin = 2;
             this.damageType = "s";
@@ -3499,6 +3590,7 @@ function Weapon(aName, aLevel) {
 
         // Ranged
         case "Bodkin":
+            this.attackType = "Ranged";
             this.damageMax = 4
             this.damageMin = 1;
             this.damageType = "p";
@@ -3510,6 +3602,7 @@ function Weapon(aName, aLevel) {
             break;
 
         case "Broadhead":
+            this.attackType = "Ranged";
             this.damageMax = 6
             this.damageMin = 2;
             this.damageType = "p";
@@ -3521,6 +3614,7 @@ function Weapon(aName, aLevel) {
             break;
 
         case "Poison-Tipped":
+            this.attackType = "Ranged";
             this.damageMax = 4
             this.damageMin = 1;
             this.damageType = "p";
@@ -3532,6 +3626,7 @@ function Weapon(aName, aLevel) {
             break;
 
         case "Heavy Bolts":
+            this.attackType = "Ranged";
             this.damageMax = 10
             this.damageMin = 4;
             this.damageType = "b";
@@ -3544,6 +3639,7 @@ function Weapon(aName, aLevel) {
 
         // Spells
         case "Magic Missile":
+            this.attackType = "Magic";
             this.damageMax = 4
             this.damageMin = 1;
             this.damageType = "m";
@@ -3555,6 +3651,7 @@ function Weapon(aName, aLevel) {
             break;
 
         case "Fireball":
+            this.attackType = "Magic";
             this.damageMax = 4
             this.damageMin = 1;
             this.damageType = "m";
@@ -3566,6 +3663,7 @@ function Weapon(aName, aLevel) {
             break;
 
         case "Frostbolt":
+            this.attackType = "Magic";
             this.damageMax = 4
             this.damageMin = 1;
             this.damageType = "m";
@@ -3577,6 +3675,7 @@ function Weapon(aName, aLevel) {
             break;
 
         case "Eldritch Blast":
+            this.attackType = "Magic";
             this.damageMax = 10
             this.damageMin = 1;
             this.damageType = "m";

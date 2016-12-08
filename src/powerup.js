@@ -51,7 +51,7 @@ Powerup.prototype.collided = function (entity) {
         // damageBonusPowerupSound.play();
         window.sfx.play("damagePickup");
         entity.combat.damageBonus += 0.2;
-        window.terminal.log("The crystal radiates a bright blue and you feel its energy course through you.");
+        window.terminal.log("The crystal radiates a bright blue and you feel its energy course through you.", window.colors.pickup);
         if (window.debug) console.log(entity.combat.damageBonus);
         this.used = true;
         break;
@@ -60,7 +60,7 @@ Powerup.prototype.collided = function (entity) {
         window.sfx.play("healthPickup");
         var potionValue = RNG.rollMultiple(3, 6, entity.level);
         entity.combat.health += potionValue;
-        window.terminal.log("You quaff the large crimson potion and feel rejuvenated.");
+        window.terminal.log("You quaff the large crimson potion and feel rejuvenated.", window.colors.pickup);
         if (window.debug) console.log("+" + potionValue + " health = " + entity.combat.health);
         this.used = true;
         break;
@@ -68,7 +68,7 @@ Powerup.prototype.collided = function (entity) {
         // defensePowerupSound.play();
         window.sfx.play("defensePickup");
         entity.combat.defenseBonus += 0.2;
-        window.terminal.log("As you finish the potion a faint ward forms around you.");
+        window.terminal.log("As you finish the potion a faint ward forms around you.", window.colors.pickup);
         if (window.debug) console.log(entity.combat.defenseBonus);
         this.used = true;
         break;
@@ -76,7 +76,7 @@ Powerup.prototype.collided = function (entity) {
         // attackPowerupSound.play();
         window.sfx.play("attackPickup");
         entity.combat.attackBonus += 0.2;
-        window.terminal.log("The very smell of the verdant green potion awakens you and you feel more agile.");
+        window.terminal.log("The very smell of the verdant green potion awakens you and you feel more agile.", window.colors.pickup);
         if (window.debug) console.log(entity.combat.attackBonus);
         this.used = true;
         break;
