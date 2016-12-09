@@ -85,7 +85,11 @@ Player.prototype.getClass = function(){
 Player.prototype.processTurn = function(input) {
     if (!this.shouldProcessTurn) return;
     if (this.combat.status.effect != "None") window.combatController.handleStatus(this.combat);
-    if (this.combat.health <= 0) this.state = "dead";
+    if (this.combat.health <= 0)
+    {
+      if(this.state != "dead") this.animator.updateState("dying");
+      this.state = "dead";  
+    }      
     if (this.state == "dead" || this.combat.status.effect == "Frozen") return;
 
     if (hasUserInput(input)) {
@@ -138,7 +142,7 @@ Player.prototype.collided = function(entity) {
 }
 
 Player.prototype.retain = function() {
-    return this.combat.health > 0;
+    return true; //this.animator.state != "dead";
 }
 
 /**
@@ -146,7 +150,7 @@ Player.prototype.retain = function() {
  * {CanvasRenderingContext2D} ctx the context to render into
  */
 Player.prototype.render = function(elapsedTime, ctx) {
-    if (this.state == "dead") return; // shouldnt be necessary
+    //if (this.state == "dead") return; // shouldnt be necessary
 
     var position = this.tilemap.toScreenCoords(this.position);
 
@@ -161,23 +165,31 @@ Player.prototype.render = function(elapsedTime, ctx) {
 
 Player.prototype.changeDirection = function(direction)
 {
-    if(direction == "down")
+    if(this.state != "dead")
     {
-        if(this.oldDirection == "right") this.animator.changeDirection("right");
-        else this.animator.changeDirection("left");
-    }
-    else
-    {
-        if(!direction == "up") this.oldDirection = direction;
-        this.animator.changeDirection(direction);
+      if(direction == "down")
+      {
+          if(this.oldDirection == "right") this.animator.changeDirection("right");
+          else this.animator.changeDirection("left");
+      }
+      else
+      {
+          if(!direction == "up") this.oldDirection = direction;
+          this.animator.changeDirection(direction);
+      }
     }
 }
 
 Player.prototype.playAttack = function(clickPos)
 {    
-    this.animator.updateState("attacking");
-    //if(clickPos.x < this.position.x) this.changeDirection("left");
-    //else this.changeDirection("right");
+    if(this.state != "dead")
+    {
+      this.animator.updateState("attacking");
+      var position = this.tilemap.toScreenCoords(this.position);
+
+      if(clickPos.x < (position.x*this.size.width+ 40)) this.changeDirection("left");
+      else this.changeDirection("right");
+    }
 }
 
 function hasUserInput(input) {

@@ -2,6 +2,7 @@
 
 const sheetColumns = 10;
 const defaultFrameTime = 150;
+const delayTime = 1000;
 module.exports = exports = Animator;
 
 /**
@@ -18,7 +19,6 @@ function Animator(start, state, entityClass) {
   this.entity = entityClass;
   this.direction = "right";
   this.timer = 0;
-
   this.index = {x: this.frame%sheetColumns, y: Math.floor(this.frame/sheetColumns)};
 }
 
@@ -64,7 +64,39 @@ Animator.prototype.update = function(time){
       }
     }
   }
-  
+  else if(this.state == "dying")
+  {
+    console.log("dying");
+    if(this.frame < this.start + sheetColumns*2+4)
+    {
+      if(this.timer >= defaultFrameTime)
+      {
+        this.timer = 0;
+        this.frame++;
+      }
+    }
+    else if(this.frame == this.start+sheetColumns*2+4)
+    {
+      if(this.timer >= defaultFrameTime + delayTime)
+      {
+        this.timer = 0;
+        this.frame++;
+      }
+    }
+    else 
+    {
+      if(this.timer >= defaultFrameTime/2)
+      {
+        this.timer = 0;
+        this.frame++;
+        if(this.frame > this.start+sheetColumns*2+7) this.updateState("dead");
+      }
+    } 
+  }
+  else if(this.state == "dead")
+  {
+    
+  }
   this.index = {x: this.frame%sheetColumns, y: Math.floor(this.frame/sheetColumns)};
 }
 
@@ -79,6 +111,16 @@ Animator.prototype.updateState = function(state)
   else if(this.state == "attacking")
   {
     this.frame = this.start+sheetColumns;
+    if(this.direction == "left") this.frame+=3;
+  }
+  else if(this.state == "dying")
+  {
+    this.frame = this.start+sheetColumns*2;
+    //create left facing death anim if(this.direction == "left")
+  }
+  else if(this.state == "dead")
+  {
+    this.frame = this.start+sheetColumns*2+7;
   }
 }
 
