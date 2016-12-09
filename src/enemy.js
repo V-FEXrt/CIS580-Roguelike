@@ -14,7 +14,7 @@ function Enemy(position, tilemap, combatClass, target, onDeathCB) {
     this.spritesheet.src = "./spritesheets/sprites.png";
     this.type = "Enemy";
     this.class = combatClass;
-    this.combat = new CombatClass(this.class);
+    this.combat = new CombatClass(this.class, target.level);
     this.target = target;
     this.onDeathCB = onDeathCB;
 }

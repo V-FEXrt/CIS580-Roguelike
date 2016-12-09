@@ -25,7 +25,7 @@ var spawnArray = [
   function () { spawnPowerup(3); },
   function () { spawnPowerup(4); },
   function () { spawnEnemy("Zombie"); },
-  function () { spawnEnemy("EnemyRanged"); },
+  function () { spawnEnemy("Skeletal Bowman"); },
   function () { spawnEnemy("Captain"); },
   function () { spawnEnemy("Shaman"); },
   function () { }
@@ -53,8 +53,8 @@ function spawn(aPlayer, tmap, count, percents) {
     spawnArray[idx]()
   }
   // if (window.debug) {
-    console.log(pu + " powerups spawned");
-    console.log(en + " enemies spawned");
+  console.log(pu + " powerups spawned");
+  console.log(en + " enemies spawned");
   // }
 }
 

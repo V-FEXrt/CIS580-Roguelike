@@ -2,6 +2,7 @@
 
 const Tilemap = require('./tilemap');
 const Vector = require('./vector');
+const RNG = require("./rng");
 
 // weapon/armor shouldnt be done here...
 // they can still be stored here if necessary, but 
@@ -12,8 +13,11 @@ const Armor = require("./armor");
 
 module.exports = exports = CombatClass;
 
-function CombatClass(aName) {
+function CombatClass(aName, aLevel) {
     this.name = aName;
+    // var levelBonus = aLevel / 3;
+    // set up random ish weapons/armor for enemies
+
     switch (aName) {
         case "Knight":
             this.health = 20;
@@ -48,9 +52,9 @@ function CombatClass(aName) {
 
         case "Zombie":
             this.health = 10;
-            this.attackBonus = 0;
-            this.damageBonus = 0;
-            this.defenseBonus = 0;
+            this.attackBonus = (RNG.rollWeighted(1, 1)) ? aLevel : aLevel - 1;
+            this.damageBonus = (RNG.rollWeighted(1, 1)) ? aLevel : aLevel - 1;
+            this.defenseBonus = (RNG.rollWeighted(1, 1)) ? aLevel : aLevel - 1;
             this.weapon = new Weapon("Claw", 1);
             this.armor = new Armor("Flesh", 1);
             this.status = { effect: "None", timer: 0 };
@@ -73,9 +77,9 @@ function CombatClass(aName) {
 
         case "Skeletal Bowman":
             this.health = 10;
-            this.attackBonus = 0;
-            this.damageBonus = 0;
-            this.defenseBonus = 0;
+            this.attackBonus = (RNG.rollWeighted(1, 1)) ? aLevel + 1 : aLevel - 1;
+            this.damageBonus = (RNG.rollWeighted(1, 1)) ? aLevel + 1 : aLevel - 1;
+            this.defenseBonus = (RNG.rollWeighted(1, 1)) ? aLevel + 1 : aLevel - 1;
             this.weapon = new Weapon("Broadhead", 1);
             this.armor = new Armor("Bones", 1);
             this.status = { effect: "None", timer: 0 };
@@ -108,9 +112,9 @@ function CombatClass(aName) {
 
         case "Captain":
             this.health = 25;
-            this.attackBonus = 0;
-            this.damageBonus = 0;
-            this.defenseBonus = 0;
+            this.attackBonus = (RNG.rollWeighted(1, 1)) ? aLevel + 3 : aLevel;
+            this.damageBonus = (RNG.rollWeighted(1, 1)) ? aLevel + 3 : aLevel;
+            this.defenseBonus = (RNG.rollWeighted(1, 1)) ? aLevel + 3 : aLevel;
             this.weapon = new Weapon("Battleaxe", 1);
             this.armor = new Armor("Chainmail", 1);
             this.status = { effect: "None", timer: 0 };
@@ -133,9 +137,9 @@ function CombatClass(aName) {
 
         case "Shaman":
             this.health = 10;
-            this.attackBonus = 0;
-            this.damageBonus = 0;
-            this.defenseBonus = 0;
+            this.attackBonus = aLevel;
+            this.damageBonus = aLevel;
+            this.defenseBonus = aLevel;
             this.weapon = new Weapon("Eldritch Blast", 1);
             this.armor = new Armor("Robes", 1);
             this.status = { effect: "None", timer: 0 };
@@ -169,7 +173,7 @@ function CombatClass(aName) {
     }
 }
 
-function moveBack(a, b) {
+function moveBack(a, b) { // TODO > should use pathfinder
     var newPos = new Object();
     if (a.x > b.x) newPos.x = a.x + 1;
     else if (a.x < b.x) newPos.x = a.x - 1;
@@ -182,7 +186,7 @@ function moveBack(a, b) {
     return newPos;
 }
 
-function moveToward(a, b) {
+function moveToward(a, b) { // TODO > should use pathfinder
     var newPos = new Object();
     if (a.x > b.x) newPos.x = a.x - 1;
     else if (a.x < b.x) newPos.x = a.x + 1;
