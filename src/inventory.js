@@ -13,89 +13,51 @@ function Inventory(weapon, armor) {
     this.inventory = [];
     this.inventory.push(weapon);
     this.inventory.push(armor);
+    window.terminal.addCommand("weapon", "Get your current weapon stats", this.weaponCommand.bind(this));
+    window.terminal.addCommand("armor", "Get your current armor atats", this.armorCommand.bind(this));
 }
 
 /**
  * @function processes a new weapon item
  *
  */
-Inventory.prototype.addWeapon = function (weapon) {
+Inventory.prototype.addWeapon = function(weapon) {
     checkWeapon(weapon);
-    // check for invalids
+    weapon.shouldRetain = false;
+    if (checkInvalidWeapon(window.player.class, weapon.attackType)) return;
 
-    window.terminal.log(`Picked up a level ${weapon.level} ${weapon.name} with damage range ${weapon.damageMin}-${weapon.damageMax}, with ${weapon.properties}.`);
+    window.terminal.log("Picked up a " + weapon.toString(), window.colors.pickup);
     var weaponToDrop = this.inventory[0];
     this.inventory[0] = weapon;
     window.player.combat.weapon = weapon;
-    weaponToDrop.position = window.player.tilemap.getRandomAdjacent(weapon.position);
+    weaponToDrop.position = window.player.position;
     weaponToDrop.shouldRetain = true;
     window.entityManager.addEntity(weaponToDrop);
-
-
-    // Commented out until we figure out what to do...
-    // if(this.inventory.length >= 17) { /* Tell GUI that inventory is full */ }
-    // if(weapon.type.damageMax > this.inventory[0].type.damageMax) { // This needs to be changed to prompting the user, I'll wait until there's a working GUI class to do that
-    //     this.inventory.push(this.inventory[0]);
-    //     this.inventory[0] = weapon;
-    // }
-    // else {
-    //     this.inventory.push(weapon);
-    // }
 }
 
 /**
  * @function processes a new armor item
  *
  */
-Inventory.prototype.addArmor = function (armor) {
+Inventory.prototype.addArmor = function(armor) {
     checkArmor(armor);
-    // check for invalids
-    if (player.class == "Mage" && armor.name != "Robes") {
-        window.terminal.log("Mages don't wear armor...");
-        return;
-    }
+    armor.shouldRetain = false;
+    if (checkInvalidArmor(window.player.class, armor.name)) return;
 
-    window.terminal.log(`Picked up level ${armor.level} ${armor.name}.`);
+    window.terminal.log("Picked up " + armor.toString(), window.colors.pickup);
     var armorToDrop = this.inventory[1];
     this.inventory[1] = armor;
     window.player.combat.armor = armor;
-    armorToDrop.position = window.player.tilemap.getRandomAdjacent(armor.position);
+    armorToDrop.position = window.player.position;
     armorToDrop.shouldRetain = true;
     window.entityManager.addEntity(armorToDrop);
-
-
-    // Commented out until we figure out what to do...
-    // if(this.inventory.length >= 17) { /* Tell GUI that inventory is full */ }
-    // if(armor.type.defense > this.inventory[1].type.defense) { // See line 25
-    //     this.inventory.push(this.inventory[1]);
-    //     this.inventory[1] = armor;
-    // }
-    // else {
-    //     this.inventory.push(armor);
-    // }
-}
-
-/**
- * @function power up the equipped weapon
- *
- */
-Inventory.prototype.powerupWeapon = function (damage) {
-    this.inventory[0].type.damageMax += damage;
-}
-
-/**
- * @function power up the equipped armor
- *
- */
-Inventory.prototype.powerupArmor = function (defense) {
-    this.inventory[1].type.defense += defense;
 }
 
 /**
  * @function add item to inventory
  *
  */
-Inventory.prototype.addItem = function (item) {
+Inventory.prototype.addItem = function(item) {
     if (this.inventory.length >= 17) { /* Tell GUI inventory is full */ }
     this.inventory.push(item);
 }
@@ -104,8 +66,16 @@ Inventory.prototype.addItem = function (item) {
  * @function remove item from inventory
  *
  */
-Inventory.prototype.removeItem = function (item) {
+Inventory.prototype.removeItem = function(item) {
     this.inventory.remove(this.inventory.indexOf(item));
+}
+
+Inventory.prototype.weaponCommand = function() {
+    window.terminal.log(this.inventory[0].toString(), window.colors.cmdResponse);
+}
+
+Inventory.prototype.armorCommand = function() {
+    window.terminal.log(this.inventory[1].toString(), window.colors.cmdResponse);
 }
 
 /**
@@ -149,3 +119,70 @@ function failWeapon() {
 function failArmor() {
     throw new Error("Item doesn't match type definition for 'Armor'");
 }
+
+function checkInvalidWeapon(aClass, aWeaponType) { // class just for cleanliness
+    var lResult = false;
+    switch (aClass) {
+        case "Knight":
+            if (aWeaponType == "Ranged") {
+                lResult = true;
+                window.terminal.log("These sharp feathery sticks will make nice kindling for my feast tonight.");
+            } else if (aWeaponType == "Magic") {
+                lResult = true;
+                window.terminal.log("Oh look, a stick with a shiny rock attached. So mystical, much power.");
+            }
+            break;
+
+        case "Archer":
+            if (aWeaponType == "Melee") {
+                lResult = true;
+                window.terminal.log("This won't fit in my bow; perhaps if I can find a crossbow though?");
+            } else if (aWeaponType == "Magic") {
+                lResult = true;
+                window.terminal.log("I am not in need of a walking stick.");
+            }
+            break;
+
+        case "Mage":
+            if (aWeaponType == "Ranged") {
+                lResult = true;
+                window.terminal.log("Me, use a bow? How plebian.");
+            } else if (aWeaponType == "Melee") {
+                lResult = true;
+                window.terminal.log("That is far too heavy for me to concern myself with.");
+            }
+            break;
+    }
+    return lResult;
+}
+
+function checkInvalidArmor(aClass, aArmorName) { // class just for cleanliness
+    var lResult = false;
+    switch (aClass) {
+        case "Knight":
+            if (aArmorName == "Robes") {
+                lResult = true;
+                window.terminal.log("When was the last time you saw a Knight wearing silly frilly robes?");
+            }
+            break;
+
+        case "Archer":
+            if (aArmorName == "Robes") {
+                window.terminal.log("While you are sure these wizard-pajamas are comfortable, it isn't bedtime.");
+                lResult = true;
+            } else if (aArmorName == "Chainmail" || aArmorName == "Plate Armor") {
+                lResult = true;
+                window.terminal.log("Oh! Big, heavy armor! That is just what I need for the dance off! Said no archer ever.");
+            }
+            break;
+
+        case "Mage":
+            if (aArmorName != "Robes") {
+                lResult = true;
+                window.terminal.log("Real Mages don't need to compensate for something with big shiny armor.");
+            }
+            break;
+    }
+    return lResult;
+}
+

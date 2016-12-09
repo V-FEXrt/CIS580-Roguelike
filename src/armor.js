@@ -2,10 +2,10 @@
 
 module.exports = exports = Armor;
 
-function Armor(aName) {
+function Armor(aName, aLevel) {
     this.type = "Armor";
     this.name = aName;
-    this.level = 0;
+    this.level = aLevel;
     this.shouldRetain = true;
 
     switch (aName) {
@@ -13,6 +13,12 @@ function Armor(aName) {
             this.defense = 3;
             this.strongType = "";
             this.weakType = "spb";
+            break;
+
+        case "Bones":
+            this.defense = 5;
+            this.strongType = "p";
+            this.weakType = "b";
             break;
 
         case "Robes":
@@ -56,30 +62,31 @@ function Armor(aName) {
     this.movingUp = true;
 }
 
-Armor.prototype.collided = function (aEntity) {
-    if (aEntity.type == "Player") {
-        aEntity.inventory.addArmor(this);
-        this.shouldRetain = false;
-    }
-}
-
-Armor.prototype.processTurn = function () {
+Armor.prototype.collided = function(aEntity) {
 
 }
 
-Armor.prototype.retain = function () {
+Armor.prototype.processTurn = function() {
+
+}
+
+Armor.prototype.retain = function() {
     return this.shouldRetain;
 }
 
-Armor.prototype.update = function () {
+Armor.prototype.update = function() {
     if (this.currY >= 5) this.movingUp = false;
     else if (this.currY <= -5) this.movingUp = true;
     if (this.movingUp) this.currY += .2;
     else this.currY -= .2;
 }
 
-Armor.prototype.render = function (time, ctx) {
+Armor.prototype.render = function(time, ctx) {
     var position = window.tilemap.toScreenCoords(this.position);
     ctx.drawImage(this.spritesheet, 305, 225, 75, 75, (position.x * this.size.width), (position.y * this.size.height) + this.currY, 96, 96);
 
+}
+
+Armor.prototype.toString = function() {
+    return `Level ${this.level} ${this.name} with ${this.defense} defense`;
 }

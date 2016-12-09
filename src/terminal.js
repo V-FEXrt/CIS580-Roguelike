@@ -1,5 +1,14 @@
 "use strict";
 
+window.colors = {
+    cmd: "yellow",
+    cmdResponse: "LawnGreen",
+    invalid: "red",
+    combat: "Orchid",
+    pickup: "SkyBlue",
+
+}
+
 const MAX_MSG_COUNT = 62;
 const MAX_MSG_LENGTH = 80;
 
@@ -12,7 +21,8 @@ function Terminal() {
     this.input = "";
     this.commands = {};
 
-    this.addCommand("help", "Print out all commands", this.helpCommand.bind(this));
+    this.addCommand("help", "Print out all available commands", this.helpCommand.bind(this));
+    this.addCommand("clear", "Clear the terminal", this.clear.bind(this));
 }
 
 Terminal.prototype.log = function (message, color) {
@@ -40,70 +50,73 @@ Terminal.prototype.render = function (elapsedTime, ctx) {
         ctx.fillText(message.text, self.startPos.x, self.startPos.y - 18 * i);
     });
 
+    ctx.fillStyle = "white";
     ctx.fillText(">", 1063, 1111);
 
-    if (this.active){
-      ctx.fillStyle = "white";
-      ctx.fillText(this.input, 1078, 1111)
-    } else{
-      ctx.fillStyle = "#d3d3d3";
-      ctx.fillText("Press / to type", 1078, 1111);
+    if (this.active) {
+        ctx.fillStyle = "white";
+        ctx.fillText(this.input, 1078, 1111)
+    } else {
+        ctx.fillStyle = "#d3d3d3";
+        ctx.fillText("Press / to type", 1078, 1111);
     }
 }
 
 Terminal.prototype.onkeydown = function (event) {
-  switch (event.key) {
-    case "/":
-      this.active = true;
-      break;
-    case "Enter":
-      if(!this.active) return;
-      this.processInput();
-      this.input = "";
-      this.active = false;
-      break;
-    case "Backspace":
-      this.input = this.input.substr(0, this.input.length - 1);
-      break;
-    case "Escape":
-      this.input = "";
-      this.active = false;
-    default:
-      if(this.active) this.input = this.input.concat(event.key);
-  }
+    switch (event.key) {
+        case "/":
+            this.active = true;
+            break;
+        case "Enter":
+            if (!this.active) return;
+            this.processInput();
+            this.input = "";
+            this.active = false;
+            break;
+        case "Backspace":
+            this.input = this.input.substr(0, this.input.length - 1);
+            break;
+        case "Escape":
+            this.input = "";
+            this.active = false;
+        default:
+            if (event.key.length > 1) return;
+            if (this.active) this.input = this.input.concat(event.key)
+    }
 
-  return this.active;
+    return this.active;
 }
 
 // Callback should accept a string and return true if it handles the Command
 // else it should return false
-Terminal.prototype.addCommand = function(command, description, callback){
-  this.commands[command] = {command: command, description: description, callback: callback};
+Terminal.prototype.addCommand = function (command, description, callback) {
+    this.commands[command] = { command: command, description: description, callback: callback };
 }
 
-Terminal.prototype.removeCommand = function(command){
-  if(command in this.commands){
-      delete this.commands[command];
-  }
+Terminal.prototype.removeCommand = function (command) {
+    if (command in this.commands) {
+        delete this.commands[command];
+    }
 }
 
-Terminal.prototype.helpCommand = function(){
-  var self = this;
-  Object.keys(self.commands).forEach(function(command){
-    var c = self.commands[command];
-    self.log(c.command + " " + c.description);
-  });
+Terminal.prototype.helpCommand = function () {
+    var self = this;
+    Object.keys(self.commands).forEach(function (command) {
+        var c = self.commands[command];
+        self.log(c.command + " " + c.description, window.colors.cmdResponse);
+    });
 }
 
 Terminal.prototype.processInput = function () {
-    this.log(this.input, "yellow");
+    var args = this.input.split(' ');
+    this.log(args[0], window.colors.cmd);
 
-    if(this.input in this.commands){
-        this.commands[this.input].callback();
+    if (args[0] in this.commands) {
+        this.commands[args[0]].callback(args);
         return;
     }
 
-    this.log("Command not found", "red");
+    this.log("Command not found", window.colors.invalid);
     /*switch (this.input) {
         case "/stats":
             window.terminal.log("Here are your current stats:");
@@ -125,12 +138,15 @@ Terminal.prototype.processInput = function () {
 }
 
 function splitMessage(message, messages, color) {
-    if (message.length < 29) {
+    if (message.length < MAX_MSG_LENGTH) {
         messages.unshift({ text: message, color: color });
     }
     else {
-        messages.unshift({ text: message.slice(0, MAX_MSG_LENGTH), color: color });
-        splitMessage(message.slice(MAX_MSG_LENGTH, message.length), messages, color);
+        var index = MAX_MSG_LENGTH;
+        for(var i = 0; i < MAX_MSG_LENGTH; i++) {
+            if(message.charAt(i) == ' ') index = i + 1;
+        }
+        messages.unshift({ text: message.slice(0, index), color: color });
+        splitMessage(message.slice(index, message.length), messages, color);
     }
-
 }
