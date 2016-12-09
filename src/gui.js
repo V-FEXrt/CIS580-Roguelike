@@ -141,6 +141,11 @@ GUI.prototype.update = function (time) {
 	}
 }
 
+GUI.prototype.onmousemove = function(mousePos)
+{
+  
+}
+
 /**
  * @function renders the GUI into the provided context
  * {CanvasRenderingContext2D} ctx the context to render into
