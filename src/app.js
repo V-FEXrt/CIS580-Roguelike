@@ -99,7 +99,8 @@ canvas.onclick = function (event) {
         x: parseInt(event.offsetX / 96),
         y: parseInt(event.offsetY / 96)
     }
-
+  
+    player.playAttack({x: event.offsetX, y: event.offsetY});
     var clickedWorldPos = tilemap.toWorldCoords(node);
     window.entityManager.addEntity(new Click(clickedWorldPos, tilemap, player, function (enemy) {
         var distance = Vector.distance(player.position, enemy.position);
@@ -131,6 +132,7 @@ window.onkeydown = function (event) {
                 turnTimer = turnDelay;
                 resetTimer = false;
             }
+      player.changeDirection("up");
             break;
         case "ArrowDown":
         case "s":
@@ -140,6 +142,7 @@ window.onkeydown = function (event) {
                 turnTimer = turnDelay;
                 resetTimer = false;
             }
+      player.changeDirection("down");
             break;
         case "ArrowLeft":
         case "a":
@@ -149,6 +152,7 @@ window.onkeydown = function (event) {
                 turnTimer = turnDelay;
                 resetTimer = false;
             }
+      player.changeDirection("left");
             break;
         case "ArrowRight":
         case "d":
@@ -158,6 +162,7 @@ window.onkeydown = function (event) {
                 turnTimer = turnDelay;
                 resetTimer = false;
             }
+      player.changeDirection("right");
             break;
         // case "Shift":
         //     event.preventDefault();
