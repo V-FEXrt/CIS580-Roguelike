@@ -24,7 +24,7 @@ function Animator(start, state, entityClass) {
 
 Animator.prototype.update = function(time){
   this.timer += time;
-  
+
   if(this.state == "idle")
   {
     if(this.timer >= defaultFrameTime)
@@ -66,7 +66,6 @@ Animator.prototype.update = function(time){
   }
   else if(this.state == "dying")
   {
-    console.log("dying");
     if(this.frame < this.start + sheetColumns*2+4)
     {
       if(this.timer >= defaultFrameTime)

@@ -100,7 +100,7 @@ canvas.onclick = function(event) {
         y: parseInt(event.offsetY / 96)
     }
   
-  player.playAttack({x: event.offsetX, y: event.offsetY});
+    player.playAttack({x: event.offsetX, y: event.offsetY});
     var clickedWorldPos = tilemap.toWorldCoords(node);
     window.entityManager.addEntity(new Click(clickedWorldPos, tilemap, player, function(enemy) {
         var distance = Vector.distance(player.position, enemy.position);
