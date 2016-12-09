@@ -63,6 +63,7 @@ function Armor(aName, aLevel) {
 }
 
 Armor.prototype.collided = function(aEntity) {
+
 }
 
 Armor.prototype.processTurn = function() {

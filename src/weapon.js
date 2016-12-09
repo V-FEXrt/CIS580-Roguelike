@@ -191,6 +191,7 @@ function Weapon(aName, aLevel) {
 }
 
 Weapon.prototype.collided = function(aEntity) {
+
 }
 
 Weapon.prototype.processTurn = function() {

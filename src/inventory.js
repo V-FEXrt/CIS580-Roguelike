@@ -23,9 +23,9 @@ function Inventory(weapon, armor) {
  */
 Inventory.prototype.addWeapon = function(weapon) {
     checkWeapon(weapon);
+    weapon.shouldRetain = false;
     if (checkInvalidWeapon(window.player.class, weapon.attackType)) return;
 
-    weapon.shouldRetain = false;
     window.terminal.log("Picked up a " + weapon.toString(), window.colors.pickup);
     var weaponToDrop = this.inventory[0];
     this.inventory[0] = weapon;
@@ -41,9 +41,9 @@ Inventory.prototype.addWeapon = function(weapon) {
  */
 Inventory.prototype.addArmor = function(armor) {
     checkArmor(armor);
+    armor.shouldRetain = false;
     if (checkInvalidArmor(window.player.class, armor.name)) return;
 
-    armor.shouldRetain = false;
     window.terminal.log("Picked up " + armor.toString(), window.colors.pickup);
     var armorToDrop = this.inventory[1];
     this.inventory[1] = armor;
