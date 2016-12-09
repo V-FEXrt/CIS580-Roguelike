@@ -52,10 +52,10 @@ function spawn(aPlayer, tmap, count, percents) {
     );
     spawnArray[idx]()
   }
-  // if (window.debug) {
-  console.log(pu + " powerups spawned");
-  console.log(en + " enemies spawned");
-  // }
+  if (window.debug) {
+    console.log(pu + " powerups spawned");
+    console.log(en + " enemies spawned");
+  }
 }
 
 function spawnPowerup(pType) {
