@@ -87,6 +87,7 @@ function CombatClass(aName, aLevel) {
             var prefDist = 3;
             // var attackCooldown = 1;
 
+
             this.turnAI = function(aEnemy) {
                 var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
 
@@ -99,7 +100,8 @@ function CombatClass(aName, aLevel) {
                     if (distance.x < prefDist && distance.y < prefDist) {
                         aEnemy.position = moveBack(aEnemy.position, aEnemy.target.position);
                     } else if (distance.x > prefDist && distance.y > prefDist) {
-                        aEnemy.position = moveToward(aEnemy.position, aEnemy.target.position);
+                        var path = pathfinder.findPath(aEnemy.position, aEnemy.target.position);
+                        if (path.length > 1) aEnemy.position = { x: path[1].x, y: path[1].y };
                     }
                 }
 
@@ -160,7 +162,8 @@ function CombatClass(aName, aLevel) {
                         aEnemy.position = moveBack(aEnemy.position, aEnemy.target.position);
                         aEnemy.state = "moving";
                     } else if (distance.x > prefDist && distance.y > prefDist) {
-                        aEnemy.position = moveToward(aEnemy.position, aEnemy.target.position);
+                        var path = pathfinder.findPath(aEnemy.position, aEnemy.target.position);
+                        if (path.length > 1) aEnemy.position = { x: path[1].x, y: path[1].y };
                     }
                 }
 
@@ -181,19 +184,6 @@ function moveBack(a, b) { // TODO > should use pathfinder
 
     if (a.y > b.y) newPos.y = a.y + 1;
     else if (a.y < b.y) newPos.y = a.y - 1;
-    else newPos.y = a.y;
-
-    return newPos;
-}
-
-function moveToward(a, b) { // TODO > should use pathfinder
-    var newPos = new Object();
-    if (a.x > b.x) newPos.x = a.x - 1;
-    else if (a.x < b.x) newPos.x = a.x + 1;
-    else newPos.x = a.x;
-
-    if (a.y > b.y) newPos.y = a.y - 1;
-    else if (a.y < b.y) newPos.y = a.y + 1;
     else newPos.y = a.y;
 
     return newPos;
