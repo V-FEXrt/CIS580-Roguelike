@@ -31,6 +31,7 @@ function Player(position, tilemap, combatClass) {
     this.level = 0;
     this.shouldProcessTurn = true;
     this.shouldEndGame = false;
+    this.hasMoved = false;
 
     window.terminal.addCommand("class", "Get your player class", this.getClass.bind(this));
     window.terminal.addCommand("kill", "Kill yourself", this.killPlayer.bind(this));
@@ -69,23 +70,23 @@ Player.prototype.debugModeChanged = function () {
 }
 
 Player.prototype.spawnCommand = function (args) {
-    if(args.length == 1) window.terminal.log("Requires parameters", window.colors.invalid);
+    if (args.length == 1) window.terminal.log("Requires parameters", window.colors.invalid);
     else {
-        switch(args[1]) {
+        switch (args[1]) {
             case "weapon":
-                if(args[2] == "MorningStar") args[2] = "Morning Star";
-                if(args[2] == "HeavyBolts") args[2] = "Heavy Bolts";
-                if(args[2] == "MagicMissile") args[2] = "Magic Missile";
-                if(args[2] == "EldritchBlast") args[2] = "Eldritch Blast";
+                if (args[2] == "MorningStar") args[2] = "Morning Star";
+                if (args[2] == "HeavyBolts") args[2] = "Heavy Bolts";
+                if (args[2] == "MagicMissile") args[2] = "Magic Missile";
+                if (args[2] == "EldritchBlast") args[2] = "Eldritch Blast";
                 var weapon = new Weapon(args[2], args[3]);
                 weapon.position.x = args[4];
                 weapon.position.y = args[5];
                 window.entityManager.addEntity(weapon);
                 break;
             case "armor":
-                if(args[2] == "HideArmor") args[2] = "Hide Armor";
-                if(args[2] == "LeatherArmor") args[2] = "Leather Armor";
-                if(args[2] == "PlateArmor") args[2] = "Plate Armor";
+                if (args[2] == "HideArmor") args[2] = "Hide Armor";
+                if (args[2] == "LeatherArmor") args[2] = "Leather Armor";
+                if (args[2] == "PlateArmor") args[2] = "Plate Armor";
                 var armor = new Armor(args[2], args[3]);
                 armor.position.x = args[4];
                 armor.position.y = args[5];
@@ -115,9 +116,8 @@ Player.prototype.teleportCommand = function (args) {
     }
 }
 
-Player.prototype.healthCommand = function(args)
-{
-  this.combat.health = args[1];
+Player.prototype.healthCommand = function (args) {
+    this.combat.health = args[1];
 }
 Player.prototype.walkPath = function (path, completion) {
     if (this.state == "dead") return; // shouldnt be necessary
@@ -234,6 +234,8 @@ Player.prototype.processTurn = function (input) {
     if (screenCoor.x + 5 >= this.tilemap.draw.size.width) {
         this.tilemap.moveBy({ x: 1, y: 0 });
     }
+
+    this.hasMoved = true;
 }
 
 Player.prototype.collided = function (entity) {
@@ -242,6 +244,10 @@ Player.prototype.collided = function (entity) {
     }
     if (entity.type == "Weapon" || entity.type == "Armor") {
         this.collidingWith = entity;
+        if (this.hasMoved) {
+            this.lookCommand();
+            this.hasMoved = false;
+        }
     }
 }
 

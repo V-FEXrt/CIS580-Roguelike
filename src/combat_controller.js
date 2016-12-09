@@ -8,7 +8,35 @@ const Armor = require("./armor");
 const RNG = require("./rng");
 
 function CombatController() {
-
+    // for (var a = 0; a < 10; a++) {
+    //     var baseWeights = [10, 10, 15, 15, 20, 10, 5, 2, 5];
+    //     var rolls = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+    //     for (var i = 0; i < 30; i++) {
+    //         rolls[RNG.rollWeighted(
+    //             baseWeights[0],
+    //             baseWeights[1],
+    //             baseWeights[2],
+    //             baseWeights[3],
+    //             baseWeights[4],
+    //             baseWeights[5],
+    //             baseWeights[6],
+    //             baseWeights[7],
+    //             baseWeights[8]
+    //         )]++;
+    //     }
+    //     console.log(
+    //         a + ":",
+    //         rolls[0],
+    //         rolls[1],
+    //         rolls[2],
+    //         rolls[3],
+    //         rolls[4],
+    //         rolls[5],
+    //         rolls[6],
+    //         rolls[7],
+    //         rolls[8]
+    //     );
+    // }
 }
 
 CombatController.prototype.handleAttack = function(aAttackerClass, aDefenderClass) {
@@ -28,7 +56,7 @@ CombatController.prototype.handleAttack = function(aAttackerClass, aDefenderClas
     var lDamageRoll = RNG.rollRandom(lDamageMin, lDamageMax);
     var lDamageBonus = Math.floor(aAttackerClass.damageBonus);
     var lDamageResist = aDefenderClass.armor.level;
-    var lDamageTotal = Math.max(lDamageBase + lDamageBonus + lDamageRoll - lDamageResist, 0); // DR shouldnt deal zero or negative damage
+    var lDamageTotal = Math.max(lDamageBase + lDamageBonus + lDamageRoll - lDamageResist, 1); // DR shouldnt deal zero or negative damage
 
     var lApplyEffect = false;
 
@@ -52,7 +80,7 @@ CombatController.prototype.handleAttack = function(aAttackerClass, aDefenderClas
         } else { // attacker is enemy
             message = `The ${attacker} critically fails its attack and takes ${lSelfDamage} damage.`;
         }
-    } else if (lAttackRoll == 20 || (lAttackRoll == 19 && (aAttackerClass.weapon.attackType == "Ranged" || aAttackerClass.weapon.name == "Battleaxe"))) {
+    } else if (lAttackRoll == 20 || (lAttackRoll >= 18 && (aAttackerClass.weapon.attackType == "Ranged" || aAttackerClass.weapon.name == "Battleaxe"))) {
         lDamageTotal += lDamageMax;
         aDefenderClass.health -= lDamageTotal;
         // defender hit, play defender hit sound
@@ -139,7 +167,8 @@ CombatController.prototype.randomDrop = function(aPosition) {
         var armorRand = RNG.rollWeighted(robesChance, 35, 35, 10, 5);
         lDrop = new Armor(armorArray[armorRand], level);
     } else if (lRand > 1 && lRand < 17) {       // spawn weapon
-        var weaponArray = getWeapons(window.player.class); // TODO > Can spawn other classes weapons for fluff once invalid check is implemented
+        var classRand = getClass(window.player.class);
+        var weaponArray = getWeapons()[classRand];
         var weaponRand = RNG.rollRandom(0, weaponArray.length - 1);
         lDrop = new Weapon(weaponArray[weaponRand], level);
     } else {                                    // dont spawn anything
@@ -149,19 +178,47 @@ CombatController.prototype.randomDrop = function(aPosition) {
     return lDrop;
 }
 
+CombatController.prototype.getPercentArray = function() {
+    // damage, health, defense, attack, zombie, skele, cap, shaman, empty
+    var baseWeights = [10, 10, 15, 15, 20, 10, 5, 2, 5];
+    var level = window.player.level;
+
+    // var damageWeight = 20;
+    // var healthWeight = 20;
+    // var defenseWeight = 20;
+    // var attackWeight = 20;
+    // var zombieWeight = 20;
+    // var skeletonWeight = 0;
+    // var captainWeight = 0;
+    // var shamanWeight = 0;
+    // var emptyWeight = 5;
+
+    // return [damageWeight, healthWeight, defenseWeight, attackWeight,
+    //     zombieWeight, skeletonWeight, captainWeight, shamanWeight, emptyWeight];
+
+    return baseWeights;
+}
+
+function getClass(aClass) {
+    switch (aClass) {
+        case "Knight":
+            return RNG.rollWeighted(5, 2, 2);
+        case "Archer":
+            return RNG.rollWeighted(2, 5, 2);
+        case "Mage":
+            return RNG.rollWeighted(2, 2, 5);
+    }
+}
+
 function getArmors() {
     return ["Robes", "Hide Armor", "Leather Armor", "Chainmail", "Plate Armor"];
 }
 
-function getWeapons(aClass) {
-    switch (aClass) {
-        case "Knight":
-            return ["Longsword", "Morning Star", "Halberd", "Battleaxe"];
-
-        case "Archer":
-            return ["Bodkin", "Broadhead", "Poison-Tipped", "Heavy Bolts"];
-
-        case "Mage":
-            return ["Magic Missile", "Fireball", "Frostbolt", "Eldritch Blast"];
-    }
+function getWeapons() {
+    return [
+        ["Longsword", "Morning Star", "Halberd", "Battleaxe"],
+        ["Bodkin", "Broadhead", "Poison-Tipped", "Heavy Bolts"],
+        ["Magic Missile", "Fireball", "Frostbolt", "Eldritch Blast"]
+    ];
 }
+

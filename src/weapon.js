@@ -39,33 +39,33 @@ function Weapon(aName, aLevel) {
             this.damageMin = 1;
             this.damageType = "b";
             this.range = 1;
-            this.hitBonus = 3;
+            this.hitBonus = 2;
             this.attackEffect = "";
-            this.properties = "+3 to Hit";
+            this.properties = "+2 to Hit";
             this.spriteIdx = 2;
             break;
 
         case "Halberd":
             this.attackType = "Melee";
             this.damageMax = 8
-            this.damageMin = 2;
-            this.damageType = "s";
+            this.damageMin = 1;
+            this.damageType = "sp";
             this.range = 2;
             this.hitBonus = 0;
             this.attackEffect = "";
-            this.properties = "+1 Range, +1 Min Damage";
+            this.properties = "+1 Range";
             this.spriteIdx = 4;
             break;
 
         case "Battleaxe":
             this.attackType = "Melee";
             this.damageMax = 12
-            this.damageMin = 4;
+            this.damageMin = 1;
             this.damageType = "sb";
             this.range = 1;
             this.hitBonus = 1;
             this.attackEffect = "";
-            this.properties = "+3 Min Damage, +1 Crit Chance";
+            this.properties = "+2 Crit Chance";
             this.spriteIdx = 4;
             break;
 
@@ -75,19 +75,19 @@ function Weapon(aName, aLevel) {
             this.damageMin = 2;
             this.damageType = "s";
             this.range = 1;
-            this.hitBonus = 0;
+            this.hitBonus = 1;
             this.attackEffect = "";
             this.properties = "+1 Min Damage";
             this.spriteIdx = 3;
             break;
 
         // Ranged
-        case "Bodkin":
+        case "Bodkin": // bypass ac/dbl ab
             this.attackType = "Ranged";
             this.damageMax = 4
             this.damageMin = 1;
             this.damageType = "p";
-            this.range = 5;
+            this.range = 4;
             this.hitBonus = 3;
             this.attackEffect = "";
             this.properties = "+3 to Hit";
@@ -99,7 +99,7 @@ function Weapon(aName, aLevel) {
             this.damageMax = 6
             this.damageMin = 2;
             this.damageType = "p";
-            this.range = 5;
+            this.range = 4;
             this.hitBonus = 0;
             this.attackEffect = "";
             this.properties = "+1 Min Damage";
@@ -111,7 +111,7 @@ function Weapon(aName, aLevel) {
             this.damageMax = 4
             this.damageMin = 1;
             this.damageType = "p";
-            this.range = 5;
+            this.range = 4;
             this.hitBonus = 0;
             this.attackEffect = "Poisoned";
             this.properties = "50% Poison Chance";
@@ -123,7 +123,7 @@ function Weapon(aName, aLevel) {
             this.damageMax = 10
             this.damageMin = 4;
             this.damageType = "b";
-            this.range = 3;
+            this.range = 2;
             this.hitBonus = 0;
             this.attackEffect = "";
             this.properties = "+3 Min Damage, -2 Range";
@@ -136,8 +136,8 @@ function Weapon(aName, aLevel) {
             this.damageMax = 4
             this.damageMin = 1;
             this.damageType = "m";
-            this.range = 255;
-            this.hitBonus = 255;
+            this.range = 6;
+            this.hitBonus = 0;
             this.attackEffect = "";
             this.properties = "Unerring Accuracy";
             this.spriteIdx = 0;
@@ -148,7 +148,7 @@ function Weapon(aName, aLevel) {
             this.damageMax = 4
             this.damageMin = 1;
             this.damageType = "m";
-            this.range = 255;
+            this.range = 6;
             this.hitBonus = 0;
             this.attackEffect = "Burned";
             this.properties = "50% Burn Chance, Explodes on Contact";
@@ -160,7 +160,7 @@ function Weapon(aName, aLevel) {
             this.damageMax = 4
             this.damageMin = 1;
             this.damageType = "m";
-            this.range = 255;
+            this.range = 6;
             this.hitBonus = 0;
             this.attackEffect = "Frozen";
             this.properties = "50% Freeze Chance";
@@ -172,7 +172,7 @@ function Weapon(aName, aLevel) {
             this.damageMax = 10
             this.damageMin = 1;
             this.damageType = "m";
-            this.range = 255;
+            this.range = 6;
             this.hitBonus = -2;
             this.attackEffect = "";
             this.properties = "-2 to Hit";
@@ -190,30 +190,31 @@ function Weapon(aName, aLevel) {
     this.movingUp = true;
 }
 
-Weapon.prototype.collided = function (aEntity) {
-}
-
-Weapon.prototype.processTurn = function () {
+Weapon.prototype.collided = function(aEntity) {
 
 }
 
-Weapon.prototype.retain = function () {
+Weapon.prototype.processTurn = function() {
+
+}
+
+Weapon.prototype.retain = function() {
     return this.shouldRetain;
 }
 
-Weapon.prototype.update = function () {
+Weapon.prototype.update = function() {
     if (this.currY >= 5) this.movingUp = false;
     else if (this.currY <= -5) this.movingUp = true;
     if (this.movingUp) this.currY += .2;
     else this.currY -= .2;
 }
 
-Weapon.prototype.render = function (time, ctx) {
+Weapon.prototype.render = function(time, ctx) {
     var position = window.tilemap.toScreenCoords(this.position);
     var spriteSource = this.spritePositions[this.spriteIdx];
     ctx.drawImage(this.spritesheet, spriteSource.x, spriteSource.y, 75, 75, (position.x * this.size.width), (position.y * this.size.height) + this.currY, 96, 96);
 }
 
-Weapon.prototype.toString = function () {
+Weapon.prototype.toString = function() {
     return `Level ${this.level} ${this.name} with damage range ${this.damageMin}-${this.damageMax}, with ${this.properties}`
 }
