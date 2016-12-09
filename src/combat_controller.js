@@ -139,7 +139,8 @@ CombatController.prototype.randomDrop = function(aPosition) {
         var armorRand = RNG.rollWeighted(robesChance, 35, 35, 10, 5);
         lDrop = new Armor(armorArray[armorRand], level);
     } else if (lRand > 1 && lRand < 17) {       // spawn weapon
-        var weaponArray = getWeapons(window.player.class); // TODO > Can spawn other classes weapons for fluff once invalid check is implemented
+        var classRand = getClass(window.player.class);
+        var weaponArray = getWeapons()[classRand];
         var weaponRand = RNG.rollRandom(0, weaponArray.length - 1);
         lDrop = new Weapon(weaponArray[weaponRand], level);
     } else {                                    // dont spawn anything
@@ -165,20 +166,26 @@ CombatController.prototype.getPercentArray = function() {
         zombieWeight, skeletonWeight, captainWeight, shamanWeight, emptyWeight];
 }
 
+function getClass(aClass) {
+    switch (aClass) {
+        case "Knight":
+            return RNG.rollWeighted(5, 2, 2);
+        case "Archer":
+            return RNG.rollWeighted(2, 5, 2);
+        case "Mage":
+            return RNG.rollWeighted(2, 2, 5);
+    }
+}
+
 function getArmors() {
     return ["Robes", "Hide Armor", "Leather Armor", "Chainmail", "Plate Armor"];
 }
 
-function getWeapons(aClass) {
-    switch (aClass) {
-        case "Knight":
-            return ["Longsword", "Morning Star", "Halberd", "Battleaxe"];
-
-        case "Archer":
-            return ["Bodkin", "Broadhead", "Poison-Tipped", "Heavy Bolts"];
-
-        case "Mage":
-            return ["Magic Missile", "Fireball", "Frostbolt", "Eldritch Blast"];
-    }
+function getWeapons() {
+    return [
+        ["Longsword", "Morning Star", "Halberd", "Battleaxe"],
+        ["Bodkin", "Broadhead", "Poison-Tipped", "Heavy Bolts"],
+        ["Magic Missile", "Fireball", "Frostbolt", "Eldritch Blast"]
+    ];
 }
 
