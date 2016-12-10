@@ -85,7 +85,7 @@ CombatController.prototype.handleAttack = function(aAttackerClass, aDefenderClas
         aDefenderClass.health -= lDamageTotal;
         // defender hit, play defender hit sound
 
-        if (lAttackEffect != "") lApplyEffect = RNG.rollWeighted(25, 75);
+        if (lAttackEffect != "") lApplyEffect = RNG.rollWeighted(1, 4);
 
         // If attacker is player
         if (playerAttacker) {
@@ -98,7 +98,7 @@ CombatController.prototype.handleAttack = function(aAttackerClass, aDefenderClas
             aDefenderClass.health -= lDamageTotal;
             // defender hit, play defender hit sound
 
-            if (lAttackEffect != "") lApplyEffect = RNG.rollWeighted(50, 50);
+            if (lAttackEffect != "") lApplyEffect = RNG.rollWeighted(1, 1);
 
             // If attacker is player
             if (playerAttacker) {
@@ -139,13 +139,14 @@ CombatController.prototype.handleStatus = function(aCombatClass) {
             }
             break;
 
+        case "Stunned":
         case "Frozen":
             if (aCombatClass.status.timer > 1) {
                 aCombatClass.status.timer--;
-                window.terminal.log(`The ${aCombatClass.name} is Frozen solid!`, window.colors.combat);
+                window.terminal.log(`The ${aCombatClass.name} is ${aCombatClass.status.effect}.`, window.colors.combat);
             } else if (aCombatClass.status.timer == 1) {
-                if (RNG.rollWeighted(50, 50)) aCombatClass.status.timer--;
-                else window.terminal.log(`The ${aCombatClass.name} is Frozen solid!`, window.colors.combat);
+                if (RNG.rollWeighted(1, 1)) aCombatClass.status.timer--;
+                else window.terminal.log(`The ${aCombatClass.name} is ${aCombatClass.status.effect}.`, window.colors.combat);
             } else {
                 aCombatClass.status.effect = "None";
             }
@@ -159,7 +160,7 @@ CombatController.prototype.handleStatus = function(aCombatClass) {
 CombatController.prototype.randomDrop = function(aPosition) {
     var lDrop = new Object();
     var lRand = RNG.rollRandom(1, 20);
-    var level = window.player.level + RNG.rollWeighted(50, 40, 10);
+    var level = window.player.level + RNG.rollWeighted(5, 4, 1);
 
     if (lRand > 17) {                           // spawn armor
         var armorArray = getArmors();
@@ -212,11 +213,11 @@ CombatController.prototype.getPercentArray = function() {
 function getClass(aClass) {
     switch (aClass) {
         case "Knight":
-            return RNG.rollWeighted(5, 2, 2);
+            return RNG.rollWeighted(5, 1, 1);
         case "Archer":
-            return RNG.rollWeighted(2, 5, 2);
+            return RNG.rollWeighted(1, 5, 1);
         case "Mage":
-            return RNG.rollWeighted(2, 2, 5);
+            return RNG.rollWeighted(1, 1, 5);
     }
 }
 
