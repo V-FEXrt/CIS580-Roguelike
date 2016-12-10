@@ -216,5 +216,5 @@ Weapon.prototype.render = function (time, ctx) {
 }
 
 Weapon.prototype.toString = function () {
-    return `Level ${this.level} ${this.name} with damage range ${this.damageMin}-${this.damageMax}, with ${this.properties}`
+    return `Level ${this.level} ${this.name} with damage range ${this.damageMin+this.level}-${this.damageMax+this.level}, with ${this.properties}`
 }

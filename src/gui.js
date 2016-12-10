@@ -323,7 +323,8 @@ GUI.prototype.render = function (elapsedTime, ctx) {
 
     ctx.font = "25px Arial Black";
     ctx.fillStyle = "white";
-    ctx.fillText(window.player.combat.weapon.name + " -- " + window.player.combat.weapon.damageMin + "-" + window.player.combat.weapon.damageMax + " Damage, " + window.player.combat.weapon.properties, 450, 1095);
+    var str=`${window.player.combat.weapon.name}, ${window.player.combat.weapon.damageMin + window.player.combat.weapon.level}-${window.player.combat.weapon.damageMax+window.player.combat.weapon.level} Damage, ${window.player.combat.weapon.properties}`;
+    ctx.fillText(str, 450, 1095);
 
     }
   else if(this.state == "game over")
