@@ -15,6 +15,12 @@ function Armor(aName, aLevel) {
             this.weakType = "spb";
             break;
 
+        case "Bones":
+            this.defense = 5;
+            this.strongType = "p";
+            this.weakType = "b";
+            break;
+
         case "Robes":
             this.defense = 5;
             this.strongType = "spb"; // Purely for balance.
@@ -57,6 +63,7 @@ function Armor(aName, aLevel) {
 }
 
 Armor.prototype.collided = function(aEntity) {
+
 }
 
 Armor.prototype.processTurn = function() {
@@ -80,6 +87,6 @@ Armor.prototype.render = function(time, ctx) {
 
 }
 
-Armor.prototype.toString = function () {
+Armor.prototype.toString = function() {
     return `Level ${this.level} ${this.name} with ${this.defense} defense`;
 }

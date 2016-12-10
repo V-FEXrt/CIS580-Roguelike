@@ -2,6 +2,7 @@
 
 const Tilemap = require('./tilemap');
 const Vector = require('./vector');
+const RNG = require("./rng");
 
 // weapon/armor shouldnt be done here...
 // they can still be stored here if necessary, but 
@@ -12,8 +13,11 @@ const Armor = require("./armor");
 
 module.exports = exports = CombatClass;
 
-function CombatClass(aName) {
+function CombatClass(aName, aLevel) {
     this.name = aName;
+    // var levelBonus = aLevel / 3;
+    // set up random ish weapons/armor for enemies
+
     switch (aName) {
         case "Knight":
             this.health = 20;
@@ -22,7 +26,7 @@ function CombatClass(aName) {
             this.defenseBonus = 0;
             this.weapon = new Weapon("Longsword", 1);
             this.armor = new Armor("Hide Armor", 1);
-            this.status = { effect: "None", timer: 0 }
+            this.status = { effect: "None", timer: 0 };
             break;
 
         case "Archer":
@@ -32,7 +36,7 @@ function CombatClass(aName) {
             this.defenseBonus = 0;
             this.weapon = new Weapon("Broadhead", 1);
             this.armor = new Armor("Hide Armor", 1);
-            this.status = { effect: "None", timer: 0 }
+            this.status = { effect: "None", timer: 0 };
             break;
 
         case "Mage":
@@ -42,25 +46,26 @@ function CombatClass(aName) {
             this.defenseBonus = 0;
             this.weapon = new Weapon("Eldritch Blast", 1);
             this.armor = new Armor("Robes", 1);
-            this.status = { effect: "None", timer: 0 }
+            this.status = { effect: "None", timer: 0 };
             break;
 
 
         case "Zombie":
             this.health = 10;
-            this.attackBonus = 0;
-            this.damageBonus = 0;
-            this.defenseBonus = 0;
+            this.attackBonus = (RNG.rollWeighted(1, 1)) ? aLevel : aLevel - 1;
+            this.damageBonus = (RNG.rollWeighted(1, 1)) ? aLevel : aLevel - 1;
+            this.defenseBonus = (RNG.rollWeighted(1, 1)) ? aLevel : aLevel - 1;
             this.weapon = new Weapon("Claw", 1);
             this.armor = new Armor("Flesh", 1);
-            this.status = { effect: "None", timer: 0 }
-            this.senseRange = 5;
+            this.status = { effect: "None", timer: 0 };
+            var senseRange = 5;
+            // var attackCooldown = 0;
 
-            this.turnAI = function (aEnemy) {
+            this.turnAI = function(aEnemy) {
                 var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
                 if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
                     combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
-                } else if (distance.x <= aEnemy.combat.senseRange && distance.y <= aEnemy.combat.senseRange) {
+                } else if (distance.x <= senseRange && distance.y <= senseRange) {
                     var path = pathfinder.findPath(aEnemy.position, aEnemy.target.position);
                     if (path.length > 1) aEnemy.position = { x: path[1].x, y: path[1].y };
                 } else {
@@ -70,45 +75,57 @@ function CombatClass(aName) {
             }
             break;
 
-        case "EnemyRanged":
+        case "Skeletal Bowman":
             this.health = 10;
-            this.attackBonus = 0;
-            this.damageBonus = 0;
-            this.defenseBonus = 0;
+            this.attackBonus = (RNG.rollWeighted(1, 1)) ? aLevel + 1 : aLevel - 1;
+            this.damageBonus = (RNG.rollWeighted(1, 1)) ? aLevel + 1 : aLevel - 1;
+            this.defenseBonus = (RNG.rollWeighted(1, 1)) ? aLevel + 1 : aLevel - 1;
             this.weapon = new Weapon("Broadhead", 1);
-            this.armor = new Armor("Hide Armor", 1);
-            this.status = { effect: "None", timer: 0 }
-            this.senseRange = 10;
+            this.armor = new Armor("Bones", 1);
+            this.status = { effect: "None", timer: 0 };
+            var senseRange = 10;
+            var prefDist = 3;
+            // var attackCooldown = 1;
 
-            this.turnAI = function (aEnemy) {
+            this.turnAI = function(aEnemy) {
                 var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
-                if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
-                    combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
-                } else if (distance.x <= aEnemy.combat.senseRange && distance.y <= aEnemy.combat.senseRange) {
-                    var path = pathfinder.findPath(aEnemy.position, aEnemy.target.position);
-                    if (path.length > 1) aEnemy.position = { x: path[1].x, y: path[1].y };
-                } else {
+
+                // Move
+                if (distance.x > senseRange && distance.y > senseRange) {
                     var nextTile = aEnemy.tilemap.getRandomAdjacent(aEnemy.position);
                     aEnemy.position = { x: nextTile.x, y: nextTile.y };
+                } else {
+                    // Check preferred engagement distance
+                    if (distance.x < prefDist && distance.y < prefDist) {
+                        aEnemy.position = moveBack(aEnemy.position, aEnemy.target.position);
+                    } else if (distance.x > prefDist && distance.y > prefDist) {
+                        aEnemy.position = moveToward(aEnemy.position, aEnemy.target.position);
+                    }
+                }
+
+                // Attack
+                if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
+                    combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
                 }
             }
             break;
 
         case "Captain":
             this.health = 25;
-            this.attackBonus = 0;
-            this.damageBonus = 0;
-            this.defenseBonus = 0;
+            this.attackBonus = (RNG.rollWeighted(1, 1)) ? aLevel + 3 : aLevel;
+            this.damageBonus = (RNG.rollWeighted(1, 1)) ? aLevel + 3 : aLevel;
+            this.defenseBonus = (RNG.rollWeighted(1, 1)) ? aLevel + 3 : aLevel;
             this.weapon = new Weapon("Battleaxe", 1);
             this.armor = new Armor("Chainmail", 1);
-            this.status = { effect: "None", timer: 0 }
-            this.senseRange = 15;
+            this.status = { effect: "None", timer: 0 };
+            var senseRange = 15;
+            // var attackCooldown = 0;
 
-            this.turnAI = function (aEnemy) {
+            this.turnAI = function(aEnemy) {
                 var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
                 if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
                     combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
-                } else if (distance.x <= aEnemy.combat.senseRange && distance.y <= aEnemy.combat.senseRange) {
+                } else if (distance.x <= senseRange && distance.y <= senseRange) {
                     var path = pathfinder.findPath(aEnemy.position, aEnemy.target.position);
                     if (path.length > 1) aEnemy.position = { x: path[1].x, y: path[1].y };
                 } else {
@@ -120,27 +137,65 @@ function CombatClass(aName) {
 
         case "Shaman":
             this.health = 10;
-            this.attackBonus = 0;
-            this.damageBonus = 0;
-            this.defenseBonus = 0;
+            this.attackBonus = aLevel;
+            this.damageBonus = aLevel;
+            this.defenseBonus = aLevel;
             this.weapon = new Weapon("Eldritch Blast", 1);
             this.armor = new Armor("Robes", 1);
-            this.status = { effect: "None", timer: 0 }
-            this.senseRange = 10;
+            this.status = { effect: "None", timer: 0 };
+            var senseRange = 10;
+            var prefDist = 5;
+            // var attackCooldown = 2;
 
-            this.turnAI = function (aEnemy) {
+            this.turnAI = function(aEnemy) {
                 var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
-                if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
-                    combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
-                } else if (distance.x <= aEnemy.combat.senseRange && distance.y <= aEnemy.combat.senseRange) {
-                    var path = pathfinder.findPath(aEnemy.position, aEnemy.target.position);
-                    if (path.length > 1) aEnemy.position = { x: path[1].x, y: path[1].y };
-                } else {
+
+                // Move
+                if (distance.x > senseRange && distance.y > senseRange) {
                     var nextTile = aEnemy.tilemap.getRandomAdjacent(aEnemy.position);
                     aEnemy.position = { x: nextTile.x, y: nextTile.y };
+                } else {
+                    // Check preferred engagement distance
+                    if (distance.x < prefDist && distance.y < prefDist) {
+                        aEnemy.position = moveBack(aEnemy.position, aEnemy.target.position);
+                        aEnemy.state = "moving";
+                    } else if (distance.x > prefDist && distance.y > prefDist) {
+                        aEnemy.position = moveToward(aEnemy.position, aEnemy.target.position);
+                    }
+                }
+
+                // Attack
+                if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
+                    combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
                 }
             }
             break;
     }
+}
+
+function moveBack(a, b) { // TODO > should use pathfinder
+    var newPos = new Object();
+    if (a.x > b.x) newPos.x = a.x + 1;
+    else if (a.x < b.x) newPos.x = a.x - 1;
+    else newPos.x = a.x;
+
+    if (a.y > b.y) newPos.y = a.y + 1;
+    else if (a.y < b.y) newPos.y = a.y - 1;
+    else newPos.y = a.y;
+
+    return newPos;
+}
+
+function moveToward(a, b) { // TODO > should use pathfinder
+    var newPos = new Object();
+    if (a.x > b.x) newPos.x = a.x - 1;
+    else if (a.x < b.x) newPos.x = a.x + 1;
+    else newPos.x = a.x;
+
+    if (a.y > b.y) newPos.y = a.y - 1;
+    else if (a.y < b.y) newPos.y = a.y + 1;
+    else newPos.y = a.y;
+
+    return newPos;
 }
 

@@ -46,9 +46,10 @@ GUI.prototype.onmousemove = function(event)
 	x = event.offsetX;
 	y = event.offsetY;
 	if(this.state == "start")
-	{
+	{     
 		if(x >= 753 && x <= 1041)
 		{
+
 			if(y >= this.swordYPos[0] + 20 && y <= this.swordYPos[0] + 76)
 			{
 				this.swordHighlights[0] = this.highlightSize;
@@ -132,6 +133,7 @@ GUI.prototype.onmousedown = function(event)
  * {DOMHighResTimeStamp} time the elapsed time since the last frame
  */
 GUI.prototype.update = function (time) {
+
 	if(this.state == "start")
 	{
 		if(this.titleY >= this.titleMaxY)

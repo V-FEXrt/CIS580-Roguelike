@@ -7,7 +7,7 @@ const Inventory = require('./inventory.js');
 const Weapon = require('./weapon.js');
 const Armor = require('./armor.js');
 const Powerup = require('./powerup.js');
-
+const Animator = require('./animator.js');
 /**
  * @module exports the Player class
  */
@@ -24,14 +24,16 @@ function Player(position, tilemap, combatClass) {
     this.size = { width: 96, height: 96 };
     this.spritesheet = new Image();
     this.tilemap = tilemap;
-    this.spritesheet.src = './spritesheets/sprites.png';
+    this.spritesheet.src = './spritesheets/player_animations.png';
     this.type = "Player";
     this.walk = [];
     this.changeClass(combatClass);
     this.level = 0;
     this.shouldProcessTurn = true;
     this.shouldEndGame = false;
-
+    this.hasMoved = false;
+    this.direction = "right";
+    this.oldDirection = "right";
     window.terminal.addCommand("class", "Get your player class", this.getClass.bind(this));
     window.terminal.addCommand("kill", "Kill yourself", this.killPlayer.bind(this));
     window.terminal.addCommand("look", "Get info about the item at your feet", this.lookCommand.bind(this));
@@ -44,10 +46,22 @@ function Player(position, tilemap, combatClass) {
  * {DOMHighResTimeStamp} time the elapsed time since the last frame
  */
 Player.prototype.update = function (time) {
-    if (this.combat.health <= 0 && this.state != "dead") {
-        this.state = "dead";
-        this.shouldEndGame = true;
+    if(this.combat.health <= 0 && this.state != "dead")
+    {
+      this.state = "dead";
+      if(this.animator.state != "dead" && this.animator.state != "dying")
+      {
+        this.animator.updateState("dying");
+        this.shouldProcessTurn = false;
+      }
+     
     }
+    if(this.animator.state == "dead") 
+    {
+      this.animator.updateState("idle");
+      this.shouldEndGame = true;
+    } 
+    this.animator.update(time);
 }
 
 Player.prototype.debugModeChanged = function () {
@@ -69,23 +83,23 @@ Player.prototype.debugModeChanged = function () {
 }
 
 Player.prototype.spawnCommand = function (args) {
-    if(args.length == 1) window.terminal.log("Requires parameters", window.colors.invalid);
+    if (args.length == 1) window.terminal.log("Requires parameters", window.colors.invalid);
     else {
-        switch(args[1]) {
+        switch (args[1]) {
             case "weapon":
-                if(args[2] == "MorningStar") args[2] = "Morning Star";
-                if(args[2] == "HeavyBolts") args[2] = "Heavy Bolts";
-                if(args[2] == "MagicMissile") args[2] = "Magic Missile";
-                if(args[2] == "EldritchBlast") args[2] = "Eldritch Blast";
+                if (args[2] == "MorningStar") args[2] = "Morning Star";
+                if (args[2] == "HeavyBolts") args[2] = "Heavy Bolts";
+                if (args[2] == "MagicMissile") args[2] = "Magic Missile";
+                if (args[2] == "EldritchBlast") args[2] = "Eldritch Blast";
                 var weapon = new Weapon(args[2], args[3]);
                 weapon.position.x = args[4];
                 weapon.position.y = args[5];
                 window.entityManager.addEntity(weapon);
                 break;
             case "armor":
-                if(args[2] == "HideArmor") args[2] = "Hide Armor";
-                if(args[2] == "LeatherArmor") args[2] = "Leather Armor";
-                if(args[2] == "PlateArmor") args[2] = "Plate Armor";
+                if (args[2] == "HideArmor") args[2] = "Hide Armor";
+                if (args[2] == "LeatherArmor") args[2] = "Leather Armor";
+                if (args[2] == "PlateArmor") args[2] = "Plate Armor";
                 var armor = new Armor(args[2], args[3]);
                 armor.position.x = args[4];
                 armor.position.y = args[5];
@@ -115,9 +129,8 @@ Player.prototype.teleportCommand = function (args) {
     }
 }
 
-Player.prototype.healthCommand = function(args)
-{
-  this.combat.health = args[1];
+Player.prototype.healthCommand = function (args) {
+    this.combat.health = args[1];
 }
 Player.prototype.walkPath = function (path, completion) {
     if (this.state == "dead") return; // shouldnt be necessary
@@ -140,11 +153,14 @@ Player.prototype.changeClass = function (chosenClass) {
     this.state = "idle";
 
     if (this.class == "Knight") {
-        this.spritesheetPos = { x: 1, y: 5 };
+        //this.spritesheetPos = { x: 1, y: 5 };
+        this.animator = new Animator(3, this.state, this.class);
     } else if (this.class == "Mage") {
-        this.spritesheetPos = { x: 9, y: 5 };
+        //this.spritesheetPos = { x: 9, y: 5 };
+        this.animator = new Animator(6, this.state, this.class);
     } else if (this.class == "Archer") {
-        this.spritesheetPos = { x: 7, y: 6 };
+        //this.spritesheetPos = { x: 7, y: 6 };
+        this.animator = new Animator(0, this.state, this.class);
     }
 };
 
@@ -190,7 +206,7 @@ Player.prototype.getClass = function (args) {
 Player.prototype.processTurn = function (input) {
     if (!this.shouldProcessTurn) return;
     this.collidingWith = undefined;
-    if (this.combat.status.effect != "None") window.combatController.handleStatus(this.combat);
+    if (this.combat.status.effect != "None") window.combatController.handleStatus(this.combat);    
     if (this.state == "dead" || this.combat.status.effect == "Frozen") return;
 
     if (hasUserInput(input)) {
@@ -234,6 +250,8 @@ Player.prototype.processTurn = function (input) {
     if (screenCoor.x + 5 >= this.tilemap.draw.size.width) {
         this.tilemap.moveBy({ x: 1, y: 0 });
     }
+
+    this.hasMoved = true;
 }
 
 Player.prototype.collided = function (entity) {
@@ -242,6 +260,10 @@ Player.prototype.collided = function (entity) {
     }
     if (entity.type == "Weapon" || entity.type == "Armor") {
         this.collidingWith = entity;
+        if (this.hasMoved) {
+            this.lookCommand();
+            this.hasMoved = false;
+        }
     }
 }
 
@@ -255,13 +277,13 @@ Player.prototype.retain = function () {
  * {CanvasRenderingContext2D} ctx the context to render into
  */
 Player.prototype.render = function (elapsedTime, ctx) {
-    if (this.state == "dead") return; // shouldnt be necessary
+    //if (this.state == "dead") return; // shouldnt be necessary
 
     var position = this.tilemap.toScreenCoords(this.position);
 
     ctx.drawImage(
         this.spritesheet,
-        96 * this.spritesheetPos.x, 96 * this.spritesheetPos.y,
+        96 * this.animator.index.x, 96 * this.animator.index.y,
         96, 96,
         position.x * this.size.width, position.y * this.size.height,
         96, 96
@@ -270,6 +292,48 @@ Player.prototype.render = function (elapsedTime, ctx) {
 
 Player.prototype.killPlayer = function () {
     this.combat.health = 0;
+    if(this.state != "dead")
+    {
+      if(direction == "down")
+      {
+          if(this.oldDirection == "right") this.animator.changeDirection("right");
+          else this.animator.changeDirection("left");
+      }
+      else
+      {
+          if(!direction == "up") this.oldDirection = direction;
+          this.animator.changeDirection(direction);
+      }
+    }
+}
+
+Player.prototype.changeDirection = function(direction)
+{
+    if(this.state != "dead")
+    {
+      if(direction == "down")
+      {
+          if(this.oldDirection == "right") this.animator.changeDirection("right");
+          else this.animator.changeDirection("left");
+      }
+      else
+      {
+          if(!direction == "up") this.oldDirection = direction;
+          this.animator.changeDirection(direction);
+      }
+    }
+}
+
+Player.prototype.playAttack = function(clickPos)
+{    
+    if(this.state != "dead")
+    {
+      this.animator.updateState("attacking");
+      var position = this.tilemap.toScreenCoords(this.position);
+
+      if(clickPos.x < (position.x*this.size.width+ 40)) this.changeDirection("left");
+      else this.changeDirection("right");
+    }
 }
 
 function hasUserInput(input) {
