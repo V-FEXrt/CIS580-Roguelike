@@ -716,7 +716,7 @@ canvas.onclick = function(event) {
         x: parseInt(event.offsetX / 96),
         y: parseInt(event.offsetY / 96)
     }
-  
+
     player.playAttack({x: event.offsetX, y: event.offsetY});
     var clickedWorldPos = tilemap.toWorldCoords(node);
     window.entityManager.addEntity(new Click(clickedWorldPos, tilemap, player, function(enemy) {
@@ -857,9 +857,11 @@ function update(elapsedTime) {
             function() {
                 window.terminal.log(`The coordinates of the exit door are x: ${stairs.position.x} y: ${stairs.position.y}`, window.colors.cmdResponse);
             });
+        window.terminal.addCommand("spawn", "Spawns a given entity", function (args) { EntitySpawner.spawnCommand(args); });
     }
     else {
         window.terminal.removeCommand("door");
+        window.terminal.removeCommand("spawn");
     }
 }
 
@@ -1790,6 +1792,8 @@ function collision(entity1, entity2){
 const Enemy = require('./enemy');
 const Powerup = require('./powerup');
 const RNG = require('./rng');
+const Weapon = require('./weapon');
+const Armor = require('./armor');
 
 /**
  * @module EntitySpawner
@@ -1797,7 +1801,8 @@ const RNG = require('./rng');
  */
 module.exports = exports = {
   spawn: spawn,
-  drop: spawnDrop
+  drop: spawnDrop,
+  spawnCommand: spawnCommand
 }
 
 var pu = 0;
@@ -1861,7 +1866,72 @@ function spawnDrop(position) {
   if (drop.type != "None") window.entityManager.addEntity(drop);
 }
 
-},{"./enemy":10,"./powerup":19,"./rng":21}],13:[function(require,module,exports){
+function spawnCommand(args) {
+  if (args.length == 1) window.terminal.log("Requires parameters", window.colors.invalid);
+  else {
+      switch (args[1]) {
+          case "weapon":
+              if (args.length != 6) {
+                window.terminal.log("Syntax: spawn weapon <weaponName(no spaces)> <weaponLevel(preferably less than 100)> <x> <y>", window.colors.invalid);
+                break;
+              }
+              if (args[2] == "MorningStar") args[2] = "Morning Star";
+              if (args[2] == "HeavyBolts") args[2] = "Heavy Bolts";
+              if (args[2] == "MagicMissile") args[2] = "Magic Missile";
+              if (args[2] == "EldritchBlast") args[2] = "Eldritch Blast";
+              var weapon = new Weapon(args[2], args[3]);
+              if (weapon.damageMin == "undefined") {
+                window.terminal.log("Invalid weapon", window.colors.invalid);
+                break;
+              }
+              weapon.position.x = args[4];
+              weapon.position.y = args[5];
+              window.terminal.log(`Spawned ${args[2]}`, window.colors.cmdResponse);
+              window.entityManager.addEntity(weapon);
+              break;
+          case "armor":
+              if (args.length != 6) {
+                window.terminal.log("Syntax: spawn armor <armorName(no spaces)> <armorLevel(preferably less than 100)> <x> <y>", window.colors.invalid);
+                break;
+              }
+              if (args[2] == "HideArmor") args[2] = "Hide Armor";
+              if (args[2] == "LeatherArmor") args[2] = "Leather Armor";
+              if (args[2] == "PlateArmor") args[2] = "Plate Armor";
+              var armor = new Armor(args[2], args[3]);
+              if (armor.defense == "undefined") {
+                window.terminal.log("Invalid armor", window.colors.invalid);
+                break;
+              }
+              armor.position.x = args[4];
+              armor.position.y = args[5];
+              window.terminal.log(`Spawned ${args[2]}`, window.colors.cmdResponse);
+              window.entityManager.addEntity(armor);
+              break;
+          case "potion":
+              if (args.length != 5) {
+                window.terminal.log("Syntax: spawn potion <potionNum> <x> <y>", window.colors.invalid);
+                break;
+              }
+              window.entityManager.addEntity(new Powerup({x: args[3], y: args[4]}, tilemap, parseInt(args[2])));
+              var potions = ["crystal", "health", "defense", "agility"];
+              window.terminal.log(`Spawned ${potions[parseInt(args[2])-1]} potion`, window.colors.cmdResponse);
+              break;
+          case "enemy":
+              if (args.length != 5) {
+                window.terminal.log("Syntax: spawn enemy <enemyName> <x> <y>", window.colors.invalid);
+                break;
+              }
+              window.entityManager.addEntity(new Enemy({x: args[3], y: args[4]}, tilemap, args[2], window.player, spawnDrop));
+              window.terminal.log(`Spawned ${args[2]}`, window.colors.cmdResponse);
+              break;
+          default:
+              window.terminal.log("Invalid entity name", window.colors.invalid);
+              break;
+      }
+}
+}
+
+},{"./armor":6,"./enemy":10,"./powerup":19,"./rng":21,"./weapon":27}],13:[function(require,module,exports){
 "use strict";
 
 /**
@@ -2809,6 +2879,7 @@ const Weapon = require('./weapon.js');
 const Armor = require('./armor.js');
 const Powerup = require('./powerup.js');
 const Animator = require('./animator.js');
+const EntitySpawner = require('./entity_spawner');
 /**
  * @module exports the Player class
  */
@@ -2855,60 +2926,24 @@ Player.prototype.update = function (time) {
         this.animator.updateState("dying");
         this.shouldProcessTurn = false;
       }
-     
+
     }
-    if(this.animator.state == "dead") 
+    if(this.animator.state == "dead")
     {
       this.animator.updateState("idle");
       this.shouldEndGame = true;
-    } 
+    }
     this.animator.update(time);
 }
 
 Player.prototype.debugModeChanged = function () {
     if (window.gameDebug) {
-        window.terminal.addCommand("godmode", "Make yourself invincible",
-            function () {
-                window.terminal.log("You are now invincible", window.colors.cmdResponse);
-                this.combat.health = Number.POSITIVE_INFINITY;
-            });
         window.terminal.addCommand("tp", "Teleport to the specified coordinates", this.teleportCommand.bind(this));
-        window.terminal.addCommand("spawn", "Spawn an entity at a given location", this.spawnCommand.bind(this));
         window.terminal.addCommand("health", "Set the Player's health", this.healthCommand.bind(this));
     }
     else {
-        window.terminal.removeCommand("godmode");
         window.terminal.removeCommand("tp");
         window.terminal.removeCommand("health");
-    }
-}
-
-Player.prototype.spawnCommand = function (args) {
-    if (args.length == 1) window.terminal.log("Requires parameters", window.colors.invalid);
-    else {
-        switch (args[1]) {
-            case "weapon":
-                if (args[2] == "MorningStar") args[2] = "Morning Star";
-                if (args[2] == "HeavyBolts") args[2] = "Heavy Bolts";
-                if (args[2] == "MagicMissile") args[2] = "Magic Missile";
-                if (args[2] == "EldritchBlast") args[2] = "Eldritch Blast";
-                var weapon = new Weapon(args[2], args[3]);
-                weapon.position.x = args[4];
-                weapon.position.y = args[5];
-                window.entityManager.addEntity(weapon);
-                break;
-            case "armor":
-                if (args[2] == "HideArmor") args[2] = "Hide Armor";
-                if (args[2] == "LeatherArmor") args[2] = "Leather Armor";
-                if (args[2] == "PlateArmor") args[2] = "Plate Armor";
-                var armor = new Armor(args[2], args[3]);
-                armor.position.x = args[4];
-                armor.position.y = args[5];
-                window.entityManager.addEntity(armor);
-                break;
-            default:
-                window.terminal.log("Invalid entity name", window.colors.invalid);
-        }
     }
 }
 
@@ -2931,7 +2966,8 @@ Player.prototype.teleportCommand = function (args) {
 }
 
 Player.prototype.healthCommand = function (args) {
-    this.combat.health = args[1];
+  if(args == 1) window.terminal.log("You must provide an integer value", window.colors.invalid);
+  else this.combat.health = args[1];
 }
 Player.prototype.walkPath = function (path, completion) {
     if (this.state == "dead") return; // shouldnt be necessary
@@ -3007,7 +3043,7 @@ Player.prototype.getClass = function (args) {
 Player.prototype.processTurn = function (input) {
     if (!this.shouldProcessTurn) return;
     this.collidingWith = undefined;
-    if (this.combat.status.effect != "None") window.combatController.handleStatus(this.combat);    
+    if (this.combat.status.effect != "None") window.combatController.handleStatus(this.combat);
     if (this.state == "dead" || this.combat.status.effect == "Frozen") return;
 
     if (hasUserInput(input)) {
@@ -3126,7 +3162,7 @@ Player.prototype.changeDirection = function(direction)
 }
 
 Player.prototype.playAttack = function(clickPos)
-{    
+{
     if(this.state != "dead")
     {
       this.animator.updateState("attacking");
@@ -3141,7 +3177,7 @@ function hasUserInput(input) {
     return input.up || input.down || input.right || input.left;
 }
 
-},{"./animator.js":4,"./armor.js":6,"./combat_class":8,"./inventory.js":15,"./powerup.js":19,"./tilemap":25,"./vector":26,"./weapon.js":27}],19:[function(require,module,exports){
+},{"./animator.js":4,"./armor.js":6,"./combat_class":8,"./entity_spawner":12,"./inventory.js":15,"./powerup.js":19,"./tilemap":25,"./vector":26,"./weapon.js":27}],19:[function(require,module,exports){
 "use strict";
 
 const Tilemap = require('./tilemap');

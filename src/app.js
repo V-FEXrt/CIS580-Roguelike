@@ -99,7 +99,7 @@ canvas.onclick = function(event) {
         x: parseInt(event.offsetX / 96),
         y: parseInt(event.offsetY / 96)
     }
-  
+
     player.playAttack({x: event.offsetX, y: event.offsetY});
     var clickedWorldPos = tilemap.toWorldCoords(node);
     window.entityManager.addEntity(new Click(clickedWorldPos, tilemap, player, function(enemy) {
@@ -240,9 +240,11 @@ function update(elapsedTime) {
             function() {
                 window.terminal.log(`The coordinates of the exit door are x: ${stairs.position.x} y: ${stairs.position.y}`, window.colors.cmdResponse);
             });
+        window.terminal.addCommand("spawn", "Spawns a given entity", function (args) { EntitySpawner.spawnCommand(args); });
     }
     else {
         window.terminal.removeCommand("door");
+        window.terminal.removeCommand("spawn");
     }
 }
 
