@@ -66,7 +66,7 @@ CombatController.prototype.handleAttack = function(aAttackerClass, aDefenderClas
     var playerAttacker = (attacker == "Knight" || attacker == "Archer" || attacker == "Mage");
 
     if (lAttackRoll == 1) {
-        var lSelfDamage = RNG.rollMultiple(1, 3, aAttackerClass.weapon.level);
+        var lSelfDamage = RNG.rollMultiple(1, 3, Math.max(1, aAttackerClass.weapon.level / 5));
         aAttackerClass.health -= lSelfDamage;
         if (aAttackerClass.health <= 0) { // Crit fail cant kill an entity
             lSelfDamage - (1 - aAttackerClass.health);
@@ -131,7 +131,7 @@ CombatController.prototype.handleStatus = function(aCombatClass) {
         case "Poisoned":
             if (aCombatClass.status.timer > 0) {
                 aCombatClass.status.timer--;
-                var damage = RNG.rollMultiple(1, 5, window.player.level);
+                var damage = RNG.rollMultiple(1, 5, Math.max(1, window.player.level / 5));
                 aCombatClass.health -= damage;
                 window.terminal.log(`${damage} ${aCombatClass.status.effect.substring(0, aCombatClass.status.effect.length - 2)} damage.`, window.colors.combat);
             } else {
@@ -180,23 +180,34 @@ CombatController.prototype.randomDrop = function(aPosition) {
 
 CombatController.prototype.getPercentArray = function() {
     // damage, health, defense, attack, zombie, skele, cap, shaman, empty
-    var baseWeights = [10, 10, 15, 15, 20, 10, 5, 2, 5];
+    var baseWeights = [10, 10, 15, 15, 20, 8, 5, 2, 5];
     var level = window.player.level;
+    var mult = 1;
 
-    // var damageWeight = 20;
-    // var healthWeight = 20;
-    // var defenseWeight = 20;
-    // var attackWeight = 20;
-    // var zombieWeight = 20;
-    // var skeletonWeight = 0;
-    // var captainWeight = 0;
-    // var shamanWeight = 0;
-    // var emptyWeight = 5;
+    var damageWeight = baseWeights[0];
+    var healthWeight = baseWeights[1];
+    var defenseWeight = baseWeights[2];
+    var attackWeight = baseWeights[3];
 
-    // return [damageWeight, healthWeight, defenseWeight, attackWeight,
-    //     zombieWeight, skeletonWeight, captainWeight, shamanWeight, emptyWeight];
+    var zombieWeight = baseWeights[4];
+    var skeletonWeight = baseWeights[5];
+    var captainWeight = function() {
+        if (level < 5) return 0;
+        else if (level < 10 && rollWeighted(1, 1)) return baseWeights[6];
+        else return baseWeights[6] + level;
+    }
+    var shamanWeight = function() {
+        if (level < 5) return 0;
+        else if (level < 10 && rollWeighted(1, 1)) return baseWeights[7];
+        else return baseWeights[7] + level;
+    }
 
-    return baseWeights;
+    var emptyWeight = baseWeights[8];
+
+    return [damageWeight, healthWeight, defenseWeight, attackWeight,
+        zombieWeight, skeletonWeight, captainWeight, shamanWeight, emptyWeight];
+
+    // return baseWeights;
 }
 
 function getClass(aClass) {

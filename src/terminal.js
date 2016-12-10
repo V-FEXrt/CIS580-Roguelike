@@ -65,20 +65,26 @@ Terminal.prototype.render = function (elapsedTime, ctx) {
 Terminal.prototype.onkeydown = function (event) {
     switch (event.key) {
         case "/":
+            event.preventDefault();
             this.active = true;
             break;
         case "Enter":
+            event.preventDefault();
             if (!this.active) return;
             this.processInput();
             this.input = "";
             this.active = false;
             break;
         case "Backspace":
+            event.preventDefault();
             this.input = this.input.substr(0, this.input.length - 1);
             break;
         case "Escape":
+            event.preventDefault();
             this.input = "";
             this.active = false;
+        case " ":
+            event.preventDefault();
         default:
             if (event.key.length > 1) return;
             if (this.active) this.input = this.input.concat(event.key)
@@ -143,8 +149,8 @@ function splitMessage(message, messages, color) {
     }
     else {
         var index = MAX_MSG_LENGTH;
-        for(var i = 0; i < MAX_MSG_LENGTH; i++) {
-            if(message.charAt(i) == ' ') index = i + 1;
+        for (var i = 0; i < MAX_MSG_LENGTH; i++) {
+            if (message.charAt(i) == ' ') index = i + 1;
         }
         messages.unshift({ text: message.slice(0, index), color: color });
         splitMessage(message.slice(index, message.length), messages, color);
