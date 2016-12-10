@@ -58,7 +58,7 @@ Player.prototype.update = function (time) {
     }
     if(this.animator.state == "dead") 
     {
-      this.animator.updateState("idle");
+      this.animator.updateState("nothing");
       this.shouldEndGame = true;
     } 
     this.animator.update(time);

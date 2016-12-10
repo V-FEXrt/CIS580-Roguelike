@@ -515,31 +515,51 @@ Animator.prototype.update = function(time){
   }
   else if(this.state == "dying")
   {
-    if(this.frame < this.start + sheetColumns*2+4)
+    if(this.entity == "Knight")
+    {
+      if(this.frame < this.start + sheetColumns*2+4)
+      {
+        if(this.timer >= defaultFrameTime)
+        {
+          this.timer = 0;
+          this.frame++;
+        }
+      }
+      else if(this.frame == this.start+sheetColumns*2+4)
+      {
+        if(this.timer >= defaultFrameTime + delayTime)
+        {
+          this.timer = 0;
+          this.frame++;
+        }
+      }
+      else 
+      {
+        if(this.timer >= defaultFrameTime/2)
+        {
+          this.frame++;
+          if(this.frame > this.start+sheetColumns*2+7)
+          {
+             if(this.timer >= delayTime + 1000) this.updateState("dead");
+             this.frame--;
+          }     
+          else this.timer = 0;
+        }
+      } 
+    }
+    else if(this.entity == "Archer" || this.entity == "Mage")
     {
       if(this.timer >= defaultFrameTime)
       {
-        this.timer = 0;
         this.frame++;
+        if(this.frame > this.start+sheetColumns*2+3)
+        {
+          if(this.timer >= delayTime + 1000) this.updateState("dead");
+          this.frame--;
+        }     
+        else this.timer = 0;
       }
     }
-    else if(this.frame == this.start+sheetColumns*2+4)
-    {
-      if(this.timer >= defaultFrameTime + delayTime)
-      {
-        this.timer = 0;
-        this.frame++;
-      }
-    }
-    else 
-    {
-      if(this.timer >= defaultFrameTime/2)
-      {
-        this.timer = 0;
-        this.frame++;
-        if(this.frame > this.start+sheetColumns*2+7) this.updateState("dead");
-      }
-    } 
   }
   else if(this.state == "dead")
   {
@@ -569,6 +589,10 @@ Animator.prototype.updateState = function(state)
   else if(this.state == "dead")
   {
     this.frame = this.start+sheetColumns*2+7;
+  }
+  else if(this.state == "nothing")
+  {
+    
   }
 }
 
@@ -2859,7 +2883,7 @@ Player.prototype.update = function (time) {
     }
     if(this.animator.state == "dead") 
     {
-      this.animator.updateState("idle");
+      this.animator.updateState("nothing");
       this.shouldEndGame = true;
     } 
     this.animator.update(time);
