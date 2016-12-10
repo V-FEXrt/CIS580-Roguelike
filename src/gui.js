@@ -310,8 +310,8 @@ GUI.prototype.render = function (elapsedTime, ctx) {
     ctx.font = "25px Arial Black";
     ctx.fillStyle = "green";
     ctx.drawImage(crest, 136, 1061);
-    if(window.player.combat.armor.defense < 10) ctx.fillText(window.player.combat.armor.defense, 148.5, 1093);
-    else ctx.fillText(window.player.combat.armor.defense, 142.5, 1093);
+    if(window.player.combat.armor.level < 10) ctx.fillText(window.player.combat.armor.level, 148.5, 1093);
+    else ctx.fillText(window.player.combat.armor.level, 142.5, 1093);
 
     ctx.fillStyle = "white";
     ctx.fillText(window.player.combat.armor.name, 187.5, 1094.5)

@@ -139,13 +139,14 @@ CombatController.prototype.handleStatus = function(aCombatClass) {
             }
             break;
 
+        case "Stunned":
         case "Frozen":
             if (aCombatClass.status.timer > 1) {
                 aCombatClass.status.timer--;
-                window.terminal.log(`The ${aCombatClass.name} is Frozen solid!`, window.colors.combat);
+                window.terminal.log(`The ${aCombatClass.name} is ${aCombatClass.status.effect}.`, window.colors.combat);
             } else if (aCombatClass.status.timer == 1) {
                 if (RNG.rollWeighted(50, 50)) aCombatClass.status.timer--;
-                else window.terminal.log(`The ${aCombatClass.name} is Frozen solid!`, window.colors.combat);
+                else window.terminal.log(`The ${aCombatClass.name} is ${aCombatClass.status.effect}.`, window.colors.combat);
             } else {
                 aCombatClass.status.effect = "None";
             }
@@ -212,11 +213,11 @@ CombatController.prototype.getPercentArray = function() {
 function getClass(aClass) {
     switch (aClass) {
         case "Knight":
-            return RNG.rollWeighted(5, 2, 2);
+            return RNG.rollWeighted(5, 1, 1);
         case "Archer":
-            return RNG.rollWeighted(2, 5, 2);
+            return RNG.rollWeighted(1, 5, 1);
         case "Mage":
-            return RNG.rollWeighted(2, 2, 5);
+            return RNG.rollWeighted(1, 1, 5);
     }
 }
 
