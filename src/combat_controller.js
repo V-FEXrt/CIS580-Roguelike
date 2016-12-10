@@ -66,7 +66,7 @@ CombatController.prototype.handleAttack = function(aAttackerClass, aDefenderClas
     var playerAttacker = (attacker == "Knight" || attacker == "Archer" || attacker == "Mage");
 
     if (lAttackRoll == 1) {
-        var lSelfDamage = RNG.rollMultiple(1, 3, aAttackerClass.weapon.level);
+        var lSelfDamage = RNG.rollMultiple(1, 3, Math.max(1, aAttackerClass.weapon.level / 5));
         aAttackerClass.health -= lSelfDamage;
         if (aAttackerClass.health <= 0) { // Crit fail cant kill an entity
             lSelfDamage - (1 - aAttackerClass.health);
@@ -131,7 +131,7 @@ CombatController.prototype.handleStatus = function(aCombatClass) {
         case "Poisoned":
             if (aCombatClass.status.timer > 0) {
                 aCombatClass.status.timer--;
-                var damage = RNG.rollMultiple(1, 5, window.player.level);
+                var damage = RNG.rollMultiple(1, 5, Math.max(1, window.player.level / 5));
                 aCombatClass.health -= damage;
                 window.terminal.log(`${damage} ${aCombatClass.status.effect.substring(0, aCombatClass.status.effect.length - 2)} damage.`, window.colors.combat);
             } else {

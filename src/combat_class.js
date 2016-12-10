@@ -55,8 +55,8 @@ function CombatClass(aName, aLevel) {
             this.attackBonus = 0;
             this.damageBonus = 0;
             this.defenseBonus = 0;
-            this.weapon = new Weapon("Claw", 1);
-            this.armor = new Armor("Flesh", 1);
+            this.weapon = new Weapon("Claw", aLevel);
+            this.armor = new Armor("Flesh", aLevel);
             this.status = { effect: "None", timer: 0 };
             var senseRange = 5;
             // var attackCooldown = 0;
@@ -79,8 +79,8 @@ function CombatClass(aName, aLevel) {
             this.attackBonus = 0;
             this.damageBonus = 0;
             this.defenseBonus = 0;
-            this.weapon = new Weapon("Broadhead", 1);
-            this.armor = new Armor("Bones", 1);
+            this.weapon = new Weapon("Broadhead", aLevel);
+            this.armor = new Armor("Bones", aLevel);
             this.status = { effect: "None", timer: 0 };
             var senseRange = 10;
             var prefDist = 3;
@@ -115,8 +115,8 @@ function CombatClass(aName, aLevel) {
             this.attackBonus = aLevel;
             this.damageBonus = aLevel;
             this.defenseBonus = aLevel;
-            this.weapon = new Weapon("Battleaxe", 1);
-            this.armor = new Armor("Chainmail", 1);
+            this.weapon = new Weapon("Battleaxe", aLevel);
+            this.armor = new Armor("Chainmail", aLevel);
             this.status = { effect: "None", timer: 0 };
             var senseRange = 15;
             // var attackCooldown = 0;
@@ -139,8 +139,8 @@ function CombatClass(aName, aLevel) {
             this.attackBonus = 0;
             this.damageBonus = 0;
             this.defenseBonus = 0;
-            this.weapon = new Weapon("Eldritch Blast", 1);
-            this.armor = new Armor("Robes", 1);
+            this.weapon = new Weapon("Eldritch Blast", aLevel);
+            this.armor = new Armor("Robes", aLevel);
             this.status = { effect: "None", timer: 0 };
             var senseRange = 10;
             var prefDist = 5;
@@ -182,10 +182,12 @@ function moveBack(a, b) {
     else if (a.y < b.y) newPos.y = a.y - 1;
     else newPos.y = a.y;
 
-    return moveToward(a, newPos);
+    // return moveToward(a, newPos);
+    return newPos;
 }
 
 function moveToward(a, b) {
     var path = pathfinder.findPath(a, b);
     if (path.length > 1) return { x: path[1].x, y: path[1].y };
 }
+
