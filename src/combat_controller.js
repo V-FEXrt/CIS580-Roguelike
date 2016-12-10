@@ -191,16 +191,15 @@ CombatController.prototype.getPercentArray = function() {
 
     var zombieWeight = baseWeights[4];
     var skeletonWeight = baseWeights[5];
-    var captainWeight = function() {
-        if (level < 5) return 0;
-        else if (level < 10 && rollWeighted(1, 1)) return baseWeights[6];
-        else return baseWeights[6] + level;
-    }
-    var shamanWeight = function() {
-        if (level < 5) return 0;
-        else if (level < 10 && rollWeighted(1, 1)) return baseWeights[7];
-        else return baseWeights[7] + level;
-    }
+    var captainWeight;
+    if (level < 5) captainWeight = 0;
+    else if (level < 10 && rollWeighted(1, 1)) captainWeight = baseWeights[6];
+    else captainWeight = baseWeights[6] + level;
+    var shamanWeight;
+    if (level < 5) shamanWeight = 0;
+    else if (level < 10 && rollWeighted(1, 1)) shamanWeight = baseWeights[7];
+    else shamanWeight = baseWeights[7] + level;
+
 
     var emptyWeight = baseWeights[8];
 
