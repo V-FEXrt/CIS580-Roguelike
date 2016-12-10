@@ -241,10 +241,22 @@ function update(elapsedTime) {
                 window.terminal.log(`The coordinates of the exit door are x: ${stairs.position.x} y: ${stairs.position.y}`, window.colors.cmdResponse);
             });
         window.terminal.addCommand("spawn", "Spawns a given entity", function (args) { EntitySpawner.spawnCommand(args); });
+        window.terminal.addCommand("level", "Sets the level to the given integer",
+          function(args) {
+            if (args.length != 2) {
+              window.terminal.log("Syntax: level <integer>", window.colors.invalid);
+            }
+            else {
+              window.player.position = {x: stairs.position.x, y: stairs.position.y};
+              window.terminal.log(`Setting level to ${args[1]}`, window.colors.cmdResponse);
+              window.player.level = parseInt(args[1]);
+            }
+        });
     }
     else {
         window.terminal.removeCommand("door");
         window.terminal.removeCommand("spawn");
+        window.terminal.removeCommand("level");
     }
 }
 
