@@ -3,6 +3,8 @@
 const Enemy = require('./enemy');
 const Powerup = require('./powerup');
 const RNG = require('./rng');
+const Weapon = require('./weapon');
+const Armor = require('./armor');
 
 /**
  * @module EntitySpawner
@@ -10,7 +12,8 @@ const RNG = require('./rng');
  */
 module.exports = exports = {
   spawn: spawn,
-  drop: spawnDrop
+  drop: spawnDrop,
+  spawnCommand: spawnCommand
 }
 
 var pu = 0;
@@ -72,4 +75,69 @@ function spawnDrop(position) {
   pu++;
   var drop = window.combatController.randomDrop(position);
   if (drop.type != "None") window.entityManager.addEntity(drop);
+}
+
+function spawnCommand(args) {
+  if (args.length == 1) window.terminal.log("Requires parameters", window.colors.invalid);
+  else {
+      switch (args[1]) {
+          case "weapon":
+              if (args.length != 6) {
+                window.terminal.log("Syntax: spawn weapon <weaponName(no spaces)> <weaponLevel(preferably less than 100)> <x> <y>", window.colors.invalid);
+                break;
+              }
+              if (args[2] == "MorningStar") args[2] = "Morning Star";
+              if (args[2] == "HeavyBolts") args[2] = "Heavy Bolts";
+              if (args[2] == "MagicMissile") args[2] = "Magic Missile";
+              if (args[2] == "EldritchBlast") args[2] = "Eldritch Blast";
+              var weapon = new Weapon(args[2], args[3]);
+              if (weapon.damageMin == "undefined") {
+                window.terminal.log("Invalid weapon", window.colors.invalid);
+                break;
+              }
+              weapon.position.x = args[4];
+              weapon.position.y = args[5];
+              window.terminal.log(`Spawned ${args[2]}`, window.colors.cmdResponse);
+              window.entityManager.addEntity(weapon);
+              break;
+          case "armor":
+              if (args.length != 6) {
+                window.terminal.log("Syntax: spawn armor <armorName(no spaces)> <armorLevel(preferably less than 100)> <x> <y>", window.colors.invalid);
+                break;
+              }
+              if (args[2] == "HideArmor") args[2] = "Hide Armor";
+              if (args[2] == "LeatherArmor") args[2] = "Leather Armor";
+              if (args[2] == "PlateArmor") args[2] = "Plate Armor";
+              var armor = new Armor(args[2], args[3]);
+              if (armor.defense == "undefined") {
+                window.terminal.log("Invalid armor", window.colors.invalid);
+                break;
+              }
+              armor.position.x = args[4];
+              armor.position.y = args[5];
+              window.terminal.log(`Spawned ${args[2]}`, window.colors.cmdResponse);
+              window.entityManager.addEntity(armor);
+              break;
+          case "potion":
+              if (args.length != 5) {
+                window.terminal.log("Syntax: spawn potion <potionNum> <x> <y>", window.colors.invalid);
+                break;
+              }
+              window.entityManager.addEntity(new Powerup({x: args[3], y: args[4]}, tilemap, parseInt(args[2])));
+              var potions = ["crystal", "health", "defense", "agility"];
+              window.terminal.log(`Spawned ${potions[parseInt(args[2])-1]} potion`, window.colors.cmdResponse);
+              break;
+          case "enemy":
+              if (args.length != 5) {
+                window.terminal.log("Syntax: spawn enemy <enemyName> <x> <y>", window.colors.invalid);
+                break;
+              }
+              window.entityManager.addEntity(new Enemy({x: args[3], y: args[4]}, tilemap, args[2], window.player, spawnDrop));
+              window.terminal.log(`Spawned ${args[2]}`, window.colors.cmdResponse);
+              break;
+          default:
+              window.terminal.log("Invalid entity name", window.colors.invalid);
+              break;
+      }
+}
 }
