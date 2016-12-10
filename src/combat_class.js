@@ -84,8 +84,7 @@ function CombatClass(aName, aLevel) {
             this.status = { effect: "None", timer: 0 };
             var senseRange = 10;
             var prefDist = 3;
-            // var attackCooldown = 1;
-
+            var attackCooldown = 1;
 
             this.turnAI = function(aEnemy) {
                 var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
@@ -94,19 +93,24 @@ function CombatClass(aName, aLevel) {
                 if (distance.x > senseRange && distance.y > senseRange) {
                     var nextTile = aEnemy.tilemap.getRandomAdjacent(aEnemy.position);
                     aEnemy.position = { x: nextTile.x, y: nextTile.y };
-                } else {
+                } else if (attackCooldown <= 0) {
                     // Check preferred engagement distance
                     if (distance.x < prefDist && distance.y < prefDist) {
                         aEnemy.position = moveBack(aEnemy.position, aEnemy.target.position);
+                        attackCooldown = 1;
                     } else if (distance.x > prefDist && distance.y > prefDist) {
                         aEnemy.position = moveToward(aEnemy.position, aEnemy.target.position);
+                        attackCooldown = 1;
                     }
                 }
 
                 // Attack
-                if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
+                if (attackCooldown <= 0 && distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
                     combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
+                    attackCooldown = 2;
                 }
+
+                attackCooldown--;
             }
             break;
 
