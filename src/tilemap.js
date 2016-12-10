@@ -203,7 +203,7 @@ Tilemap.prototype.findOpenSpace = function()
 }
 
 // Finds an random open tile adjacent to a given tile.
-Tilemap.prototype.getRandomAdjacent = function (aTile) {
+Tilemap.prototype.getRandomAdjacent = function (aTile, aFilter) {
   var adjacents = [
     { x: aTile.x - 1, y: aTile.y - 1, wall: this.isWall(aTile.x - 1, aTile.y - 1) },
     { x: aTile.x, y: aTile.y - 1, wall: this.isWall(aTile.x, aTile.y - 1) },
