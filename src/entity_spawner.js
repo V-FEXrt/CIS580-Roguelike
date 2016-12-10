@@ -37,7 +37,7 @@ var spawnArray = [
 var tilemap;
 var player;
 // percents should be an array of the percent everything should be spawned. in this format
-// [ crystal, red potion, blue potion, green potion, Zombie, EnemyRanged, Captain, Shaman ]
+// [ crystal, red potion, blue potion, green potion, Zombie, Skeletal Bowman, Captain, Shaman, Empty ]
 function spawn(aPlayer, tmap, count, percents) {
   tilemap = tmap;
   player = aPlayer;
