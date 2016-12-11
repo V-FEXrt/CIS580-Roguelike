@@ -2,7 +2,7 @@
 
 const Tilemap = require('./tilemap');
 const CombatClass = require("./combat_class");
-
+const Animator = require("./animator.js");
 module.exports = exports = Enemy;
 
 function Enemy(position, tilemap, combatClass, target, onDeathCB) {
@@ -17,6 +17,11 @@ function Enemy(position, tilemap, combatClass, target, onDeathCB) {
     this.combat = new CombatClass(this.class, target.level);
     this.target = target;
     this.onDeathCB = onDeathCB;
+    
+    if(this.combatClass == "Shaman")
+    {
+      this.animator = new Animator(0, "idle", "Shaman");
+    }
 }
 
 Enemy.prototype.processTurn = function() {
