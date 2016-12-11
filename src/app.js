@@ -107,12 +107,21 @@ canvas.onclick = function(event) {
     window.entityManager.addEntity(new Click(clickedWorldPos, tilemap, player, function(enemy) {
         var distance = Vector.distance(player.position, enemy.position);
         if (distance.x <= player.combat.weapon.range && distance.y <= player.combat.weapon.range) {
-            turnDelay = defaultTurnDelay;
-            autoTurn = false;
-            combatController.handleAttack(player.combat, enemy.combat);
+            if (player.combat.weapon.attackType != "Melee") {
+                var path = pathfinder.findPath(player.position, enemy.position);
+                if (Vector.magnitude(distance) * 2 >= path.length) {
+                    combatController.handleAttack(player.combat, enemy.combat);
+                }
+            } else {
+                combatController.handleAttack(player.combat, enemy.combat);
+            }
             processTurn();
         }
     }));
+}
+
+canvas.oncontextmenu = function(event) {
+    event.preventDefault();
 }
 
 /**
@@ -124,48 +133,43 @@ window.onkeydown = function(event) {
     switch (event.key) {
         case "ArrowUp":
         case "w":
+            event.preventDefault();
             input.up = true;
             if (resetTimer) {
                 turnTimer = turnDelay;
                 resetTimer = false;
             }
-      player.changeDirection("up");
-            event.preventDefault();
+            player.changeDirection("up");
             break;
         case "ArrowDown":
         case "s":
+            event.preventDefault();
             input.down = true;
             if (resetTimer) {
                 turnTimer = turnDelay;
                 resetTimer = false;
             }
-      player.changeDirection("down");
-            event.preventDefault();
+            player.changeDirection("down");
             break;
         case "ArrowLeft":
         case "a":
+            event.preventDefault();
             input.left = true;
             if (resetTimer) {
                 turnTimer = turnDelay;
                 resetTimer = false;
             }
-      player.changeDirection("left");
-            event.preventDefault();
+            player.changeDirection("left");
             break;
         case "ArrowRight":
         case "d":
+            event.preventDefault();
             input.right = true;
             if (resetTimer) {
                 turnTimer = turnDelay;
                 resetTimer = false;
             }
-      player.changeDirection("right");
-            event.preventDefault();
-            break;
-        case "Shift":
-            event.preventDefault();
-            turnDelay = defaultTurnDelay / 2;
-            autoTurn = true;
+            player.changeDirection("right");
             break;
         case "Escape":
             event.preventDefault();
@@ -173,6 +177,11 @@ window.onkeydown = function(event) {
             {
               gui.state = "start";
             }
+        // case "Shift":
+        //     event.preventDefault();
+        //     turnDelay = defaultTurnDelay / 2;
+        //     autoTurn = true;
+        //     break;
     }
 }
 
@@ -248,9 +257,11 @@ function update(elapsedTime) {
             function() {
                 window.terminal.log(`The coordinates of the exit door are x: ${stairs.position.x} y: ${stairs.position.y}`, window.colors.cmdResponse);
             });
+        window.terminal.addCommand("spawn", "Spawns a given entity", function(args) { EntitySpawner.spawnCommand(args); });
     }
     else {
         window.terminal.removeCommand("door");
+        window.terminal.removeCommand("spawn");
     }
 }
 

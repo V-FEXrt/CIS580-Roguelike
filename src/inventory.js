@@ -21,7 +21,7 @@ function Inventory(weapon, armor) {
  * @function processes a new weapon item
  *
  */
-Inventory.prototype.addWeapon = function(weapon) {
+Inventory.prototype.addWeapon = function (weapon) {
     checkWeapon(weapon);
     weapon.shouldRetain = false;
     if (checkInvalidWeapon(window.player.class, weapon.attackType)) return;
@@ -30,7 +30,7 @@ Inventory.prototype.addWeapon = function(weapon) {
     var weaponToDrop = this.inventory[0];
     this.inventory[0] = weapon;
     window.player.combat.weapon = weapon;
-    weaponToDrop.position = window.player.position;
+    weaponToDrop.position = { x: window.player.position.x, y: window.player.position.y };
     weaponToDrop.shouldRetain = true;
     window.entityManager.addEntity(weaponToDrop);
 }
@@ -39,7 +39,7 @@ Inventory.prototype.addWeapon = function(weapon) {
  * @function processes a new armor item
  *
  */
-Inventory.prototype.addArmor = function(armor) {
+Inventory.prototype.addArmor = function (armor) {
     checkArmor(armor);
     armor.shouldRetain = false;
     if (checkInvalidArmor(window.player.class, armor.name)) return;
@@ -48,7 +48,7 @@ Inventory.prototype.addArmor = function(armor) {
     var armorToDrop = this.inventory[1];
     this.inventory[1] = armor;
     window.player.combat.armor = armor;
-    armorToDrop.position = window.player.position;
+    armorToDrop.position = { x: window.player.position.x, y: window.player.position.y };
     armorToDrop.shouldRetain = true;
     window.entityManager.addEntity(armorToDrop);
 }
@@ -57,7 +57,7 @@ Inventory.prototype.addArmor = function(armor) {
  * @function add item to inventory
  *
  */
-Inventory.prototype.addItem = function(item) {
+Inventory.prototype.addItem = function (item) {
     if (this.inventory.length >= 17) { /* Tell GUI inventory is full */ }
     this.inventory.push(item);
 }
@@ -66,15 +66,15 @@ Inventory.prototype.addItem = function(item) {
  * @function remove item from inventory
  *
  */
-Inventory.prototype.removeItem = function(item) {
+Inventory.prototype.removeItem = function (item) {
     this.inventory.remove(this.inventory.indexOf(item));
 }
 
-Inventory.prototype.weaponCommand = function() {
+Inventory.prototype.weaponCommand = function () {
     window.terminal.log(this.inventory[0].toString(), window.colors.cmdResponse);
 }
 
-Inventory.prototype.armorCommand = function() {
+Inventory.prototype.armorCommand = function () {
     window.terminal.log(this.inventory[1].toString(), window.colors.cmdResponse);
 }
 

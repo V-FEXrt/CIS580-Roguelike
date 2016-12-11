@@ -8,6 +8,7 @@ const Weapon = require('./weapon.js');
 const Armor = require('./armor.js');
 const Powerup = require('./powerup.js');
 const Animator = require('./animator.js');
+const EntitySpawner = require('./entity_spawner');
 /**
  * @module exports the Player class
  */
@@ -46,15 +47,13 @@ function Player(position, tilemap, combatClass) {
  * {DOMHighResTimeStamp} time the elapsed time since the last frame
  */
 Player.prototype.update = function (time) {
-    if(this.combat.health <= 0 && this.state != "dead")
-    {
-      this.state = "dead";
-      if(this.animator.state != "dead" && this.animator.state != "dying")
-      {
-        this.animator.updateState("dying");
-        this.shouldProcessTurn = false;
-      }
-     
+    if (this.combat.health <= 0 && this.state != "dead") {
+        this.state = "dead";
+        if (this.animator.state != "dead" && this.animator.state != "dying") {
+            this.animator.updateState("dying");
+            this.shouldProcessTurn = false;
+        }
+
     }
     if(this.animator.state == "dead") 
     {
@@ -66,48 +65,12 @@ Player.prototype.update = function (time) {
 
 Player.prototype.debugModeChanged = function () {
     if (window.gameDebug) {
-        window.terminal.addCommand("godmode", "Make yourself invincible",
-            function () {
-                window.terminal.log("You are now invincible", window.colors.cmdResponse);
-                this.combat.health = Number.POSITIVE_INFINITY;
-            });
         window.terminal.addCommand("tp", "Teleport to the specified coordinates", this.teleportCommand.bind(this));
-        window.terminal.addCommand("spawn", "Spawn an entity at a given location", this.spawnCommand.bind(this));
         window.terminal.addCommand("health", "Set the Player's health", this.healthCommand.bind(this));
     }
     else {
-        window.terminal.removeCommand("godmode");
         window.terminal.removeCommand("tp");
         window.terminal.removeCommand("health");
-    }
-}
-
-Player.prototype.spawnCommand = function (args) {
-    if (args.length == 1) window.terminal.log("Requires parameters", window.colors.invalid);
-    else {
-        switch (args[1]) {
-            case "weapon":
-                if (args[2] == "MorningStar") args[2] = "Morning Star";
-                if (args[2] == "HeavyBolts") args[2] = "Heavy Bolts";
-                if (args[2] == "MagicMissile") args[2] = "Magic Missile";
-                if (args[2] == "EldritchBlast") args[2] = "Eldritch Blast";
-                var weapon = new Weapon(args[2], args[3]);
-                weapon.position.x = args[4];
-                weapon.position.y = args[5];
-                window.entityManager.addEntity(weapon);
-                break;
-            case "armor":
-                if (args[2] == "HideArmor") args[2] = "Hide Armor";
-                if (args[2] == "LeatherArmor") args[2] = "Leather Armor";
-                if (args[2] == "PlateArmor") args[2] = "Plate Armor";
-                var armor = new Armor(args[2], args[3]);
-                armor.position.x = args[4];
-                armor.position.y = args[5];
-                window.entityManager.addEntity(armor);
-                break;
-            default:
-                window.terminal.log("Invalid entity name", window.colors.invalid);
-        }
     }
 }
 
@@ -130,7 +93,8 @@ Player.prototype.teleportCommand = function (args) {
 }
 
 Player.prototype.healthCommand = function (args) {
-    this.combat.health = args[1];
+    if (args == 1) window.terminal.log("You must provide an integer value", window.colors.invalid);
+    else this.combat.health = args[1];
 }
 Player.prototype.walkPath = function (path, completion) {
     if (this.state == "dead") return; // shouldnt be necessary
@@ -206,7 +170,7 @@ Player.prototype.getClass = function (args) {
 Player.prototype.processTurn = function (input) {
     if (!this.shouldProcessTurn) return;
     this.collidingWith = undefined;
-    if (this.combat.status.effect != "None") window.combatController.handleStatus(this.combat);    
+    if (this.combat.status.effect != "None") window.combatController.handleStatus(this.combat);
     if (this.state == "dead" || this.combat.status.effect == "Frozen") return;
 
     if (hasUserInput(input)) {
@@ -230,7 +194,7 @@ Player.prototype.processTurn = function (input) {
         var position = Vector.add(this.position, change);
         if (this.tilemap.isWall(position.x, position.y)) return;
 
-        this.position = position;
+        this.position = { x: position.x, y: position.y };
     }
 
     var screenCoor = this.tilemap.toScreenCoords(this.position);
@@ -307,32 +271,26 @@ Player.prototype.killPlayer = function () {
     }
 }
 
-Player.prototype.changeDirection = function(direction)
-{
-    if(this.state != "dead")
-    {
-      if(direction == "down")
-      {
-          if(this.oldDirection == "right") this.animator.changeDirection("right");
-          else this.animator.changeDirection("left");
-      }
-      else
-      {
-          if(!direction == "up") this.oldDirection = direction;
-          this.animator.changeDirection(direction);
-      }
+Player.prototype.changeDirection = function (direction) {
+    if (this.state != "dead") {
+        if (direction == "down") {
+            if (this.oldDirection == "right") this.animator.changeDirection("right");
+            else this.animator.changeDirection("left");
+        }
+        else {
+            if (!direction == "up") this.oldDirection = direction;
+            this.animator.changeDirection(direction);
+        }
     }
 }
 
-Player.prototype.playAttack = function(clickPos)
-{    
-    if(this.state != "dead")
-    {
-      this.animator.updateState("attacking");
-      var position = this.tilemap.toScreenCoords(this.position);
+Player.prototype.playAttack = function (clickPos) {
+    if (this.state != "dead") {
+        this.animator.updateState("attacking");
+        var position = this.tilemap.toScreenCoords(this.position);
 
-      if(clickPos.x < (position.x*this.size.width+ 40)) this.changeDirection("left");
-      else this.changeDirection("right");
+        if (clickPos.x < (position.x * this.size.width + 40)) this.changeDirection("left");
+        else this.changeDirection("right");
     }
 }
 
