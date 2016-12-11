@@ -195,5 +195,6 @@ function moveBack(a, b) {
 function moveToward(a, b) {
     var path = pathfinder.findPath(a, b);
     if (path.length > 1) return { x: path[1].x, y: path[1].y };
+    else return a;
 }
 
