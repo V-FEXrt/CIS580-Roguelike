@@ -84,30 +84,35 @@ function CombatClass(aName, aLevel) {
             this.status = { effect: "None", timer: 0 };
             var senseRange = 10;
             var prefDist = 3;
-            var canAttack = false;
+            var moveOrAttack = 0;
 
             this.turnAI = function(aEnemy) {
                 var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
 
                 // Move
-                if (distance.x > senseRange && distance.y > senseRange) {
-                    var nextTile = aEnemy.tilemap.getRandomAdjacent(aEnemy.position);
-                    aEnemy.position = { x: nextTile.x, y: nextTile.y };
-                } else {
-                    // Check preferred engagement distance
-                    if (distance.x < prefDist && distance.y < prefDist) {
-                        aEnemy.position = moveBack(aEnemy.position, aEnemy.target.position);
-                    } else if (distance.x > prefDist && distance.y > prefDist) {
-                        aEnemy.position = moveToward(aEnemy.position, aEnemy.target.position);
+                if (!moveOrAttack) {
+                    if (distance.x > senseRange && distance.y > senseRange) {
+                        var nextTile = aEnemy.tilemap.getRandomAdjacent(aEnemy.position);
+                        aEnemy.position = { x: nextTile.x, y: nextTile.y };
+                    } else {
+                        // Check preferred engagement distance
+                        if (distance.x < prefDist && distance.y < prefDist) {
+                            aEnemy.position = moveBack(aEnemy.position, aEnemy.target.position);
+                        } else if (distance.x > prefDist && distance.y > prefDist) {
+                            aEnemy.position = moveToward(aEnemy.position, aEnemy.target.position);
+                        }
                     }
+                    moveOrAttack = 1;
                 }
-
                 // Attack
-                if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
-                    var path = pathfinder.findPath(aEnemy.position, aEnemy.target.position);
-                    if (Vector.magnitude(distance) * 2 >= path.length) {
-                        combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
+                else if (moveOrAttack) {
+                    if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
+                        var path = pathfinder.findPath(aEnemy.position, aEnemy.target.position);
+                        if (Vector.magnitude(distance) * 2 >= path.length) {
+                            combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
+                        }
                     }
+                    moveOrAttack = 0;
                 }
             }
             break;
