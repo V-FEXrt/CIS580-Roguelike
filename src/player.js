@@ -294,14 +294,14 @@ Player.prototype.killPlayer = function () {
     this.combat.health = 0;
     if(this.state != "dead")
     {
-      if(direction == "down")
+      if(this.direction == "down")
       {
           if(this.oldDirection == "right") this.animator.changeDirection("right");
           else this.animator.changeDirection("left");
       }
       else
       {
-          if(!direction == "up") this.oldDirection = direction;
+          if(!this.direction == "up") this.oldDirection = direction;
           this.animator.changeDirection(direction);
       }
     }

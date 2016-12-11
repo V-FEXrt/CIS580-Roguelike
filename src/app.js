@@ -76,6 +76,7 @@ var resetTimer = true;          //Take turn immediately on movement key press if
 var player = new Player({ x: 0, y: 0 }, tilemap, "Mage");
 
 window.player = player;
+player.shouldProcessTurn = false;
 
 window.onmousemove = function(event) {
     gui.onmousemove(event);
@@ -83,12 +84,14 @@ window.onmousemove = function(event) {
 
 window.onmousedown = function(event) {
     // Init the level when class is chosen
+    if(player.shouldProcessTurn) player.playAttack({x: event.offsetX, y: event.offsetY});
     if (gui.state == "start" || gui.state == "choose class") {
         window.sfx.play("click");
         gui.onmousedown(event);
         if (gui.chosenClass != "") {
             window.sfx.play("click");
             player.changeClass(gui.chosenClass);
+            player.shouldProcessTurn = true;
             nextLevel(false);
         }
     }
@@ -99,8 +102,7 @@ canvas.onclick = function(event) {
         x: parseInt(event.offsetX / 96),
         y: parseInt(event.offsetY / 96)
     }
-  
-    player.playAttack({x: event.offsetX, y: event.offsetY});
+
     var clickedWorldPos = tilemap.toWorldCoords(node);
     window.entityManager.addEntity(new Click(clickedWorldPos, tilemap, player, function(enemy) {
         var distance = Vector.distance(player.position, enemy.position);
@@ -165,6 +167,12 @@ window.onkeydown = function(event) {
             turnDelay = defaultTurnDelay / 2;
             autoTurn = true;
             break;
+        case "Escape":
+            event.preventDefault();
+            if(gui.state == "controls" || gui.state == "credits" || gui.state == "choose class")
+            {
+              gui.state = "start";
+            }
     }
 }
 

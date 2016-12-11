@@ -717,6 +717,7 @@ var resetTimer = true;          //Take turn immediately on movement key press if
 var player = new Player({ x: 0, y: 0 }, tilemap, "Mage");
 
 window.player = player;
+player.shouldProcessTurn = false;
 
 window.onmousemove = function(event) {
     gui.onmousemove(event);
@@ -724,12 +725,14 @@ window.onmousemove = function(event) {
 
 window.onmousedown = function(event) {
     // Init the level when class is chosen
+    if(player.shouldProcessTurn) player.playAttack({x: event.offsetX, y: event.offsetY});
     if (gui.state == "start" || gui.state == "choose class") {
         window.sfx.play("click");
         gui.onmousedown(event);
         if (gui.chosenClass != "") {
             window.sfx.play("click");
             player.changeClass(gui.chosenClass);
+            player.shouldProcessTurn = true;
             nextLevel(false);
         }
     }
@@ -740,8 +743,7 @@ canvas.onclick = function(event) {
         x: parseInt(event.offsetX / 96),
         y: parseInt(event.offsetY / 96)
     }
-  
-    player.playAttack({x: event.offsetX, y: event.offsetY});
+
     var clickedWorldPos = tilemap.toWorldCoords(node);
     window.entityManager.addEntity(new Click(clickedWorldPos, tilemap, player, function(enemy) {
         var distance = Vector.distance(player.position, enemy.position);
@@ -806,6 +808,12 @@ window.onkeydown = function(event) {
             turnDelay = defaultTurnDelay / 2;
             autoTurn = true;
             break;
+        case "Escape":
+            event.preventDefault();
+            if(gui.state == "controls" || gui.state == "credits" || gui.state == "choose class")
+            {
+              gui.state = "start";
+            }
     }
 }
 
@@ -1573,7 +1581,7 @@ function getWeapons() {
 
 const Tilemap = require('./tilemap');
 const CombatClass = require("./combat_class");
-
+const Animator = require("./animator.js");
 module.exports = exports = Enemy;
 
 function Enemy(position, tilemap, combatClass, target, onDeathCB) {
@@ -1588,6 +1596,11 @@ function Enemy(position, tilemap, combatClass, target, onDeathCB) {
     this.combat = new CombatClass(this.class, target.level);
     this.target = target;
     this.onDeathCB = onDeathCB;
+    
+    if(this.combatClass == "Shaman")
+    {
+      this.animator = new Animator(0, "idle", "Shaman");
+    }
 }
 
 Enemy.prototype.processTurn = function() {
@@ -1632,7 +1645,7 @@ Enemy.prototype.render = function(elapsedTime, ctx) {
 }
 
 
-},{"./combat_class":8,"./tilemap":25}],11:[function(require,module,exports){
+},{"./animator.js":4,"./combat_class":8,"./tilemap":25}],11:[function(require,module,exports){
 "use strict";
 
 /**
@@ -2044,11 +2057,11 @@ GUI.prototype.onmousedown = function(event)
 		}
 		else if(this.swordHighlights[1] != 0)
 		{
-            //this.state = "controls";
+      this.state = "controls";
 		}
 		else if(this.swordHighlights[2] != 0)
 		{
-            //this.state = "credits";
+      this.state = "credits";
 		}
 	}
     else if(this.state == "choose class")
@@ -2227,6 +2240,68 @@ GUI.prototype.render = function (elapsedTime, ctx) {
       96 , 96,
       this.playerXPos[2]  - this.playerHighlights[2]/2, 474  - this.playerHighlights[2]/2,
       96 + this.playerHighlights[2] , 96 + this.playerHighlights[2]
+    );
+  }
+  else if(this.state == "credits")
+  {
+    //Background
+    ctx.drawImage(
+      this.startBackground,
+      0, 0,
+      1728,
+      1056,
+      0, 0,
+      1788,
+      1116
+    );
+    
+    //Shadow
+    ctx.drawImage(
+        this.startSprites,
+        1248, 768,
+        384, 384,
+        581, 338,
+        576, 576
+    );
+    
+    //Credits
+    ctx.drawImage(
+      this.startSprites,
+      1248, 0,
+      384, 384,
+      581, 268,
+      576, 576
+    );
+  }
+  else if(this.state == "controls")
+  {
+    //Background
+    ctx.drawImage(
+      this.startBackground,
+      0, 0,
+      1728,
+      1056,
+      0, 0,
+      1788,
+      1116
+    );
+    
+    //Shadow
+    ctx.drawImage(
+        this.startSprites,
+        1248, 768,
+        384, 384,
+        581, 338,
+        576, 576
+    );
+    
+    //Credits
+    ctx.drawImage(
+      this.startSprites,
+      1248, 384,
+      384, 384,
+      581, 268,
+      576, 576
     );
   }
   else if(this.state == "paused")
@@ -3119,14 +3194,14 @@ Player.prototype.killPlayer = function () {
     this.combat.health = 0;
     if(this.state != "dead")
     {
-      if(direction == "down")
+      if(this.direction == "down")
       {
           if(this.oldDirection == "right") this.animator.changeDirection("right");
           else this.animator.changeDirection("left");
       }
       else
       {
-          if(!direction == "up") this.oldDirection = direction;
+          if(!this.direction == "up") this.oldDirection = direction;
           this.animator.changeDirection(direction);
       }
     }

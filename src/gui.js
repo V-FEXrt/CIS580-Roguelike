@@ -98,11 +98,11 @@ GUI.prototype.onmousedown = function(event)
 		}
 		else if(this.swordHighlights[1] != 0)
 		{
-            //this.state = "controls";
+      this.state = "controls";
 		}
 		else if(this.swordHighlights[2] != 0)
 		{
-            //this.state = "credits";
+      this.state = "credits";
 		}
 	}
     else if(this.state == "choose class")
@@ -281,6 +281,68 @@ GUI.prototype.render = function (elapsedTime, ctx) {
       96 , 96,
       this.playerXPos[2]  - this.playerHighlights[2]/2, 474  - this.playerHighlights[2]/2,
       96 + this.playerHighlights[2] , 96 + this.playerHighlights[2]
+    );
+  }
+  else if(this.state == "credits")
+  {
+    //Background
+    ctx.drawImage(
+      this.startBackground,
+      0, 0,
+      1728,
+      1056,
+      0, 0,
+      1788,
+      1116
+    );
+    
+    //Shadow
+    ctx.drawImage(
+        this.startSprites,
+        1248, 768,
+        384, 384,
+        581, 338,
+        576, 576
+    );
+    
+    //Credits
+    ctx.drawImage(
+      this.startSprites,
+      1248, 0,
+      384, 384,
+      581, 268,
+      576, 576
+    );
+  }
+  else if(this.state == "controls")
+  {
+    //Background
+    ctx.drawImage(
+      this.startBackground,
+      0, 0,
+      1728,
+      1056,
+      0, 0,
+      1788,
+      1116
+    );
+    
+    //Shadow
+    ctx.drawImage(
+        this.startSprites,
+        1248, 768,
+        384, 384,
+        581, 338,
+        576, 576
+    );
+    
+    //Credits
+    ctx.drawImage(
+      this.startSprites,
+      1248, 384,
+      384, 384,
+      581, 268,
+      576, 576
     );
   }
   else if(this.state == "paused")
