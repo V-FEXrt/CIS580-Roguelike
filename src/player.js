@@ -146,8 +146,10 @@ Player.prototype.takeCommand = function () {
     }
     if (this.collidingWith.type == "Weapon") {
         this.inventory.addWeapon(this.collidingWith);
+        window.sfx.play("weaponPickUp");
     } else if (this.collidingWith.type == "Armor") {
         this.inventory.addArmor(this.collidingWith);
+        window.sfx.play("armorPickUp");
     }
 }
 
