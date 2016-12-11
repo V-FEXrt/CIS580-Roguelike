@@ -106,11 +106,14 @@ function CombatClass(aName, aLevel) {
 
                 // Attack
                 if (attackCooldown <= 0 && distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
-                    combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
+                    var path = pathfinder.findPath(aEnemy.position, aEnemy.target.position);
+                    if (Vector.magnitude(distance) * 2 >= path.length) {
+                        combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
                     attackCooldown = 2;
-                }
+                    }
 
                 attackCooldown--;
+                }
             }
             break;
 
@@ -169,7 +172,10 @@ function CombatClass(aName, aLevel) {
 
                 // Attack
                 if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
-                    combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
+                    var path = pathfinder.findPath(aEnemy.position, aEnemy.target.position);
+                    if (Vector.magnitude(distance) * 2 >= path.length) {
+                        combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
+                    }
                 }
             }
             break;
@@ -193,5 +199,6 @@ function moveBack(a, b) {
 function moveToward(a, b) {
     var path = pathfinder.findPath(a, b);
     if (path.length > 1) return { x: path[1].x, y: path[1].y };
+    else return a;
 }
 
