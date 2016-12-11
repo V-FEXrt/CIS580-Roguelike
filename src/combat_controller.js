@@ -66,7 +66,7 @@ CombatController.prototype.handleAttack = function(aAttackerClass, aDefenderClas
     var playerAttacker = (attacker == "Knight" || attacker == "Archer" || attacker == "Mage");
 
     if (lAttackRoll == 1) {
-        var lSelfDamage = RNG.rollMultiple(1, 3, aAttackerClass.weapon.level);
+        var lSelfDamage = RNG.rollMultiple(1, 3, Math.max(1, aAttackerClass.weapon.level / 5));
         aAttackerClass.health -= lSelfDamage;
         if (aAttackerClass.health <= 0) { // Crit fail cant kill an entity
             lSelfDamage - (1 - aAttackerClass.health);
@@ -85,7 +85,7 @@ CombatController.prototype.handleAttack = function(aAttackerClass, aDefenderClas
         aDefenderClass.health -= lDamageTotal;
         // defender hit, play defender hit sound
 
-        if (lAttackEffect != "") lApplyEffect = RNG.rollWeighted(25, 75);
+        if (lAttackEffect != "") lApplyEffect = RNG.rollWeighted(1, 4);
 
         // If attacker is player
         if (playerAttacker) {
@@ -98,7 +98,7 @@ CombatController.prototype.handleAttack = function(aAttackerClass, aDefenderClas
             aDefenderClass.health -= lDamageTotal;
             // defender hit, play defender hit sound
 
-            if (lAttackEffect != "") lApplyEffect = RNG.rollWeighted(50, 50);
+            if (lAttackEffect != "") lApplyEffect = RNG.rollWeighted(1, 1);
 
             // If attacker is player
             if (playerAttacker) {
@@ -131,7 +131,7 @@ CombatController.prototype.handleStatus = function(aCombatClass) {
         case "Poisoned":
             if (aCombatClass.status.timer > 0) {
                 aCombatClass.status.timer--;
-                var damage = RNG.rollMultiple(1, 5, window.player.level);
+                var damage = RNG.rollMultiple(1, 5, Math.max(1, window.player.level / 5));
                 aCombatClass.health -= damage;
                 window.terminal.log(`${damage} ${aCombatClass.status.effect.substring(0, aCombatClass.status.effect.length - 2)} damage.`, window.colors.combat);
             } else {
@@ -139,13 +139,14 @@ CombatController.prototype.handleStatus = function(aCombatClass) {
             }
             break;
 
+        case "Stunned":
         case "Frozen":
             if (aCombatClass.status.timer > 1) {
                 aCombatClass.status.timer--;
-                window.terminal.log(`The ${aCombatClass.name} is Frozen solid!`, window.colors.combat);
+                window.terminal.log(`The ${aCombatClass.name} is ${aCombatClass.status.effect}.`, window.colors.combat);
             } else if (aCombatClass.status.timer == 1) {
-                if (RNG.rollWeighted(50, 50)) aCombatClass.status.timer--;
-                else window.terminal.log(`The ${aCombatClass.name} is Frozen solid!`, window.colors.combat);
+                if (RNG.rollWeighted(1, 1)) aCombatClass.status.timer--;
+                else window.terminal.log(`The ${aCombatClass.name} is ${aCombatClass.status.effect}.`, window.colors.combat);
             } else {
                 aCombatClass.status.effect = "None";
             }
@@ -159,7 +160,7 @@ CombatController.prototype.handleStatus = function(aCombatClass) {
 CombatController.prototype.randomDrop = function(aPosition) {
     var lDrop = new Object();
     var lRand = RNG.rollRandom(1, 20);
-    var level = window.player.level + RNG.rollWeighted(50, 40, 10);
+    var level = window.player.level + RNG.rollWeighted(5, 4, 1);
 
     if (lRand > 17) {                           // spawn armor
         var armorArray = getArmors();
@@ -174,39 +175,49 @@ CombatController.prototype.randomDrop = function(aPosition) {
     } else {                                    // dont spawn anything
         lDrop.type = "None";
     }
-    lDrop.position = aPosition;
+    lDrop.position = { x: aPosition.x, y: aPosition.y };
     return lDrop;
 }
 
 CombatController.prototype.getPercentArray = function() {
     // damage, health, defense, attack, zombie, skele, cap, shaman, empty
-    var baseWeights = [10, 10, 15, 15, 20, 10, 5, 2, 5];
+    var baseWeights = [10, 10, 15, 15, 20, 85, 5, 2, 5];
     var level = window.player.level;
+    var mult = 1;
 
-    // var damageWeight = 20;
-    // var healthWeight = 20;
-    // var defenseWeight = 20;
-    // var attackWeight = 20;
-    // var zombieWeight = 20;
-    // var skeletonWeight = 0;
-    // var captainWeight = 0;
-    // var shamanWeight = 0;
-    // var emptyWeight = 5;
+    var damageWeight = baseWeights[0];
+    var healthWeight = baseWeights[1];
+    var defenseWeight = baseWeights[2];
+    var attackWeight = baseWeights[3];
 
-    // return [damageWeight, healthWeight, defenseWeight, attackWeight,
-    //     zombieWeight, skeletonWeight, captainWeight, shamanWeight, emptyWeight];
+    var zombieWeight = baseWeights[4];
+    var skeletonWeight = baseWeights[5];
+    var captainWeight;
+    if (level < 5) captainWeight = 0;
+    else if (level < 10 && rollWeighted(1, 1)) captainWeight = baseWeights[6];
+    else captainWeight = baseWeights[6] + level;
+    var shamanWeight;
+    if (level < 5) shamanWeight = 0;
+    else if (level < 10 && rollWeighted(1, 1)) shamanWeight = baseWeights[7];
+    else shamanWeight = baseWeights[7] + level;
 
-    return baseWeights;
+
+    var emptyWeight = baseWeights[8];
+
+    return [damageWeight, healthWeight, defenseWeight, attackWeight,
+        zombieWeight, skeletonWeight, captainWeight, shamanWeight, emptyWeight];
+
+    // return baseWeights;
 }
 
 function getClass(aClass) {
     switch (aClass) {
         case "Knight":
-            return RNG.rollWeighted(5, 2, 2);
+            return RNG.rollWeighted(5, 1, 1);
         case "Archer":
-            return RNG.rollWeighted(2, 5, 2);
+            return RNG.rollWeighted(1, 5, 1);
         case "Mage":
-            return RNG.rollWeighted(2, 2, 5);
+            return RNG.rollWeighted(1, 1, 5);
     }
 }
 

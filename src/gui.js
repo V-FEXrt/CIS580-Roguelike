@@ -46,7 +46,7 @@ GUI.prototype.onmousemove = function(event)
 	x = event.offsetX;
 	y = event.offsetY;
 	if(this.state == "start")
-	{     
+	{
 		if(x >= 753 && x <= 1041)
 		{
 
@@ -98,11 +98,11 @@ GUI.prototype.onmousedown = function(event)
 		}
 		else if(this.swordHighlights[1] != 0)
 		{
-            //this.state = "controls";
+      this.state = "controls";
 		}
 		else if(this.swordHighlights[2] != 0)
 		{
-            //this.state = "credits";
+      this.state = "credits";
 		}
 	}
     else if(this.state == "choose class")
@@ -283,6 +283,68 @@ GUI.prototype.render = function (elapsedTime, ctx) {
       96 + this.playerHighlights[2] , 96 + this.playerHighlights[2]
     );
   }
+  else if(this.state == "credits")
+  {
+    //Background
+    ctx.drawImage(
+      this.startBackground,
+      0, 0,
+      1728,
+      1056,
+      0, 0,
+      1788,
+      1116
+    );
+    
+    //Shadow
+    ctx.drawImage(
+        this.startSprites,
+        1248, 768,
+        384, 384,
+        581, 338,
+        576, 576
+    );
+    
+    //Credits
+    ctx.drawImage(
+      this.startSprites,
+      1248, 0,
+      384, 384,
+      581, 268,
+      576, 576
+    );
+  }
+  else if(this.state == "controls")
+  {
+    //Background
+    ctx.drawImage(
+      this.startBackground,
+      0, 0,
+      1728,
+      1056,
+      0, 0,
+      1788,
+      1116
+    );
+    
+    //Shadow
+    ctx.drawImage(
+        this.startSprites,
+        1248, 768,
+        384, 384,
+        581, 338,
+        576, 576
+    );
+    
+    //Credits
+    ctx.drawImage(
+      this.startSprites,
+      1248, 384,
+      384, 384,
+      581, 268,
+      576, 576
+    );
+  }
   else if(this.state == "paused")
   {
 
@@ -298,45 +360,33 @@ GUI.prototype.render = function (elapsedTime, ctx) {
     ctx.fillRect(0, 1056, 1057, 2);
 
     ctx.fillStyle = "red";
-    ctx.fillRect(6, 1078, 40, 20);
-    ctx.fillRect(16, 1068, 20, 40);
+    ctx.fillRect(7, 1082.5, 38, 12);
+    ctx.fillRect(19, 1070, 12, 38);
 
-    ctx.font = "55px Arial black";
+    ctx.font = "35px Arial black";
     ctx.fillStyle = "red"
-    if(window.player.combat.health < 1000) ctx.fillText(window.player.combat.health, 50, 1107);
-    else ctx.fillText(999, 50, 1107);
-
-    ctx.drawImage(crest, 180, 1061);
+    if(window.player.combat.health < 0) ctx.fillText(0, 50, 1099.5);
+    else if(window.player.combat.health < 1000) ctx.fillText(window.player.combat.health, 50, 1099.5);
+    else ctx.fillText(999, 50, 1099.5);
 
     ctx.font = "25px Arial Black";
     ctx.fillStyle = "green";
-    if(window.player.combat.armor.defense < 10) ctx.fillText(window.player.combat.armor.defense, 192.5, 1093);
-    else ctx.fillText(window.player.combat.armor.defense, 184.5, 1093);
-
-    ctx.beginPath();
-    ctx.lineWidth = "1";
-    ctx.strokeStyle = "white";
-    ctx.rect(235, 1066, 340, 40);
-    ctx.stroke();
+    ctx.drawImage(crest, 136, 1061);
+    if(window.player.combat.armor.level < 10) ctx.fillText(window.player.combat.armor.level, 148.5, 1093);
+    else ctx.fillText(window.player.combat.armor.level, 142.5, 1093);
 
     ctx.fillStyle = "white";
-    ctx.fillText(window.player.combat.armor.name, 242.5, 1094.5)
+    ctx.fillText(window.player.combat.armor.name, 187.5, 1094.5)
 
     ctx.fillStyle = "green";
-    ctx.drawImage(pow, 580, 1061);
-    if(window.player.combat.weapon.level < 10) ctx.fillText(window.player.combat.weapon.level, 607, 1095);
-    else ctx.fillText(window.player.combat.weapon.level, 600, 1095)
+    ctx.drawImage(pow, 370, 1061);
+    if(window.player.combat.weapon.level < 10) ctx.fillText(window.player.combat.weapon.level, 397, 1095);
+    else ctx.fillText(window.player.combat.weapon.level, 390, 1095)
 
-    ctx.beginPath();
-    ctx.lineWidth = "1";
-    ctx.strokeStyle = "white";
-    ctx.rect(658, 1066, 391, 40);
-    ctx.stroke();
-
-    ctx.font = "14px Arial Black";
+    ctx.font = "25px Arial Black";
     ctx.fillStyle = "white";
-    ctx.fillText(window.player.combat.weapon.name + " -- Damage Range: " + window.player.combat.weapon.damageMin + "-" + window.player.combat.weapon.damageMax, 665.5, 1082);
-    ctx.fillText(window.player.combat.weapon.properties, 665.5, 1099);
+    var str=`${window.player.combat.weapon.name}, ${window.player.combat.weapon.damageMin + window.player.combat.weapon.level}-${window.player.combat.weapon.damageMax+window.player.combat.weapon.level} Damage, ${window.player.combat.weapon.properties}`;
+    ctx.fillText(str, 450, 1095);
 
     }
   else if(this.state == "game over")

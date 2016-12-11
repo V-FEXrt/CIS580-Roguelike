@@ -120,40 +120,74 @@ RoomsHallways.prototype.carveHallways = function(){
 }
 
 RoomsHallways.prototype.connectRoomsAndHalls = function(){
-  while(this.countRegions() > 1){
-    var point;
-    do{
-      var x = rand(this.width);
-      var y = rand(this.height);
-       point = {x: x, y: y};
-    }while(this.getTile(point) != this.filled);
+  var mergingCells = [];
 
-    var surrRegions = new Set();
-    for(var i = 0; i < this.cardinal.length; i++){
-      var r = this.getRegion(Vector.add(point, this.cardinal[i]))
-      if(r != -1) surrRegions.add(r);
-    }
+  // weird things so we ignore the borders
+  for(var y = 1; y < this.height - 1; y++){
+    for(var x = 1; x < this.width - 1; x++){
+      var point = {x: x, y: y};
+      if(this.getTile(point) != this.filled) continue;
 
-    if(surrRegions.size > 1){
-      this.carve(point);
-      var first = -1
-      var rest = []
-      surrRegions.forEach(function(value) {
-        if(first == -1){
-          first = value;
-        }else{
-          rest.push(value);
-        }
-      });
-      var self = this;
-      rest.forEach(function(region) {
-        self.replaceRegion(region, first);
-      })
-      //console.log(first);
-      this.regions[point.y * this.width + point.x] = first;
+      var surrRegions = new Set();
+      for(var i = 0; i < this.cardinal.length; i++){
+        var r = this.getRegion(Vector.add(point, this.cardinal[i]))
+        if(r != -1) surrRegions.add(r);
+      }
+
+      if(surrRegions.size == 2){
+        var mergible = {point: point, regions: []};
+        surrRegions.forEach(function(region){
+          mergible.regions.push(region);
+        })
+        mergingCells.push(mergible);
+      }
     }
   }
 
+  while(this.countRegions() > 1){
+
+    if(this.countRegions() == 2){
+      return;
+    }
+
+    var idx = rand(mergingCells.length);
+    var merge = mergingCells[idx];
+    this.carve(merge.point);
+    var first = -1;
+    var rest = [];
+
+    merge.regions.forEach(function(value) {
+      if(first == -1){
+        first = value;
+      }else{
+        rest.push(value);
+      }
+    });
+
+    mergingCells = mergingCells.filter(function(item){
+      var hasOne = item.regions.indexOf(merge.regions[0]) > -1;
+      var hasTwo = item.regions.indexOf(merge.regions[1]) > -1;
+      return !(hasOne && hasTwo)
+    });
+
+    var self = this;
+    rest.forEach(function(region) {
+      self.replaceRegion(region, first);
+    })
+
+    mergingCells.forEach(function(item){
+      rest.forEach(function(region) {
+        var idx = item.regions.indexOf(region)
+        if(idx > -1){
+          item.regions[idx] = first;
+        }
+      });
+    });
+
+    this.regions[point.y * this.width + point.x] = first;
+  }
+
+return;
   // Add extra doors to 1/2 of the rooms
   var self = this;
   this.rooms.forEach(function(room){

@@ -47,21 +47,19 @@ function Player(position, tilemap, combatClass) {
  * {DOMHighResTimeStamp} time the elapsed time since the last frame
  */
 Player.prototype.update = function (time) {
-    if(this.combat.health <= 0 && this.state != "dead")
-    {
-      this.state = "dead";
-      if(this.animator.state != "dead" && this.animator.state != "dying")
-      {
-        this.animator.updateState("dying");
-        this.shouldProcessTurn = false;
-      }
+    if (this.combat.health <= 0 && this.state != "dead") {
+        this.state = "dead";
+        if (this.animator.state != "dead" && this.animator.state != "dying") {
+            this.animator.updateState("dying");
+            this.shouldProcessTurn = false;
+        }
 
     }
-    if(this.animator.state == "dead")
+    if(this.animator.state == "dead") 
     {
-      this.animator.updateState("idle");
+      this.animator.updateState("nothing");
       this.shouldEndGame = true;
-    }
+    } 
     this.animator.update(time);
 }
 
@@ -95,8 +93,8 @@ Player.prototype.teleportCommand = function (args) {
 }
 
 Player.prototype.healthCommand = function (args) {
-  if(args == 1) window.terminal.log("You must provide an integer value", window.colors.invalid);
-  else this.combat.health = args[1];
+    if (args == 1) window.terminal.log("You must provide an integer value", window.colors.invalid);
+    else this.combat.health = args[1];
 }
 Player.prototype.walkPath = function (path, completion) {
     if (this.state == "dead") return; // shouldnt be necessary
@@ -198,7 +196,7 @@ Player.prototype.processTurn = function (input) {
         var position = Vector.add(this.position, change);
         if (this.tilemap.isWall(position.x, position.y)) return;
 
-        this.position = position;
+        this.position = { x: position.x, y: position.y };
     }
 
     var screenCoor = this.tilemap.toScreenCoords(this.position);
@@ -262,45 +260,39 @@ Player.prototype.killPlayer = function () {
     this.combat.health = 0;
     if(this.state != "dead")
     {
-      if(direction == "down")
+      if(this.direction == "down")
       {
           if(this.oldDirection == "right") this.animator.changeDirection("right");
           else this.animator.changeDirection("left");
       }
       else
       {
-          if(!direction == "up") this.oldDirection = direction;
-          this.animator.changeDirection(direction);
+          if(!this.direction == "up") this.oldDirection = direction;
+          this.animator.changeDirection(this.direction);
       }
     }
 }
 
-Player.prototype.changeDirection = function(direction)
-{
-    if(this.state != "dead")
-    {
-      if(direction == "down")
-      {
-          if(this.oldDirection == "right") this.animator.changeDirection("right");
-          else this.animator.changeDirection("left");
-      }
-      else
-      {
-          if(!direction == "up") this.oldDirection = direction;
-          this.animator.changeDirection(direction);
-      }
+Player.prototype.changeDirection = function (direction) {
+    if (this.state != "dead") {
+        if (direction == "down") {
+            if (this.oldDirection == "right") this.animator.changeDirection("right");
+            else this.animator.changeDirection("left");
+        }
+        else {
+            if (!direction == "up") this.oldDirection = direction;
+            this.animator.changeDirection(direction);
+        }
     }
 }
 
-Player.prototype.playAttack = function(clickPos)
-{
-    if(this.state != "dead")
-    {
-      this.animator.updateState("attacking");
-      var position = this.tilemap.toScreenCoords(this.position);
+Player.prototype.playAttack = function (clickPos) {
+    if (this.state != "dead") {
+        this.animator.updateState("attacking");
+        var position = this.tilemap.toScreenCoords(this.position);
 
-      if(clickPos.x < (position.x*this.size.width+ 40)) this.changeDirection("left");
-      else this.changeDirection("right");
+        if (clickPos.x < (position.x * this.size.width + 40)) this.changeDirection("left");
+        else this.changeDirection("right");
     }
 }
 

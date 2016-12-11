@@ -76,6 +76,7 @@ var resetTimer = true;          //Take turn immediately on movement key press if
 var player = new Player({ x: 0, y: 0 }, tilemap, "Mage");
 
 window.player = player;
+player.shouldProcessTurn = false;
 
 window.onmousemove = function(event) {
     gui.onmousemove(event);
@@ -83,12 +84,14 @@ window.onmousemove = function(event) {
 
 window.onmousedown = function(event) {
     // Init the level when class is chosen
+    if(player.shouldProcessTurn) player.playAttack({x: event.offsetX, y: event.offsetY});
     if (gui.state == "start" || gui.state == "choose class") {
         window.sfx.play("click");
         gui.onmousedown(event);
         if (gui.chosenClass != "") {
             window.sfx.play("click");
             player.changeClass(gui.chosenClass);
+            player.shouldProcessTurn = true;
             nextLevel(false);
         }
     }
@@ -100,17 +103,25 @@ canvas.onclick = function(event) {
         y: parseInt(event.offsetY / 96)
     }
 
-    player.playAttack({x: event.offsetX, y: event.offsetY});
     var clickedWorldPos = tilemap.toWorldCoords(node);
     window.entityManager.addEntity(new Click(clickedWorldPos, tilemap, player, function(enemy) {
         var distance = Vector.distance(player.position, enemy.position);
         if (distance.x <= player.combat.weapon.range && distance.y <= player.combat.weapon.range) {
-            turnDelay = defaultTurnDelay;
-            autoTurn = false;
-            combatController.handleAttack(player.combat, enemy.combat);
+            if (player.combat.weapon.attackType != "Melee") {
+                var path = pathfinder.findPath(player.position, enemy.position);
+                if (Vector.magnitude(distance) * 2 >= path.length) {
+                    combatController.handleAttack(player.combat, enemy.combat);
+                }
+            } else {
+                combatController.handleAttack(player.combat, enemy.combat);
+            }
             processTurn();
         }
     }));
+}
+
+canvas.oncontextmenu = function(event) {
+    event.preventDefault();
 }
 
 /**
@@ -122,49 +133,55 @@ window.onkeydown = function(event) {
     switch (event.key) {
         case "ArrowUp":
         case "w":
+            event.preventDefault();
             input.up = true;
             if (resetTimer) {
                 turnTimer = turnDelay;
                 resetTimer = false;
             }
-      player.changeDirection("up");
-            event.preventDefault();
+            player.changeDirection("up");
             break;
         case "ArrowDown":
         case "s":
+            event.preventDefault();
             input.down = true;
             if (resetTimer) {
                 turnTimer = turnDelay;
                 resetTimer = false;
             }
-      player.changeDirection("down");
-            event.preventDefault();
+            player.changeDirection("down");
             break;
         case "ArrowLeft":
         case "a":
+            event.preventDefault();
             input.left = true;
             if (resetTimer) {
                 turnTimer = turnDelay;
                 resetTimer = false;
             }
-      player.changeDirection("left");
-            event.preventDefault();
+            player.changeDirection("left");
             break;
         case "ArrowRight":
         case "d":
+            event.preventDefault();
             input.right = true;
             if (resetTimer) {
                 turnTimer = turnDelay;
                 resetTimer = false;
             }
-      player.changeDirection("right");
-            event.preventDefault();
+            player.changeDirection("right");
             break;
-        case "Shift":
+        case "Escape":
             event.preventDefault();
-            turnDelay = defaultTurnDelay / 2;
-            autoTurn = true;
-            break;
+            if(gui.state == "controls" || gui.state == "credits" || gui.state == "choose class")
+            {
+              gui.state = "start";
+            }
+        // case "Shift":
+        //     event.preventDefault();
+        //     turnDelay = defaultTurnDelay / 2;
+        //     autoTurn = true;
+        //     break;
     }
 }
 
