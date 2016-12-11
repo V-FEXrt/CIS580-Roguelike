@@ -266,7 +266,7 @@ Player.prototype.killPlayer = function () {
       else
       {
           if(!this.direction == "up") this.oldDirection = direction;
-          this.animator.changeDirection(direction);
+          this.animator.changeDirection(this.direction);
       }
     }
 }
