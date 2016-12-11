@@ -105,7 +105,10 @@ function CombatClass(aName, aLevel) {
 
                 // Attack
                 if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
-                    combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
+                    var path = pathfinder.findPath(aEnemy.position, aEnemy.target.position);
+                    if (Vector.magnitude(distance) * 2 >= path.length) {
+                        combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
+                    }
                 }
             }
             break;
@@ -165,7 +168,10 @@ function CombatClass(aName, aLevel) {
 
                 // Attack
                 if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
-                    combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
+                    var path = pathfinder.findPath(aEnemy.position, aEnemy.target.position);
+                    if (Vector.magnitude(distance) * 2 >= path.length) {
+                        combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
+                    }
                 }
             }
             break;
