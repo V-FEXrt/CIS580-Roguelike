@@ -56,7 +56,7 @@ Powerup.prototype.collided = function (entity) {
                 break;
             case 2:
                 window.sfx.play("healthPickup");
-                var potionValue = RNG.rollMultiple(1, 4, Math.max(1, entity.level / 5));
+                var potionValue = RNG.rollMultiple(1, 4, Math.max(2, window.combatController.getDifficulty(entity.level))) + 2;
                 entity.combat.health += potionValue;
                 window.terminal.log("You quaff the large crimson potion and feel rejuvenated.", window.colors.pickup);
                 if (window.debug) console.log("+" + potionValue + " health = " + entity.combat.health);
