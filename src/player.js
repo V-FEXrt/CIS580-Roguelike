@@ -55,10 +55,11 @@ Player.prototype.update = function (time) {
         }
 
     }
-    if (this.animator.state == "dead") {
-        this.animator.updateState("idle");
-        this.shouldEndGame = true;
-    }
+    if(this.animator.state == "dead") 
+    {
+      this.animator.updateState("nothing");
+      this.shouldEndGame = true;
+    } 
     this.animator.update(time);
 }
 
@@ -143,8 +144,10 @@ Player.prototype.takeCommand = function () {
     }
     if (this.collidingWith.type == "Weapon") {
         this.inventory.addWeapon(this.collidingWith);
+        window.sfx.play("weaponPickUp");
     } else if (this.collidingWith.type == "Armor") {
         this.inventory.addArmor(this.collidingWith);
+        window.sfx.play("armorPickUp");
     }
 }
 
@@ -255,15 +258,18 @@ Player.prototype.render = function (elapsedTime, ctx) {
 
 Player.prototype.killPlayer = function () {
     this.combat.health = 0;
-    if (this.state != "dead") {
-        if (direction == "down") {
-            if (this.oldDirection == "right") this.animator.changeDirection("right");
-            else this.animator.changeDirection("left");
-        }
-        else {
-            if (!direction == "up") this.oldDirection = direction;
-            this.animator.changeDirection(direction);
-        }
+    if(this.state != "dead")
+    {
+      if(this.direction == "down")
+      {
+          if(this.oldDirection == "right") this.animator.changeDirection("right");
+          else this.animator.changeDirection("left");
+      }
+      else
+      {
+          if(!this.direction == "up") this.oldDirection = direction;
+          this.animator.changeDirection(this.direction);
+      }
     }
 }
 

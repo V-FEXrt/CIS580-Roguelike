@@ -7,16 +7,18 @@ var healthPickup = new Audio();
 var attackPowerup = new Audio();
 var damageBonusPowerup = new Audio();
 var defensePowerup = new Audio();
+var weaponPickUp = new Audio();
+var armorPickUp = new Audio();
 var click = new Audio();
 var backgroundMusicOnLoop = new Audio('sounds/tempBGMusicLoop.wav');
 var volume = 3;
 
 var volumeMatrix = [
-    // bg, bgOnLoop, health, attack, damage, defense, click
-    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], // Volume 0
-    [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1], // Volume 1
-    [0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2], // Volume 2
-    [0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3]  // Volume 3
+    // bg, bgOnLoop, health, attack, damage, defense, click, weapon, armor
+    [ 0.0,      0.0,    0.0,    0.0,    0.0,     0.0,   0.0,    0.0,   0.0 ], // Volume 0
+    [ 0.1,      0.1,    0.1,    0.1,    0.1,     0.1,   0.1,    0.1,   0.1 ], // Volume 1
+    [ 0.2,      0.2,    0.2,    0.2,    0.2,     0.2,   0.2,    0.2,   0.2 ], // Volume 2
+    [ 0.3,      0.3,    0.3,    0.3,    0.3,     0.3,   0.3,    0.3,   0.3 ]  // Volume 3
 ];
 
 
@@ -35,6 +37,8 @@ function SFX() {
     damageBonusPowerup.src = encodeURI('sounds/Powerup1.wav');
     defensePowerup.src = encodeURI('sounds/Powerup2.wav');
     click.src = encodeURI("sounds/click.wav");
+    weaponPickUp.src = encodeURI("sounds/weapon-pickup.wav");
+    armorPickUp.src = encodeURI("sounds/armor-pickup.wav");
 
     this.setVolume(["volume", "3"]);
     window.terminal.addCommand("volume", "Set the volume", this.setVolume.bind(this));
@@ -60,6 +64,14 @@ SFX.prototype.play = function(aSound) {
 
         case "click":
             click.play();
+            break;
+
+        case "weaponPickUp":
+            weaponPickUp.play();
+            break;
+
+        case "armorPickUp":
+            armorPickUp.play();
             break;
     }
 }
@@ -91,4 +103,6 @@ SFX.prototype.setVolume = function(args) {
     damageBonusPowerup.volume = lvls[4];
     defensePowerup.volume = lvls[5];
     click.volume = lvls[6];
+    weaponPickUp.volume = lvls[7];
+    armorPickUp.volume = lvls[8];
 }
