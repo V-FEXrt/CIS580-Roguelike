@@ -15,7 +15,7 @@ module.exports = exports = CombatClass;
 
 function CombatClass(aName, aLevel) {
     this.name = aName;
-    // var levelBonus = aLevel / 3;
+    this.difficulty = window.combatController.getDifficulty(aLevel);
     // set up random ish weapons/armor for enemies
 
     switch (aName) {
@@ -51,15 +51,14 @@ function CombatClass(aName, aLevel) {
 
 
         case "Zombie":
-            this.health = 10;
-            this.attackBonus = 0;
-            this.damageBonus = 0;
-            this.defenseBonus = 0;
+            this.health = Math.min(10, 10 * this.difficulty);
+            this.attackBonus = this.difficulty;
+            this.damageBonus = this.difficulty;
+            this.defenseBonus = this.difficulty;
             this.weapon = new Weapon("Claw", aLevel);
             this.armor = new Armor("Flesh", aLevel);
             this.status = { effect: "None", timer: 0 };
             var senseRange = 5;
-            // var attackCooldown = 0;
 
             this.turnAI = function(aEnemy) {
                 var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
@@ -75,10 +74,10 @@ function CombatClass(aName, aLevel) {
             break;
 
         case "Skeletal Bowman":
-            this.health = 10;
-            this.attackBonus = 0;
-            this.damageBonus = 0;
-            this.defenseBonus = 0;
+            this.health = Math.min(10, 10 * this.difficulty);
+            this.attackBonus = this.difficulty - 1;
+            this.damageBonus = this.difficulty - 1;
+            this.defenseBonus = this.difficulty - 1;
             this.weapon = new Weapon("Broadhead", aLevel);
             this.armor = new Armor("Bones", aLevel);
             this.status = { effect: "None", timer: 0 };
@@ -128,15 +127,14 @@ function CombatClass(aName, aLevel) {
             break;
 
         case "Captain":
-            this.health = 25;
-            this.attackBonus = aLevel;
-            this.damageBonus = aLevel;
-            this.defenseBonus = aLevel;
+            this.health = Math.min(25, 25 * this.difficulty);
+            this.attackBonus = this.difficulty + 2;
+            this.damageBonus = this.difficulty + 2;
+            this.defenseBonus = this.difficulty + 2;
             this.weapon = new Weapon("Battleaxe", aLevel);
             this.armor = new Armor("Chainmail", aLevel);
             this.status = { effect: "None", timer: 0 };
             var senseRange = 15;
-            // var attackCooldown = 0;
 
             this.turnAI = function(aEnemy) {
                 var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
@@ -152,10 +150,10 @@ function CombatClass(aName, aLevel) {
             break;
 
         case "Shaman":
-            this.health = 10;
-            this.attackBonus = 0;
-            this.damageBonus = 0;
-            this.defenseBonus = 0;
+            this.health = Math.min(15, 15 * this.difficulty);
+            this.attackBonus = this.difficulty + 1;
+            this.damageBonus = this.difficulty + 1;
+            this.defenseBonus = this.difficulty + 1;
             this.weapon = new Weapon("Eldritch Blast", aLevel);
             this.armor = new Armor("Robes", aLevel);
             this.status = { effect: "None", timer: 0 };

@@ -210,6 +210,10 @@ CombatController.prototype.getPercentArray = function() {
     // return baseWeights;
 }
 
+CombatController.prototype.getDifficulty = function(aLevel) {
+    return Math.min(0, Math.floor(aLevel / 5));
+}
+
 function getClass(aClass) {
     switch (aClass) {
         case "Knight":
