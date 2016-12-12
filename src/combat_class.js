@@ -74,7 +74,7 @@ function CombatClass(aName, aLevel) {
             break;
 
         case "Skeletal Bowman":
-            this.health = Math.max(10, 10 * this.difficulty);
+            this.health = Math.max(8, 8 * this.difficulty);
             this.attackBonus = this.difficulty - 1;
             this.damageBonus = this.difficulty - 1;
             this.defenseBonus = this.difficulty - 1;
@@ -97,9 +97,9 @@ function CombatClass(aName, aLevel) {
                     // Check preferred engagement distance
                     var path = pathfinder.findPath(aEnemy.position, aEnemy.target.position);
                     var LoS = Vector.magnitude(distance) * 2 >= path.length;
-                    if (LoS) {
+                    if (!LoS) {
                         if (distance.x < prefDist && distance.y < prefDist) {
-                            aEnemy.position = moveBack(aEnemy.position, aEnemy.target.position);
+                            aEnemy.position = moveBack(aEnemy.position, aEnemy.target.position, aEnemy.tilemap.getRandomAdjacentArray(aEnemy.position));
                         } else if (distance.x > prefDist && distance.y > prefDist) {
                             aEnemy.position = moveToward(aEnemy.position, aEnemy.target.position);
                         }
@@ -177,7 +177,7 @@ function CombatClass(aName, aLevel) {
                     var LoS = Vector.magnitude(distance) * 2 >= path.length;
                     if (!LoS) {
                         if (distance.x < prefDist && distance.y < prefDist) {
-                            aEnemy.position = moveBack(aEnemy.position, aEnemy.target.position);
+                            aEnemy.position = moveBack(aEnemy.position, aEnemy.target.position, aEnemy.tilemap.getRandomAdjacentArray(aEnemy.position));
                         } else if (distance.x > prefDist && distance.y > prefDist) {
                             aEnemy.position = moveToward(aEnemy.position, aEnemy.target.position);
                         }
@@ -208,18 +208,24 @@ function CombatClass(aName, aLevel) {
     }
 }
 
-function moveBack(a, b) {
-    var newPos = new Object();
-    if (a.x > b.x) newPos.x = a.x + 1;
-    else if (a.x < b.x) newPos.x = a.x - 1;
-    else newPos.x = a.x;
+function moveBack(a, b, array) {
+    var adj;
 
-    if (a.y > b.y) newPos.y = a.y + 1;
-    else if (a.y < b.y) newPos.y = a.y - 1;
-    else newPos.y = a.y;
+    if (a.x < b.x && a.y < b.y) { adj = array.filter(tile => tile.x < a.x && tile.y < a.y) }
+    else if (a.x == b.x && a.y < b.y) { adj = array.filter(tile => tile.x == a.x && tile.y < a.y) }
+    else if (a.x > b.x && a.y < b.y) { adj = array.filter(tile => tile.x > a.x && tile.y < a.y) }
+    else if (a.x < b.x && a.y == b.y) { adj = array.filter(tile => tile.x < a.x && tile.y == a.y) }
+    else if (a.x > b.x && a.y == b.y) { adj = array.filter(tile => tile.x > a.x && tile.y == a.y) }
+    else if (a.x < b.x && a.y > b.y) { adj = array.filter(tile => tile.x < a.x && tile.y > a.y) }
+    else if (a.x == b.x && a.y > b.y) { adj = array.filter(tile => tile.x == a.x && tile.y > a.y) }
+    else if (a.x > b.x && a.y > b.y) { adj = array.filter(tile => tile.x > a.x && tile.y > a.y) }
+    else return { x: a.x, y: a.y };
 
-    // return moveToward(a, newPos);
-    return newPos;
+    if (adj.length == 0) return { x: a.x, y: a.y };
+    else {
+        var newPos = adj[RNG.rollRandom(0, adj.length - 1)];
+        return { x: newPos.x, y: newPos.y };
+    }
 }
 
 function moveToward(a, b) {
