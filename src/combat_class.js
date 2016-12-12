@@ -78,7 +78,7 @@ function CombatClass(aName, aLevel) {
             this.attackBonus = this.difficulty - 1;
             this.damageBonus = this.difficulty - 1;
             this.defenseBonus = this.difficulty - 1;
-            this.weapon = new Weapon("Broadhead", aLevel);
+            this.weapon = new Weapon("Ancient Nord", aLevel);
             this.armor = new Armor("Bones", aLevel);
             this.status = { effect: "None", timer: 0 };
             var senseRange = 10;
@@ -88,8 +88,6 @@ function CombatClass(aName, aLevel) {
 
             this.turnAI = function(aEnemy) {
                 var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
-                var path = pathfinder.findPath(aEnemy.position, aEnemy.target.position);
-                var LoS = Vector.magnitude(distance) * 2 >= path.length;
 
                 // Move
                 if (distance.x > senseRange && distance.y > senseRange) {
@@ -97,6 +95,8 @@ function CombatClass(aName, aLevel) {
                     aEnemy.position = { x: nextTile.x, y: nextTile.y };
                 } else if (!moveOrAttack) {
                     // Check preferred engagement distance
+                    var path = pathfinder.findPath(aEnemy.position, aEnemy.target.position);
+                    var LoS = Vector.magnitude(distance) * 2 >= path.length;
                     if (LoS) {
                         if (distance.x < prefDist && distance.y < prefDist) {
                             aEnemy.position = moveBack(aEnemy.position, aEnemy.target.position);
@@ -113,6 +113,8 @@ function CombatClass(aName, aLevel) {
                 else if (moveOrAttack) {
                     if (attackCooldown <= 0) {
                         if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
+                            var path = pathfinder.findPath(aEnemy.position, aEnemy.target.position);
+                            var LoS = Vector.magnitude(distance) * 2 >= path.length;
                             if (LoS) {
                                 combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
                                 attackCooldown = 2;
@@ -164,8 +166,6 @@ function CombatClass(aName, aLevel) {
 
             this.turnAI = function(aEnemy) {
                 var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
-                var path = pathfinder.findPath(aEnemy.position, aEnemy.target.position);
-                var LoS = Vector.magnitude(distance) * 2 >= path.length;
 
                 // Move
                 if (distance.x > senseRange && distance.y > senseRange) {
@@ -173,7 +173,9 @@ function CombatClass(aName, aLevel) {
                     aEnemy.position = { x: nextTile.x, y: nextTile.y };
                 } else if (!moveOrAttack) {
                     // Check preferred engagement distance
-                    if (LoS) {
+                    var path = pathfinder.findPath(aEnemy.position, aEnemy.target.position);
+                    var LoS = Vector.magnitude(distance) * 2 >= path.length;
+                    if (!LoS) {
                         if (distance.x < prefDist && distance.y < prefDist) {
                             aEnemy.position = moveBack(aEnemy.position, aEnemy.target.position);
                         } else if (distance.x > prefDist && distance.y > prefDist) {
@@ -189,6 +191,8 @@ function CombatClass(aName, aLevel) {
                 else if (moveOrAttack) {
                     if (attackCooldown <= 0) {
                         if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
+                            var path = pathfinder.findPath(aEnemy.position, aEnemy.target.position);
+                            var LoS = Vector.magnitude(distance) * 2 >= path.length;
                             if (LoS) {
                                 combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
                                 attackCooldown = 2;

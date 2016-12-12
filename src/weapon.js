@@ -130,6 +130,18 @@ function Weapon(aName, aLevel) {
             this.spriteIdx = 1;
             break;
 
+        case "Ancient Nord":
+            this.attackType = "Ranged";
+            this.damageMax = 4
+            this.damageMin = 2;
+            this.damageType = "p";
+            this.range = 4;
+            this.hitBonus = 0;
+            this.attackEffect = "";
+            this.properties = "+1 Min Damage";
+            this.spriteIdx = 1;
+            break;
+
         // Spells
         case "Magic Missile":
             this.attackType = "Magic";
@@ -190,31 +202,31 @@ function Weapon(aName, aLevel) {
     this.movingUp = true;
 }
 
-Weapon.prototype.collided = function (aEntity) {
+Weapon.prototype.collided = function(aEntity) {
 
 }
 
-Weapon.prototype.processTurn = function () {
+Weapon.prototype.processTurn = function() {
 
 }
 
-Weapon.prototype.retain = function () {
+Weapon.prototype.retain = function() {
     return this.shouldRetain;
 }
 
-Weapon.prototype.update = function () {
+Weapon.prototype.update = function() {
     if (this.currY >= 5) this.movingUp = false;
     else if (this.currY <= -5) this.movingUp = true;
     if (this.movingUp) this.currY += .2;
     else this.currY -= .2;
 }
 
-Weapon.prototype.render = function (time, ctx) {
+Weapon.prototype.render = function(time, ctx) {
     var position = window.tilemap.toScreenCoords(this.position);
     var spriteSource = this.spritePositions[this.spriteIdx];
     ctx.drawImage(this.spritesheet, spriteSource.x, spriteSource.y, 75, 75, (position.x * this.size.width), (position.y * this.size.height) + this.currY, 96, 96);
 }
 
-Weapon.prototype.toString = function () {
-    return `Level ${this.level} ${this.name} with damage range ${this.damageMin+this.level}-${this.damageMax+this.level}, with ${this.properties}`
+Weapon.prototype.toString = function() {
+    return `Level ${this.level} ${this.name} with damage range ${this.damageMin + this.level}-${this.damageMax + this.level}, with ${this.properties}`
 }
