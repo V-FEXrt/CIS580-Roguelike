@@ -89,41 +89,52 @@ function CombatClass(aName, aLevel) {
             this.turnAI = function(aEnemy) {
                 var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
 
-                // Move
                 if (distance.x > senseRange && distance.y > senseRange) {
                     var nextTile = aEnemy.tilemap.getRandomAdjacent(aEnemy.position);
                     aEnemy.position = { x: nextTile.x, y: nextTile.y };
-                } else if (!moveOrAttack) {
-                    // Check preferred engagement distance
-                    var path = pathfinder.findPath(aEnemy.position, aEnemy.target.position);
-                    var LoS = Vector.magnitude(distance) * 2 >= path.length;
-                    if (!LoS) {
-                        if (distance.x < prefDist && distance.y < prefDist) {
-                            aEnemy.position = moveBack(aEnemy.position, aEnemy.target.position, aEnemy.tilemap.getRandomAdjacentArray(aEnemy.position));
-                        } else if (distance.x > prefDist && distance.y > prefDist) {
-                            aEnemy.position = moveToward(aEnemy.position, aEnemy.target.position);
-                        }
-                        moveOrAttack = 1;
+                } else {
+                    if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
+
                     } else {
                         aEnemy.position = moveToward(aEnemy.position, aEnemy.target.position);
                     }
-                    // attackCooldown = 1;
-                }
-                // Attack
-                else if (moveOrAttack) {
-                    if (attackCooldown <= 0) {
-                        if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
+
+
+
+
+
+
+
+
+
+                    if (moveOrAttack) {
+                        if (attackCooldown <= 0) {
+
                             var path = pathfinder.findPath(aEnemy.position, aEnemy.target.position);
                             var LoS = Vector.magnitude(distance) * 2 >= path.length;
                             if (LoS) {
                                 combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
                                 attackCooldown = 2;
                             }
+
+                        } else {
+                            attackCooldown--;
                         }
+                        moveOrAttack = 0;
                     } else {
-                        attackCooldown--;
+                        var path = pathfinder.findPath(aEnemy.position, aEnemy.target.position);
+                        var LoS = Vector.magnitude(distance) * 2 >= path.length;
+                        if (!LoS) {
+                            if (distance.x < prefDist && distance.y < prefDist) {
+                                aEnemy.position = moveBack(aEnemy.position, aEnemy.target.position, aEnemy.tilemap.getRandomAdjacentArray(aEnemy.position));
+                            } else if (distance.x > prefDist && distance.y > prefDist) {
+                                aEnemy.position = moveToward(aEnemy.position, aEnemy.target.position);
+                            }
+                            moveOrAttack = 1;
+                        } else {
+                            aEnemy.position = moveToward(aEnemy.position, aEnemy.target.position);
+                        }
                     }
-                    moveOrAttack = 0;
                 }
             }
             break;
@@ -185,7 +196,6 @@ function CombatClass(aName, aLevel) {
                     } else {
                         aEnemy.position = moveToward(aEnemy.position, aEnemy.target.position);
                     }
-                    // attackCooldown = 1;
                 }
                 // Attack
                 else if (moveOrAttack) {

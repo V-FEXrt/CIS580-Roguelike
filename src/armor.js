@@ -33,7 +33,7 @@ function Armor(aName, aLevel) {
             this.weakType = "s";
             break;
 
-        case "Leather Armor":
+        case "Leathers":
             this.defense = 10;
             this.strongType = "s";
             this.weakType = "b";
