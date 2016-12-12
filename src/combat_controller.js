@@ -181,8 +181,9 @@ CombatController.prototype.randomDrop = function(aPosition) {
 
 CombatController.prototype.getPercentArray = function() {
     // damage, health, defense, attack, zombie, skele, cap, shaman, empty
-    var baseWeights = [10, 10, 15, 15, 20, 8, 5, 2, 5];
+    var baseWeights = [10, 10, 15, 15, 20, 10, 3, 2, 5];
     var level = window.player.level;
+    var diff = this.getDifficulty(level);
     var mult = 1;
 
     var damageWeight = baseWeights[0];
@@ -190,24 +191,15 @@ CombatController.prototype.getPercentArray = function() {
     var defenseWeight = baseWeights[2];
     var attackWeight = baseWeights[3];
 
-    var zombieWeight = baseWeights[4];
-    var skeletonWeight = baseWeights[5];
-    var captainWeight;
-    if (level < 5) captainWeight = 0;
-    else if (level < 10 && rollWeighted(1, 1)) captainWeight = baseWeights[6];
-    else captainWeight = baseWeights[6] + level;
-    var shamanWeight;
-    if (level < 5) shamanWeight = 0;
-    else if (level < 10 && rollWeighted(1, 1)) shamanWeight = baseWeights[7];
-    else shamanWeight = baseWeights[7] + level;
-
+    var zombieWeight = baseWeights[4] + diff;
+    var skeletonWeight = baseWeights[5] + diff;
+    var captainWeight = diff * (baseWeights[6] + level);
+    var shamanWeight = diff * (baseWeights[7] + level);
 
     var emptyWeight = baseWeights[8];
 
     return [damageWeight, healthWeight, defenseWeight, attackWeight,
         zombieWeight, skeletonWeight, captainWeight, shamanWeight, emptyWeight];
-
-    // return baseWeights;
 }
 
 CombatController.prototype.getDifficulty = function(aLevel) {
