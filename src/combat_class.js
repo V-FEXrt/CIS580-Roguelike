@@ -161,30 +161,45 @@ function CombatClass(aName, aLevel) {
             this.status = { effect: "None", timer: 0 };
             var senseRange = 10;
             var prefDist = 5;
-            // var attackCooldown = 2;
+            var attackCooldown = 2;
+            var moveOrAttack = 0;
 
             this.turnAI = function(aEnemy) {
                 var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
+                var path = pathfinder.findPath(aEnemy.position, aEnemy.target.position);
+                var LoS = Vector.magnitude(distance) * 2 >= path.length;
 
                 // Move
                 if (distance.x > senseRange && distance.y > senseRange) {
                     var nextTile = aEnemy.tilemap.getRandomAdjacent(aEnemy.position);
                     aEnemy.position = { x: nextTile.x, y: nextTile.y };
-                } else {
+                } else if (!moveOrAttack) {
                     // Check preferred engagement distance
-                    if (distance.x < prefDist && distance.y < prefDist) {
-                        aEnemy.position = moveBack(aEnemy.position, aEnemy.target.position);
-                    } else if (distance.x > prefDist && distance.y > prefDist) {
+                    if (LoS) {
+                        if (distance.x < prefDist && distance.y < prefDist) {
+                            aEnemy.position = moveBack(aEnemy.position, aEnemy.target.position);
+                        } else if (distance.x > prefDist && distance.y > prefDist) {
+                            aEnemy.position = moveToward(aEnemy.position, aEnemy.target.position);
+                        }
+                        moveOrAttack = 1;
+                    } else {
                         aEnemy.position = moveToward(aEnemy.position, aEnemy.target.position);
                     }
+                    // attackCooldown = 1;
                 }
-
                 // Attack
-                if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
-                    var path = pathfinder.findPath(aEnemy.position, aEnemy.target.position);
-                    if (Vector.magnitude(distance) * 2 >= path.length) {
-                        combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
+                else if (moveOrAttack) {
+                    if (attackCooldown <= 0) {
+                        if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
+                            if (LoS) {
+                                combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
+                                attackCooldown = 2;
+                            }
+                        }
+                    } else {
+                        attackCooldown--;
                     }
+                    moveOrAttack = 0;
                 }
             }
             break;
