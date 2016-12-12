@@ -51,7 +51,7 @@ function CombatClass(aName, aLevel) {
 
 
         case "Zombie":
-            this.health = Math.min(10, 10 * this.difficulty);
+            this.health = Math.max(10, 10 * this.difficulty);
             this.attackBonus = this.difficulty;
             this.damageBonus = this.difficulty;
             this.defenseBonus = this.difficulty;
@@ -74,7 +74,7 @@ function CombatClass(aName, aLevel) {
             break;
 
         case "Skeletal Bowman":
-            this.health = Math.min(10, 10 * this.difficulty);
+            this.health = Math.max(10, 10 * this.difficulty);
             this.attackBonus = this.difficulty - 1;
             this.damageBonus = this.difficulty - 1;
             this.defenseBonus = this.difficulty - 1;
@@ -127,7 +127,7 @@ function CombatClass(aName, aLevel) {
             break;
 
         case "Captain":
-            this.health = Math.min(25, 25 * this.difficulty);
+            this.health = Math.max(25, 25 * this.difficulty - 1);
             this.attackBonus = this.difficulty + 2;
             this.damageBonus = this.difficulty + 2;
             this.defenseBonus = this.difficulty + 2;
@@ -150,7 +150,7 @@ function CombatClass(aName, aLevel) {
             break;
 
         case "Shaman":
-            this.health = Math.min(15, 15 * this.difficulty);
+            this.health = Math.max(15, 15 * this.difficulty - 1);
             this.attackBonus = this.difficulty + 1;
             this.damageBonus = this.difficulty + 1;
             this.defenseBonus = this.difficulty + 1;
