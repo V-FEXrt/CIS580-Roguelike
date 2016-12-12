@@ -181,7 +181,7 @@ CombatController.prototype.randomDrop = function(aPosition) {
 
 CombatController.prototype.getPercentArray = function() {
     // damage, health, defense, attack, zombie, skele, cap, shaman, empty
-    var baseWeights = [10, 10, 15, 15, 20, 85, 5, 2, 5];
+    var baseWeights = [10, 10, 15, 15, 20, 8, 5, 2, 5];
     var level = window.player.level;
     var mult = 1;
 

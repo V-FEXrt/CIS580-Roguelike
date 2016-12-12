@@ -104,10 +104,10 @@ function CombatClass(aName, aLevel) {
                         } else if (distance.x > prefDist && distance.y > prefDist) {
                             aEnemy.position = moveToward(aEnemy.position, aEnemy.target.position);
                         }
+                        moveOrAttack = 1;
                     } else {
                         aEnemy.position = moveToward(aEnemy.position, aEnemy.target.position);
                     }
-                    moveOrAttack = 1;
                     // attackCooldown = 1;
                 }
                 // Attack
