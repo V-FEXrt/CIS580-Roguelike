@@ -175,7 +175,7 @@ CombatController.prototype.getPercentArray = function() {
 }
 
 CombatController.prototype.getDifficulty = function(aLevel) {
-    return Math.min(0, Math.floor(aLevel / 5));
+    return Math.min(0, Math.floor(aLevel / 3));
 }
 
 function getClass(aClass) {
@@ -190,7 +190,7 @@ function getClass(aClass) {
 }
 
 function getArmors() {
-    return ["Robes", "Hide Armor", "Leather Armor", "Chainmail", "Plate Armor"];
+    return ["Robes", "Hide Armor", "Leathers", "Chainmail", "Plate Armor"];
 }
 
 function getWeapons() {

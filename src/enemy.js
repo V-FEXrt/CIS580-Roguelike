@@ -17,17 +17,16 @@ function Enemy(position, tilemap, combatClass, target, onDeathCB) {
     this.combat = new CombatClass(this.class, target.level);
     this.target = target;
     this.onDeathCB = onDeathCB;
-    
-    if(this.combatClass == "Shaman")
-    {
-      this.animator = new Animator(0, "idle", "Shaman");
+
+    if (this.combatClass == "Shaman") {
+        this.animator = new Animator(0, "idle", "Shaman");
     }
 }
 
 Enemy.prototype.processTurn = function() {
     if (this.combat.status.effect != "None") window.combatController.handleStatus(this.combat);
     if (this.combat.health <= 0) this.state = "dead";
-    if (this.state == "dead" || this.combat.status.effect == "Frozen") return;
+    if (this.state == "dead" || this.combat.status.effect == "Frozen" || this.combat.status.effect == "Stunned") return;
 
     this.combat.turnAI(this);
 }

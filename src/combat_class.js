@@ -75,9 +75,9 @@ function CombatClass(aName, aLevel) {
 
         case "Skeletal Bowman":
             this.health = Math.max(8, 8 * this.difficulty);
-            this.attackBonus = this.difficulty - 1;
-            this.damageBonus = this.difficulty - 1;
-            this.defenseBonus = this.difficulty - 1;
+            this.attackBonus = this.difficulty - 2;
+            this.damageBonus = this.difficulty - 2;
+            this.defenseBonus = this.difficulty - 2;
             this.weapon = new Weapon("Ancient Nord", aLevel);
             this.armor = new Armor("Bones", aLevel);
             this.status = { effect: "None", timer: 0 };
@@ -101,18 +101,18 @@ function CombatClass(aName, aLevel) {
                                 if (attackCooldown <= 0) {
                                     combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
                                     attackCooldown = 2;
-                                } else {
-                                    attackCooldown--;
                                 }
                                 moveOrAttack = 0;
                             } else {
                                 if (distance.x < prefDist && distance.y < prefDist) {
                                     aEnemy.position = moveBack(aEnemy.position, aEnemy.target.position, aEnemy.tilemap.getRandomAdjacentArray(aEnemy.position));
-                                } else if (distance.x > prefDist && distance.y > prefDist) {
+                                } else if (distance.x >= prefDist && distance.y >= prefDist) {
                                     aEnemy.position = moveToward(aEnemy.position, aEnemy.target.position);
                                 }
                                 moveOrAttack = 1;
+                                attackCooldown = 1;
                             }
+                            attackCooldown--;
                         } else {
                             aEnemy.position = moveToward(aEnemy.position, aEnemy.target.position);
                         }
@@ -174,18 +174,18 @@ function CombatClass(aName, aLevel) {
                                 if (attackCooldown <= 0) {
                                     combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
                                     attackCooldown = 2;
-                                } else {
-                                    attackCooldown--;
                                 }
                                 moveOrAttack = 0;
                             } else {
                                 if (distance.x < prefDist && distance.y < prefDist) {
                                     aEnemy.position = moveBack(aEnemy.position, aEnemy.target.position, aEnemy.tilemap.getRandomAdjacentArray(aEnemy.position));
-                                } else if (distance.x > prefDist && distance.y > prefDist) {
+                                } else if (distance.x >= prefDist && distance.y >= prefDist) {
                                     aEnemy.position = moveToward(aEnemy.position, aEnemy.target.position);
                                 }
                                 moveOrAttack = 1;
+                                attackCooldown = 1;
                             }
+                            attackCooldown--;
                         } else {
                             aEnemy.position = moveToward(aEnemy.position, aEnemy.target.position);
                         }
