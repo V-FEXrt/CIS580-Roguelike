@@ -194,6 +194,10 @@ CombatController.prototype.getDifficulty = function(aLevel) {
     return Math.min(0, Math.floor(aLevel / 3));
 }
 
+CombatController.prototype.healthPotion = function(aLevel) {
+    return RNG.rollMultiple(1, 4, Math.max(2, this.getDifficulty(aLevel))) + 2;
+}
+
 function getClass(aClass) {
     switch (aClass) {
         case "Knight":

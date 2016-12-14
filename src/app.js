@@ -84,7 +84,7 @@ window.onmousemove = function(event) {
 
 window.onmousedown = function(event) {
     // Init the level when class is chosen
-    if(player.shouldProcessTurn) player.playAttack({x: event.offsetX, y: event.offsetY});
+    if (player.shouldProcessTurn) player.playAttack({ x: event.offsetX, y: event.offsetY });
     if (gui.state == "start" || gui.state == "choose class") {
         window.sfx.play("click");
         gui.onmousedown(event);
@@ -173,15 +173,9 @@ window.onkeydown = function(event) {
             break;
         case "Escape":
             event.preventDefault();
-            if(gui.state == "controls" || gui.state == "credits" || gui.state == "choose class")
-            {
-              gui.state = "start";
+            if (gui.state == "controls" || gui.state == "credits" || gui.state == "choose class") {
+                gui.state = "start";
             }
-        // case "Shift":
-        //     event.preventDefault();
-        //     turnDelay = defaultTurnDelay / 2;
-        //     autoTurn = true;
-        //     break;
     }
 }
 
@@ -257,18 +251,18 @@ function update(elapsedTime) {
             function() {
                 window.terminal.log(`The coordinates of the exit door are x: ${stairs.position.x} y: ${stairs.position.y}`, window.colors.cmdResponse);
             });
-        window.terminal.addCommand("spawn", "Spawns a given entity", function (args) { EntitySpawner.spawnCommand(args); });
+        window.terminal.addCommand("spawn", "Spawns a given entity", function(args) { EntitySpawner.spawnCommand(args); });
         window.terminal.addCommand("level", "Sets the level to the given integer",
-          function(args) {
-            if (args.length != 2) {
-              window.terminal.log("Syntax: level <integer>", window.colors.invalid);
-            }
-            else {
-              window.player.position = {x: stairs.position.x, y: stairs.position.y};
-              window.terminal.log(`Setting level to ${args[1]}`, window.colors.cmdResponse);
-              window.player.level = parseInt(args[1]);
-            }
-        });
+            function(args) {
+                if (args.length != 2) {
+                    window.terminal.log("Syntax: level <integer>", window.colors.invalid);
+                }
+                else {
+                    window.player.position = { x: stairs.position.x, y: stairs.position.y };
+                    window.terminal.log(`Setting level to ${args[1]}`, window.colors.cmdResponse);
+                    window.player.level = parseInt(args[1]);
+                }
+            });
     }
     else {
         window.terminal.removeCommand("door");
@@ -361,6 +355,8 @@ function nextLevel(fadeOut) {
 
         // add player
         window.entityManager.addEntity(player);
+        player.combat.health += window.combatController.healthPotion(player.level);
+
         // add stairs
         stairs = new Stairs(pos, tilemap, function() { nextLevel(true) });
         window.entityManager.addEntity(stairs);
