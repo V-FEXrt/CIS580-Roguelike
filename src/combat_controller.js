@@ -191,7 +191,7 @@ CombatController.prototype.getPercentArray = function() {
 }
 
 CombatController.prototype.getDifficulty = function(aLevel) {
-    return Math.min(0, Math.floor(aLevel / 3));
+    return Math.max(0, Math.floor(aLevel / 3));
 }
 
 CombatController.prototype.healthPotion = function(aLevel) {
