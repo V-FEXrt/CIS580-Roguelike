@@ -76,7 +76,7 @@ function CombatClass(aName, aLevel) {
         case "Skeletal Bowman":
             this.health = Math.max(8, 8 * this.difficulty);
             this.attackBonus = this.difficulty - 1;
-            this.damageBonus = this.difficulty - 1;
+            this.damageBonus = this.difficulty - 2;
             this.defenseBonus = this.difficulty - 1;
             this.weapon = new Weapon("Ancient Nord", aLevel);
             this.armor = new Armor("Bones", aLevel);
