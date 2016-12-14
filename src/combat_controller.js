@@ -156,7 +156,6 @@ CombatController.prototype.getPercentArray = function() {
     var baseWeights = [10, 10, 15, 15, 20, 10, 3, 2, 5];
     var level = window.player.level;
     var diff = this.getDifficulty(level);
-    var mult = 1;
 
     var damageWeight = baseWeights[0];
     var healthWeight = baseWeights[1];
@@ -164,7 +163,24 @@ CombatController.prototype.getPercentArray = function() {
     var attackWeight = baseWeights[3];
 
     var zombieWeight = baseWeights[4] + diff;
-    var skeletonWeight = baseWeights[5] + diff;
+    var skeletonWeight;
+    switch (level) {
+        case 1:
+            skeletonWeight = 0;
+            break;
+
+        case 2:
+            skeletonWeight = baseWeights[5] / 2;
+            break;
+
+        case 3:
+            skeletonWeight = baseWeights[5];
+            break;
+
+        default:
+            skeletonWeight = baseWeights[5] + diff;
+            break;
+    }
     var captainWeight = diff * (baseWeights[6] + level);
     var shamanWeight = diff * (baseWeights[7] + level);
 
@@ -175,7 +191,11 @@ CombatController.prototype.getPercentArray = function() {
 }
 
 CombatController.prototype.getDifficulty = function(aLevel) {
-    return Math.min(0, Math.floor(aLevel / 3));
+    return Math.max(0, Math.floor(aLevel / 3));
+}
+
+CombatController.prototype.healthPotion = function(aLevel) {
+    return RNG.rollMultiple(1, 4, Math.max(2, this.getDifficulty(aLevel))) + 2;
 }
 
 function getClass(aClass) {

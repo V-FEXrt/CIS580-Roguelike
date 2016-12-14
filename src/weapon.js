@@ -155,8 +155,8 @@ function Weapon(aName, aLevel) {
         // Spells
         case "Magic Missile":
             this.attackType = "Magic";
-            this.damageMax = 4
-            this.damageMin = 1;
+            this.damageMax = 6
+            this.damageMin = 2;
             this.damageType = "m";
             this.range = 6;
             this.hitBonus = 0;
@@ -195,12 +195,12 @@ function Weapon(aName, aLevel) {
         case "Eldritch Blast":
             this.attackType = "Magic";
             this.damageMax = 10
-            this.damageMin = 1;
+            this.damageMin = 2;
             this.damageType = "m";
-            this.range = 6;
+            this.range = 5;
             this.hitBonus = -2;
             this.attackEffect = "";
-            this.properties = "-2 Accuracy";
+            this.properties = "-2 Accuracy, +1 Min Damage";
             this.propertiesShort = "-2 Acc";
             this.spriteIdx = 0;
             break;

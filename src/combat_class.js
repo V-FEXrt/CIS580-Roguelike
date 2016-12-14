@@ -20,10 +20,10 @@ function CombatClass(aName, aLevel) {
 
     switch (aName) {
         case "Knight":
-            this.health = 20;
+            this.health = 25;
             this.attackBonus = 0;
-            this.damageBonus = 0;
-            this.defenseBonus = 0;
+            this.damageBonus = 1;
+            this.defenseBonus = 2;
             this.weapon = new Weapon("Longsword", 1);
             this.armor = new Armor("Hide Armor", 1);
             this.status = { effect: "None", timer: 0 };
@@ -31,9 +31,9 @@ function CombatClass(aName, aLevel) {
 
         case "Archer":
             this.health = 10;
-            this.attackBonus = 0;
+            this.attackBonus = 2;
             this.damageBonus = 0;
-            this.defenseBonus = 0;
+            this.defenseBonus = 1;
             this.weapon = new Weapon("Broadhead", 1);
             this.armor = new Armor("Hide Armor", 1);
             this.status = { effect: "None", timer: 0 };
@@ -41,9 +41,9 @@ function CombatClass(aName, aLevel) {
 
         case "Mage":
             this.health = 10;
-            this.attackBonus = 0;
-            this.damageBonus = 0;
-            this.defenseBonus = 0;
+            this.attackBonus = -1;
+            this.damageBonus = 2;
+            this.defenseBonus = 1;
             this.weapon = new Weapon("Eldritch Blast", 1);
             this.armor = new Armor("Robes", 1);
             this.status = { effect: "None", timer: 0 };
@@ -76,7 +76,7 @@ function CombatClass(aName, aLevel) {
         case "Skeletal Bowman":
             this.health = Math.max(8, 8 * this.difficulty);
             this.attackBonus = this.difficulty - 1;
-            this.damageBonus = this.difficulty - 1;
+            this.damageBonus = this.difficulty - 2;
             this.defenseBonus = this.difficulty - 1;
             this.weapon = new Weapon("Ancient Nord", aLevel);
             this.armor = new Armor("Bones", aLevel);
