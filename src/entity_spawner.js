@@ -132,6 +132,11 @@ function spawnCommand(args) {
                 window.terminal.log("Syntax: spawn enemy <enemyName> <x> <y>", window.colors.invalid);
                 break;
               }
+              if(args[2] == "SkeletalBowman") args[2] = "Skeletal Bowman";
+              if(args[2] != "Zombie" && args[2] != "Skeletal Bowman" && args[2] != "Captain" && args[2] != "Shaman") {
+                window.terminal.log("Invalid enemy type. Please choose from Zombie, SkeletalBowman, Captain, or Shaman", window.colors.invalid);
+                break;
+              }
               window.entityManager.addEntity(new Enemy({x: args[3], y: args[4]}, tilemap, args[2], window.player, spawnDrop));
               window.terminal.log(`Spawned ${args[2]}`, window.colors.cmdResponse);
               break;
