@@ -782,7 +782,7 @@ canvas.onclick = function(event) {
     window.entityManager.addEntity(new Click(clickedWorldPos, tilemap, player, function(enemy) {
         var distance = Vector.distance(player.position, enemy.position);
         if (distance.x <= player.combat.weapon.range && distance.y <= player.combat.weapon.range) {
-            if (player.combat.weapon.attackType != "Melee") {
+            if (player.combat.weapon.attackType != "Melee" && player.combat.weapon.name != "Magic Missile") {
                 var path = pathfinder.findPath(player.position, enemy.position);
                 if (Vector.magnitude(distance) * 2 >= path.length) {
                     combatController.handleAttack(player.combat, enemy.combat);
@@ -1263,7 +1263,7 @@ function CombatClass(aName, aLevel) {
             this.status = { effect: "None", timer: 0 };
             var senseRange = 5;
 
-            this.turnAI = function(aEnemy) {
+            this.turnAI = function (aEnemy) {
                 var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
                 if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
                     combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
@@ -1276,7 +1276,7 @@ function CombatClass(aName, aLevel) {
             }
             break;
 
-        case "Skeletal Bowman":
+        case "Skeleton":
             this.health = Math.max(8, 8 * this.difficulty);
             this.attackBonus = this.difficulty - 1;
             this.damageBonus = this.difficulty - 2;
@@ -1289,7 +1289,7 @@ function CombatClass(aName, aLevel) {
             var attackCooldown = 2;
             var moveOrAttack = 0;
 
-            this.turnAI = function(aEnemy) {
+            this.turnAI = function (aEnemy) {
                 var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
 
                 if (distance.x > senseRange && distance.y > senseRange) {
@@ -1326,17 +1326,17 @@ function CombatClass(aName, aLevel) {
             }
             break;
 
-        case "Captain":
+        case "Minotaur":
             this.health = Math.max(25, 25 * this.difficulty - 1);
-            this.attackBonus = this.difficulty + 2;
-            this.damageBonus = this.difficulty + 2;
-            this.defenseBonus = this.difficulty + 2;
+            this.attackBonus = (this.difficulty <= 1) ? 0 : this.difficulty + 2;
+            this.damageBonus = (this.difficulty <= 1) ? 0 : this.difficulty + 2;
+            this.defenseBonus = (this.difficulty <= 1) ? 0 : this.difficulty + 2;
             this.weapon = new Weapon("Battleaxe", aLevel);
             this.armor = new Armor("Chainmail", aLevel);
             this.status = { effect: "None", timer: 0 };
             var senseRange = 15;
 
-            this.turnAI = function(aEnemy) {
+            this.turnAI = function (aEnemy) {
                 var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
                 if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
                     combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
@@ -1351,9 +1351,9 @@ function CombatClass(aName, aLevel) {
 
         case "Shaman":
             this.health = Math.max(15, 15 * this.difficulty - 1);
-            this.attackBonus = this.difficulty + 1;
-            this.damageBonus = this.difficulty + 1;
-            this.defenseBonus = this.difficulty + 1;
+            this.attackBonus = (this.difficulty <= 1) ? 0 : this.difficulty + 1;
+            this.damageBonus = (this.difficulty <= 1) ? 0 : this.difficulty + 1;
+            this.defenseBonus = (this.difficulty <= 1) ? 0 : this.difficulty + 1;
             this.weapon = new Weapon("Eldritch Blast", aLevel);
             this.armor = new Armor("Robes", aLevel);
             this.status = { effect: "None", timer: 0 };
@@ -1362,7 +1362,7 @@ function CombatClass(aName, aLevel) {
             var attackCooldown = 2;
             var moveOrAttack = 0;
 
-            this.turnAI = function(aEnemy) {
+            this.turnAI = function (aEnemy) {
                 var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
 
                 if (distance.x > senseRange && distance.y > senseRange) {
@@ -1442,7 +1442,7 @@ function CombatController() {
 
 }
 
-CombatController.prototype.handleAttack = function(aAttackerClass, aDefenderClass) {
+CombatController.prototype.handleAttack = function (aAttackerClass, aDefenderClass) {
     var lAttackBase = Math.floor(aAttackerClass.attackBonus);
     var lAttackBonus = aAttackerClass.weapon.hitBonus;
     var lAttackRoll = RNG.rollRandom(1, 20);
@@ -1528,7 +1528,7 @@ CombatController.prototype.handleAttack = function(aAttackerClass, aDefenderClas
     }
 }
 
-CombatController.prototype.handleStatus = function(aCombatClass) {
+CombatController.prototype.handleStatus = function (aCombatClass) {
     switch (aCombatClass.status.effect) {
         case "Burned":
         case "Poisoned":
@@ -1560,7 +1560,7 @@ CombatController.prototype.handleStatus = function(aCombatClass) {
     }
 }
 
-CombatController.prototype.randomDrop = function(aPosition) {
+CombatController.prototype.randomDrop = function (aPosition) {
     var lDrop = new Object();
     var lRand = RNG.rollRandom(1, 20);
     var level = window.player.level + RNG.rollWeighted(5, 4, 1);
@@ -1582,8 +1582,8 @@ CombatController.prototype.randomDrop = function(aPosition) {
     return lDrop;
 }
 
-CombatController.prototype.getPercentArray = function() {
-    // damage, health, defense, attack, zombie, skele, cap, shaman, empty
+CombatController.prototype.getPercentArray = function () {
+    // damage, health, defense, attack, zombie, skeleton, minotaur, shaman, empty
     var baseWeights = [10, 10, 15, 15, 20, 10, 3, 2, 5];
     var level = window.player.level;
     var diff = this.getDifficulty(level);
@@ -1595,37 +1595,45 @@ CombatController.prototype.getPercentArray = function() {
 
     var zombieWeight = baseWeights[4] + diff;
     var skeletonWeight;
+    var minotaurWeight;
+    var shamanWeight;
     switch (level) {
         case 1:
             skeletonWeight = 0;
+            minotaurWeight = 0;
+            shamanWeight = 0;
             break;
 
         case 2:
             skeletonWeight = baseWeights[5] / 2;
+            minotaurWeight = 0;
+            shamanWeight = 0;
             break;
 
         case 3:
             skeletonWeight = baseWeights[5];
+            minotaurWeight = 0;
+            shamanWeight = 0;
             break;
 
         default:
             skeletonWeight = baseWeights[5] + diff;
+            minotaurWeight = diff * baseWeights[6];
+            shamanWeight = diff * baseWeights[7];
             break;
     }
-    var captainWeight = diff * (baseWeights[6] + level);
-    var shamanWeight = diff * (baseWeights[7] + level);
 
     var emptyWeight = baseWeights[8];
 
     return [damageWeight, healthWeight, defenseWeight, attackWeight,
-        zombieWeight, skeletonWeight, captainWeight, shamanWeight, emptyWeight];
+        zombieWeight, skeletonWeight, minotaurWeight, shamanWeight, emptyWeight];
 }
 
-CombatController.prototype.getDifficulty = function(aLevel) {
+CombatController.prototype.getDifficulty = function (aLevel) {
     return Math.max(0, Math.floor(aLevel / 3));
 }
 
-CombatController.prototype.healthPotion = function(aLevel) {
+CombatController.prototype.healthPotion = function (aLevel) {
     return RNG.rollMultiple(1, 4, Math.max(2, this.getDifficulty(aLevel))) + 2;
 }
 
@@ -1676,22 +1684,16 @@ function Enemy(position, tilemap, combatClass, target, onDeathCB) {
 
     if (this.class == "Shaman") {
         this.animator = new Animator(0, "idle", "Shaman");
-    }
-    else if(this.class == "Zombie")
-    {
+    } else if (this.class == "Zombie") {
         this.animator = new Animator(3, "idle", "Zombie");
-    }
-    else if(this.class == "Skeletal Bowman")
-    {
-        this.animator = new Animator(9, "idle", "Skeletal Bowman");
-    }
-    else if(this.class == "Captain")
-    {
-        this.animator = new Animator(6, "idle", "Captain");
+    } else if (this.class == "Skeleton") {
+        this.animator = new Animator(9, "idle", "Skeleton");
+    } else if (this.class == "Minotaur") {
+        this.animator = new Animator(6, "idle", "Minotaur");
     }
 }
 
-Enemy.prototype.processTurn = function() {
+Enemy.prototype.processTurn = function () {
     if (this.combat.status.effect != "None") window.combatController.handleStatus(this.combat);
     if (this.combat.health <= 0) this.state = "dead";
     if (this.state == "dead" || this.combat.status.effect == "Frozen" || this.combat.status.effect == "Stunned") return;
@@ -1699,7 +1701,7 @@ Enemy.prototype.processTurn = function() {
     this.combat.turnAI(this);
 }
 
-Enemy.prototype.update = function(time) {
+Enemy.prototype.update = function (time) {
     // if we're dead, we should probably do something
     if (this.combat.health <= 0) {
         this.state = "dead";
@@ -1707,11 +1709,11 @@ Enemy.prototype.update = function(time) {
     this.animator.update(time);
 }
 
-Enemy.prototype.collided = function(entity) {
+Enemy.prototype.collided = function (entity) {
 
 }
 
-Enemy.prototype.retain = function() {
+Enemy.prototype.retain = function () {
     if (this.combat.health <= 0) {
         this.onDeathCB(this.position, this.tilemap);
         return false;
@@ -1720,7 +1722,7 @@ Enemy.prototype.retain = function() {
     }
 }
 
-Enemy.prototype.render = function(elapsedTime, ctx) {
+Enemy.prototype.render = function (elapsedTime, ctx) {
     if (this.state == "dead") return; // shouldnt be necessary
 
     var position = this.tilemap.toScreenCoords(this.position);
@@ -1941,8 +1943,8 @@ var spawnArray = [
   function () { spawnPowerup(3); },
   function () { spawnPowerup(4); },
   function () { spawnEnemy("Zombie"); },
-  function () { spawnEnemy("Skeletal Bowman"); },
-  function () { spawnEnemy("Captain"); },
+  function () { spawnEnemy("Skeleton"); },
+  function () { spawnEnemy("Minotaur"); },
   function () { spawnEnemy("Shaman"); },
   function () { }
 ]
@@ -1950,7 +1952,7 @@ var spawnArray = [
 var tilemap;
 var player;
 // percents should be an array of the percent everything should be spawned. in this format
-// [ crystal, red potion, blue potion, green potion, Zombie, Skeletal Bowman, Captain, Shaman, Empty ]
+// [ crystal, red potion, blue potion, green potion, Zombie, Skeleton, Minotaur, Shaman, Empty ]
 function spawn(aPlayer, tmap, count, percents) {
   tilemap = tmap;
   player = aPlayer;
@@ -1993,71 +1995,70 @@ function spawnDrop(position) {
 function spawnCommand(args) {
   if (args.length == 1) window.terminal.log("Requires parameters", window.colors.invalid);
   else {
-      switch (args[1]) {
-          case "weapon":
-              if (args.length != 6) {
-                window.terminal.log("Syntax: spawn weapon <weaponName(no spaces)> <weaponLevel(preferably less than 100)> <x> <y>", window.colors.invalid);
-                break;
-              }
-              if (args[2] == "MorningStar") args[2] = "Morning Star";
-              if (args[2] == "HeavyBolts") args[2] = "Heavy Bolts";
-              if (args[2] == "MagicMissile") args[2] = "Magic Missile";
-              if (args[2] == "EldritchBlast") args[2] = "Eldritch Blast";
-              var weapon = new Weapon(args[2], args[3]);
-              if (weapon.damageMin == "undefined") {
-                window.terminal.log("Invalid weapon", window.colors.invalid);
-                break;
-              }
-              weapon.position.x = args[4];
-              weapon.position.y = args[5];
-              window.terminal.log(`Spawned ${args[2]}`, window.colors.cmdResponse);
-              window.entityManager.addEntity(weapon);
-              break;
-          case "armor":
-              if (args.length != 6) {
-                window.terminal.log("Syntax: spawn armor <armorName(no spaces)> <armorLevel(preferably less than 100)> <x> <y>", window.colors.invalid);
-                break;
-              }
-              if (args[2] == "HideArmor") args[2] = "Hide Armor";
-              if (args[2] == "LeatherArmor") args[2] = "Leather Armor";
-              if (args[2] == "PlateArmor") args[2] = "Plate Armor";
-              var armor = new Armor(args[2], args[3]);
-              if (armor.defense == "undefined") {
-                window.terminal.log("Invalid armor", window.colors.invalid);
-                break;
-              }
-              armor.position.x = args[4];
-              armor.position.y = args[5];
-              window.terminal.log(`Spawned ${args[2]}`, window.colors.cmdResponse);
-              window.entityManager.addEntity(armor);
-              break;
-          case "potion":
-              if (args.length != 5) {
-                window.terminal.log("Syntax: spawn potion <potionNum> <x> <y>", window.colors.invalid);
-                break;
-              }
-              window.entityManager.addEntity(new Powerup({x: args[3], y: args[4]}, tilemap, parseInt(args[2])));
-              var potions = ["crystal", "health", "defense", "agility"];
-              window.terminal.log(`Spawned ${potions[parseInt(args[2])-1]} potion`, window.colors.cmdResponse);
-              break;
-          case "enemy":
-              if (args.length != 5) {
-                window.terminal.log("Syntax: spawn enemy <enemyName> <x> <y>", window.colors.invalid);
-                break;
-              }
-              if(args[2] == "SkeletalBowman") args[2] = "Skeletal Bowman";
-              if(args[2] != "Zombie" && args[2] != "Skeletal Bowman" && args[2] != "Captain" && args[2] != "Shaman") {
-                window.terminal.log("Invalid enemy type. Please choose from Zombie, SkeletalBowman, Captain, or Shaman", window.colors.invalid);
-                break;
-              }
-              window.entityManager.addEntity(new Enemy({x: args[3], y: args[4]}, tilemap, args[2], window.player, spawnDrop));
-              window.terminal.log(`Spawned ${args[2]}`, window.colors.cmdResponse);
-              break;
-          default:
-              window.terminal.log("Invalid entity name", window.colors.invalid);
-              break;
-      }
-}
+    switch (args[1]) {
+      case "weapon":
+        if (args.length != 6) {
+          window.terminal.log("Syntax: spawn weapon <weaponName(no spaces)> <weaponLevel(preferably less than 100)> <x> <y>", window.colors.invalid);
+          break;
+        }
+        if (args[2] == "MorningStar") args[2] = "Morning Star";
+        if (args[2] == "HeavyBolts") args[2] = "Heavy Bolts";
+        if (args[2] == "MagicMissile") args[2] = "Magic Missile";
+        if (args[2] == "EldritchBlast") args[2] = "Eldritch Blast";
+        var weapon = new Weapon(args[2], args[3]);
+        if (weapon.damageMin == "undefined") {
+          window.terminal.log("Invalid weapon", window.colors.invalid);
+          break;
+        }
+        weapon.position.x = args[4];
+        weapon.position.y = args[5];
+        window.terminal.log(`Spawned ${args[2]}`, window.colors.cmdResponse);
+        window.entityManager.addEntity(weapon);
+        break;
+      case "armor":
+        if (args.length != 6) {
+          window.terminal.log("Syntax: spawn armor <armorName(no spaces)> <armorLevel(preferably less than 100)> <x> <y>", window.colors.invalid);
+          break;
+        }
+        if (args[2] == "HideArmor") args[2] = "Hide Armor";
+        if (args[2] == "LeatherArmor") args[2] = "Leather Armor";
+        if (args[2] == "PlateArmor") args[2] = "Plate Armor";
+        var armor = new Armor(args[2], args[3]);
+        if (armor.defense == "undefined") {
+          window.terminal.log("Invalid armor", window.colors.invalid);
+          break;
+        }
+        armor.position.x = args[4];
+        armor.position.y = args[5];
+        window.terminal.log(`Spawned ${args[2]}`, window.colors.cmdResponse);
+        window.entityManager.addEntity(armor);
+        break;
+      case "potion":
+        if (args.length != 5) {
+          window.terminal.log("Syntax: spawn potion <potionNum> <x> <y>", window.colors.invalid);
+          break;
+        }
+        window.entityManager.addEntity(new Powerup({ x: args[3], y: args[4] }, tilemap, parseInt(args[2])));
+        var potions = ["crystal", "health", "defense", "agility"];
+        window.terminal.log(`Spawned ${potions[parseInt(args[2]) - 1]} potion`, window.colors.cmdResponse);
+        break;
+      case "enemy":
+        if (args.length != 5) {
+          window.terminal.log("Syntax: spawn enemy <enemyName> <x> <y>", window.colors.invalid);
+          break;
+        }
+        if (args[2] != "Zombie" && args[2] != "Skeleton" && args[2] != "Minotaur" && args[2] != "Shaman") {
+          window.terminal.log("Invalid enemy type. Please choose from Zombie, Skeleton, Minotaur, or Shaman", window.colors.invalid);
+          break;
+        }
+        window.entityManager.addEntity(new Enemy({ x: args[3], y: args[4] }, tilemap, args[2], window.player, spawnDrop));
+        window.terminal.log(`Spawned ${args[2]}`, window.colors.cmdResponse);
+        break;
+      default:
+        window.terminal.log("Invalid entity name", window.colors.invalid);
+        break;
+    }
+  }
 }
 
 },{"./armor":6,"./enemy":10,"./powerup":19,"./rng":21,"./weapon":27}],13:[function(require,module,exports){
