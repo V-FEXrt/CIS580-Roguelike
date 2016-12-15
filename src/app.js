@@ -107,7 +107,7 @@ canvas.onclick = function(event) {
     window.entityManager.addEntity(new Click(clickedWorldPos, tilemap, player, function(enemy) {
         var distance = Vector.distance(player.position, enemy.position);
         if (distance.x <= player.combat.weapon.range && distance.y <= player.combat.weapon.range) {
-            if (player.combat.weapon.attackType != "Melee") {
+            if (player.combat.weapon.attackType != "Melee" && player.combat.weapon.name != "Magic Missile") {
                 var path = pathfinder.findPath(player.position, enemy.position);
                 if (Vector.magnitude(distance) * 2 >= path.length) {
                     combatController.handleAttack(player.combat, enemy.combat);
