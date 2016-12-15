@@ -60,7 +60,7 @@ function CombatClass(aName, aLevel) {
             this.status = { effect: "None", timer: 0 };
             var senseRange = 5;
 
-            this.turnAI = function(aEnemy) {
+            this.turnAI = function (aEnemy) {
                 var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
                 if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
                     combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
@@ -73,7 +73,7 @@ function CombatClass(aName, aLevel) {
             }
             break;
 
-        case "Skeletal Bowman":
+        case "Skeleton":
             this.health = Math.max(8, 8 * this.difficulty);
             this.attackBonus = this.difficulty - 1;
             this.damageBonus = this.difficulty - 2;
@@ -86,7 +86,7 @@ function CombatClass(aName, aLevel) {
             var attackCooldown = 2;
             var moveOrAttack = 0;
 
-            this.turnAI = function(aEnemy) {
+            this.turnAI = function (aEnemy) {
                 var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
 
                 if (distance.x > senseRange && distance.y > senseRange) {
@@ -123,17 +123,17 @@ function CombatClass(aName, aLevel) {
             }
             break;
 
-        case "Captain":
+        case "Minotaur":
             this.health = Math.max(25, 25 * this.difficulty - 1);
-            this.attackBonus = this.difficulty + 2;
-            this.damageBonus = this.difficulty + 2;
-            this.defenseBonus = this.difficulty + 2;
+            this.attackBonus = (this.difficulty <= 1) ? 0 : this.difficulty + 2;
+            this.damageBonus = (this.difficulty <= 1) ? 0 : this.difficulty + 2;
+            this.defenseBonus = (this.difficulty <= 1) ? 0 : this.difficulty + 2;
             this.weapon = new Weapon("Battleaxe", aLevel);
             this.armor = new Armor("Chainmail", aLevel);
             this.status = { effect: "None", timer: 0 };
             var senseRange = 15;
 
-            this.turnAI = function(aEnemy) {
+            this.turnAI = function (aEnemy) {
                 var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
                 if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
                     combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
@@ -148,9 +148,9 @@ function CombatClass(aName, aLevel) {
 
         case "Shaman":
             this.health = Math.max(15, 15 * this.difficulty - 1);
-            this.attackBonus = this.difficulty + 1;
-            this.damageBonus = this.difficulty + 1;
-            this.defenseBonus = this.difficulty + 1;
+            this.attackBonus = (this.difficulty <= 1) ? 0 : this.difficulty + 1;
+            this.damageBonus = (this.difficulty <= 1) ? 0 : this.difficulty + 1;
+            this.defenseBonus = (this.difficulty <= 1) ? 0 : this.difficulty + 1;
             this.weapon = new Weapon("Eldritch Blast", aLevel);
             this.armor = new Armor("Robes", aLevel);
             this.status = { effect: "None", timer: 0 };
@@ -159,7 +159,7 @@ function CombatClass(aName, aLevel) {
             var attackCooldown = 2;
             var moveOrAttack = 0;
 
-            this.turnAI = function(aEnemy) {
+            this.turnAI = function (aEnemy) {
                 var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
 
                 if (distance.x > senseRange && distance.y > senseRange) {
