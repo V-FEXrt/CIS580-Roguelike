@@ -11,15 +11,27 @@ function Enemy(position, tilemap, combatClass, target, onDeathCB) {
     this.size = { width: 96, height: 96 };
     this.tilemap = tilemap;
     this.spritesheet = new Image();
-    this.spritesheet.src = "./spritesheets/sprites.png";
+    this.spritesheet.src = "./spritesheets/enemy_animations.png";
     this.type = "Enemy";
     this.class = combatClass;
     this.combat = new CombatClass(this.class, target.level);
     this.target = target;
     this.onDeathCB = onDeathCB;
 
-    if (this.combatClass == "Shaman") {
+    if (this.class == "Shaman") {
         this.animator = new Animator(0, "idle", "Shaman");
+    }
+    else if(this.class == "Zombie")
+    {
+        this.animator = new Animator(3, "idle", "Zombie");
+    }
+    else if(this.class == "Skeletal Bowman")
+    {
+        this.animator = new Animator(9, "idle", "Skeletal Bowman");
+    }
+    else if(this.class == "Captain")
+    {
+        this.animator = new Animator(6, "idle", "Captain");
     }
 }
 
@@ -36,6 +48,7 @@ Enemy.prototype.update = function(time) {
     if (this.combat.health <= 0) {
         this.state = "dead";
     }
+    this.animator.update(time);
 }
 
 Enemy.prototype.collided = function(entity) {
@@ -57,7 +70,7 @@ Enemy.prototype.render = function(elapsedTime, ctx) {
     var position = this.tilemap.toScreenCoords(this.position);
     ctx.drawImage(
         this.spritesheet,
-        768, 576, // skeleton guy
+        96 * this.animator.index.x, 96 * this.animator.index.y,
         96, 96,
         position.x * this.size.width, position.y * this.size.height,
         96, 96
