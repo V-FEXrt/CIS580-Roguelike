@@ -164,25 +164,33 @@ CombatController.prototype.getPercentArray = function () {
 
     var zombieWeight = baseWeights[4] + diff;
     var skeletonWeight;
+    var minotaurWeight;
+    var shamanWeight;
     switch (level) {
         case 1:
             skeletonWeight = 0;
+            minotaurWeight = 0;
+            shamanWeight = 0;
             break;
 
         case 2:
             skeletonWeight = baseWeights[5] / 2;
+            minotaurWeight = 0;
+            shamanWeight = 0;
             break;
 
         case 3:
             skeletonWeight = baseWeights[5];
+            minotaurWeight = 0;
+            shamanWeight = 0;
             break;
 
         default:
             skeletonWeight = baseWeights[5] + diff;
+            minotaurWeight = diff * baseWeights[6];
+            shamanWeight = diff * baseWeights[7];
             break;
     }
-    var minotaurWeight = diff * (baseWeights[6] + level);
-    var shamanWeight = diff * (baseWeights[7] + level);
 
     var emptyWeight = baseWeights[8];
 
