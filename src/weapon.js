@@ -30,6 +30,7 @@ function Weapon(aName, aLevel) {
             this.hitBonus = 0;
             this.attackEffect = "";
             this.properties = "+1 Min Damage";
+            this.propertiesShort = "";
             this.spriteIdx = 3;
             break;
 
@@ -41,7 +42,8 @@ function Weapon(aName, aLevel) {
             this.range = 1;
             this.hitBonus = 2;
             this.attackEffect = "Stunned";
-            this.properties = "+2 to Hit, 50% Stun";
+            this.properties = "+2 Accuracy, 50% Stun Chance";
+            this.propertiesShort = "50% Stun";
             this.spriteIdx = 2;
             break;
 
@@ -54,6 +56,7 @@ function Weapon(aName, aLevel) {
             this.hitBonus = 0;
             this.attackEffect = "";
             this.properties = "+1 Range";
+            this.propertiesShort = "+1 Range";
             this.spriteIdx = 4;
             break;
 
@@ -66,6 +69,7 @@ function Weapon(aName, aLevel) {
             this.hitBonus = 1;
             this.attackEffect = "";
             this.properties = "+2 Crit Chance";
+            this.propertiesShort = "+2 Crit";
             this.spriteIdx = 4;
             break;
 
@@ -78,6 +82,7 @@ function Weapon(aName, aLevel) {
             this.hitBonus = 1;
             this.attackEffect = "";
             this.properties = "+1 Min Damage";
+            this.propertiesShort = "";
             this.spriteIdx = 3;
             break;
 
@@ -90,7 +95,8 @@ function Weapon(aName, aLevel) {
             this.range = 4;
             this.hitBonus = 3;
             this.attackEffect = "";
-            this.properties = "+3 to Hit";
+            this.properties = "+3 Accuracy";
+            this.propertiesShort = "+3 Acc";
             this.spriteIdx = 1;
             break;
 
@@ -103,6 +109,7 @@ function Weapon(aName, aLevel) {
             this.hitBonus = 0;
             this.attackEffect = "";
             this.properties = "+1 Min Damage";
+            this.propertiesShort = "";
             this.spriteIdx = 1;
             break;
 
@@ -115,6 +122,7 @@ function Weapon(aName, aLevel) {
             this.hitBonus = 0;
             this.attackEffect = "Poisoned";
             this.properties = "50% Poison Chance";
+            this.propertiesShort = "50% Poison";
             this.spriteIdx = 1;
             break;
 
@@ -127,19 +135,34 @@ function Weapon(aName, aLevel) {
             this.hitBonus = 0;
             this.attackEffect = "";
             this.properties = "+3 Min Damage, -1 Range";
+            this.propertiesShort = "-1 Range";
+            this.spriteIdx = 1;
+            break;
+
+        case "Ancient Nord":
+            this.attackType = "Ranged";
+            this.damageMax = 4
+            this.damageMin = 2;
+            this.damageType = "p";
+            this.range = 4;
+            this.hitBonus = 0;
+            this.attackEffect = "";
+            this.properties = "+1 Min Damage";
+            this.propertiesShort = "";
             this.spriteIdx = 1;
             break;
 
         // Spells
         case "Magic Missile":
             this.attackType = "Magic";
-            this.damageMax = 4
-            this.damageMin = 1;
+            this.damageMax = 6
+            this.damageMin = 2;
             this.damageType = "m";
             this.range = 6;
             this.hitBonus = 0;
             this.attackEffect = "";
             this.properties = "Unerring Accuracy";
+            this.propertiesShort = "100% Acc";
             this.spriteIdx = 0;
             break;
 
@@ -152,6 +175,7 @@ function Weapon(aName, aLevel) {
             this.hitBonus = 0;
             this.attackEffect = "Burned";
             this.properties = "50% Burn Chance";
+            this.propertiesShort = "50% Burn";
             this.spriteIdx = 5;
             break;
 
@@ -164,18 +188,20 @@ function Weapon(aName, aLevel) {
             this.hitBonus = 0;
             this.attackEffect = "Frozen";
             this.properties = "50% Freeze Chance";
+            this.propertiesShort = "50% Freeze";
             this.spriteIdx = 5;
             break;
 
         case "Eldritch Blast":
             this.attackType = "Magic";
             this.damageMax = 10
-            this.damageMin = 1;
+            this.damageMin = 2;
             this.damageType = "m";
-            this.range = 6;
+            this.range = 5;
             this.hitBonus = -2;
             this.attackEffect = "";
-            this.properties = "-2 to Hit";
+            this.properties = "-2 Accuracy, +1 Min Damage";
+            this.propertiesShort = "-2 Acc";
             this.spriteIdx = 0;
             break;
     }
@@ -190,31 +216,31 @@ function Weapon(aName, aLevel) {
     this.movingUp = true;
 }
 
-Weapon.prototype.collided = function (aEntity) {
+Weapon.prototype.collided = function(aEntity) {
 
 }
 
-Weapon.prototype.processTurn = function () {
+Weapon.prototype.processTurn = function() {
 
 }
 
-Weapon.prototype.retain = function () {
+Weapon.prototype.retain = function() {
     return this.shouldRetain;
 }
 
-Weapon.prototype.update = function () {
+Weapon.prototype.update = function() {
     if (this.currY >= 5) this.movingUp = false;
     else if (this.currY <= -5) this.movingUp = true;
     if (this.movingUp) this.currY += .2;
     else this.currY -= .2;
 }
 
-Weapon.prototype.render = function (time, ctx) {
+Weapon.prototype.render = function(time, ctx) {
     var position = window.tilemap.toScreenCoords(this.position);
     var spriteSource = this.spritePositions[this.spriteIdx];
     ctx.drawImage(this.spritesheet, spriteSource.x, spriteSource.y, 75, 75, (position.x * this.size.width), (position.y * this.size.height) + this.currY, 96, 96);
 }
 
-Weapon.prototype.toString = function () {
-    return `Level ${this.level} ${this.name} with damage range ${this.damageMin+this.level}-${this.damageMax+this.level}, with ${this.properties}`
+Weapon.prototype.toString = function() {
+    return `Level ${this.level} ${this.name} with damage range ${this.damageMin + this.level}-${this.damageMax + this.level}, with ${this.properties}`
 }
