@@ -150,51 +150,58 @@ CombatController.prototype.randomDrop = function (aPosition) {
     return lDrop;
 }
 
-CombatController.prototype.getPercentArray = function () {
-    // damage, health, defense, attack, zombie, skeleton, minotaur, shaman, empty
-    var baseWeights = [10, 10, 15, 15, 20, 10, 3, 2, 5];
-    var level = window.player.level;
-    var diff = this.getDifficulty(level);
+CombatController.prototype.getPercentArray = function (aDragonLevel) {
+    if (aDragonLevel) {
+        // damage, health, defense, attack, zombie, skeleton, minotaur, shaman, empty
+        var baseWeights = [15, 25, 15, 15, 0, 0, 0, 0, 5];
+        return baseWeights;
+    } else {
+        // damage, health, defense, attack, zombie, skeleton, minotaur, shaman, empty
+        var baseWeights = [10, 10, 15, 15, 20, 10, 3, 2, 5];
+        var level = window.player.level;
+        var diff = this.getDifficulty(level);
 
-    var damageWeight = baseWeights[0];
-    var healthWeight = baseWeights[1];
-    var defenseWeight = baseWeights[2];
-    var attackWeight = baseWeights[3];
+        var damageWeight = baseWeights[0];
+        var healthWeight = baseWeights[1];
+        var defenseWeight = baseWeights[2];
+        var attackWeight = baseWeights[3];
 
-    var zombieWeight = baseWeights[4] + diff;
-    var skeletonWeight;
-    var minotaurWeight;
-    var shamanWeight;
-    switch (level) {
-        case 1:
-            skeletonWeight = 0;
-            minotaurWeight = 0;
-            shamanWeight = 0;
-            break;
+        var zombieWeight = baseWeights[4] + diff;
+        var skeletonWeight;
+        var minotaurWeight;
+        var shamanWeight;
+        switch (level) {
+            case 1:
+                skeletonWeight = 0;
+                minotaurWeight = 0;
+                shamanWeight = 0;
+                break;
 
-        case 2:
-            skeletonWeight = baseWeights[5] / 2;
-            minotaurWeight = 0;
-            shamanWeight = 0;
-            break;
+            case 2:
+                skeletonWeight = baseWeights[5] / 2;
+                minotaurWeight = 0;
+                shamanWeight = 0;
+                break;
 
-        case 3:
-            skeletonWeight = baseWeights[5];
-            minotaurWeight = 0;
-            shamanWeight = 0;
-            break;
+            case 3:
+                skeletonWeight = baseWeights[5];
+                minotaurWeight = 0;
+                shamanWeight = 0;
+                break;
 
-        default:
-            skeletonWeight = baseWeights[5] + diff;
-            minotaurWeight = diff * baseWeights[6];
-            shamanWeight = diff * baseWeights[7];
-            break;
+            default:
+                skeletonWeight = baseWeights[5] + diff;
+                minotaurWeight = diff * baseWeights[6];
+                shamanWeight = diff * baseWeights[7];
+                break;
+        }
+
+        var emptyWeight = baseWeights[8];
+
+        return [damageWeight, healthWeight, defenseWeight, attackWeight,
+            zombieWeight, skeletonWeight, minotaurWeight, shamanWeight, emptyWeight];
     }
 
-    var emptyWeight = baseWeights[8];
-
-    return [damageWeight, healthWeight, defenseWeight, attackWeight,
-        zombieWeight, skeletonWeight, minotaurWeight, shamanWeight, emptyWeight];
 }
 
 CombatController.prototype.getDifficulty = function (aLevel) {
