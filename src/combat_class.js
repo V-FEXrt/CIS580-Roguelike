@@ -63,6 +63,7 @@ function CombatClass(aName, aLevel) {
             this.turnAI = function (aEnemy) {
                 var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
                 if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
+                    aEnemy.playAttack();
                     combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
                 } else if (distance.x <= senseRange && distance.y <= senseRange) {
                     aEnemy.position = moveToward(aEnemy.position, aEnemy.target.position);
@@ -136,6 +137,7 @@ function CombatClass(aName, aLevel) {
             this.turnAI = function (aEnemy) {
                 var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
                 if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
+                    aEnemy.playAttack();
                     combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
                 } else if (distance.x <= senseRange && distance.y <= senseRange) {
                     aEnemy.position = moveToward(aEnemy.position, aEnemy.target.position);
