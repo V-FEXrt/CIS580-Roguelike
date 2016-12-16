@@ -26,7 +26,7 @@ window.terminal = new Terminal();
 window.terminal.log("Welcome to Roguelike");
 window.terminal.log("Good luck!");
 window.terminal.addCommand("debug", "Toggle debug",
-    function(args) {
+    function (args) {
         if (args.length == 1) window.terminal.log("You do not have permission to use this command", window.colors.invalid);
         else if (args[1] != 4747) window.terminal.log("Nice try, but that's incorrect", window.colors.invalid);
         else {
@@ -41,7 +41,7 @@ var canvas = document.getElementById('screen');
 var game = new Game(canvas, update, render);
 window.sfx = new SFX();
 window.entityManager = new EntityManager();
-var fadeAnimationProgress = new ProgressManager(0, function() { });
+var fadeAnimationProgress = new ProgressManager(0, function () { });
 var isFadeOut = true;
 var screenSize = { width: 1056, height: 1056 };
 var stairs;
@@ -51,7 +51,7 @@ window.combatController = new CombatController();
 var gui = new GUI(screenSize);
 
 var tilemap = new Tilemap(screenSize, 65, 65, tileset, {
-    onload: function() {
+    onload: function () {
         masterLoop(performance.now());
     }
 });
@@ -78,11 +78,11 @@ var player = new Player({ x: 0, y: 0 }, tilemap, "Mage");
 window.player = player;
 player.shouldProcessTurn = false;
 
-window.onmousemove = function(event) {
+window.onmousemove = function (event) {
     gui.onmousemove(event);
 }
 
-window.onmousedown = function(event) {
+window.onmousedown = function (event) {
     // Init the level when class is chosen
     if (player.shouldProcessTurn) player.playAttack({ x: event.offsetX, y: event.offsetY });
     if (gui.state == "start" || gui.state == "choose class") {
@@ -97,14 +97,14 @@ window.onmousedown = function(event) {
     }
 }
 
-canvas.onclick = function(event) {
+canvas.onclick = function (event) {
     var node = {
         x: parseInt(event.offsetX / 96),
         y: parseInt(event.offsetY / 96)
     }
 
     var clickedWorldPos = tilemap.toWorldCoords(node);
-    window.entityManager.addEntity(new Click(clickedWorldPos, tilemap, player, function(enemy) {
+    window.entityManager.addEntity(new Click(clickedWorldPos, tilemap, player, function (enemy) {
         var distance = Vector.distance(player.position, enemy.position);
         if (distance.x <= player.combat.weapon.range && distance.y <= player.combat.weapon.range) {
             if (player.combat.weapon.attackType != "Melee" && player.combat.weapon.name != "Magic Missile") {
@@ -120,7 +120,7 @@ canvas.onclick = function(event) {
     }));
 }
 
-canvas.oncontextmenu = function(event) {
+canvas.oncontextmenu = function (event) {
     event.preventDefault();
 }
 
@@ -128,7 +128,7 @@ canvas.oncontextmenu = function(event) {
  * @function onkeydown
  * Handles keydown events
  */
-window.onkeydown = function(event) {
+window.onkeydown = function (event) {
     if (window.terminal.onkeydown(event)) return;
     switch (event.key) {
         case "ArrowUp":
@@ -183,7 +183,7 @@ window.onkeydown = function(event) {
  * @function onkeyup
  * Handles keyup events
  */
-window.onkeyup = function(event) {
+window.onkeyup = function (event) {
     switch (event.key) {
         case "ArrowUp":
         case "w":
@@ -214,7 +214,7 @@ window.onkeyup = function(event) {
  * Advances the game in sync with the refresh rate of the screen
  * @param {DOMHighResTimeStamp} timestamp the current time
  */
-var masterLoop = function(timestamp) {
+var masterLoop = function (timestamp) {
     game.loop(timestamp);
     window.requestAnimationFrame(masterLoop);
 }
@@ -248,16 +248,20 @@ function update(elapsedTime) {
     window.terminal.update(elapsedTime);
     if (window.gameDebug) {
         window.terminal.addCommand("door", "Get the coordinates of the exit door",
-            function() {
+            function () {
                 window.terminal.log(`The coordinates of the exit door are x: ${stairs.position.x} y: ${stairs.position.y}`, window.colors.cmdResponse);
             });
-        window.terminal.addCommand("spawn", "Spawns a given entity", function(args) { EntitySpawner.spawnCommand(args); });
+        window.terminal.addCommand("spawn", "Spawns a given entity", function (args) { EntitySpawner.spawnCommand(args); });
         window.terminal.addCommand("level", "Sets the level to the given integer",
-            function(args) {
+            function (args) {
                 if (args.length != 2) {
                     window.terminal.log("Syntax: level <integer>", window.colors.invalid);
                 }
                 else {
+                    if (args[1] != parseInt(args[1]) || args[1] < 1) {
+                        window.terminal.log("Invalid level number", window.colors.invalid);
+                        return;
+                    }
                     window.player.position = { x: stairs.position.x, y: stairs.position.y };
                     window.terminal.log(`Setting level to ${args[1]}`, window.colors.cmdResponse);
                     window.player.level = parseInt(args[1]);
@@ -309,7 +313,7 @@ function processTurn() {
 
 function nextLevel(fadeOut) {
     player.level++;
-    var init = function() {
+    var init = function () {
         // clear terminal
         window.terminal.clear();
         var msg = `---===| LEVEL ${player.level} |===---`;
@@ -358,7 +362,7 @@ function nextLevel(fadeOut) {
         player.combat.health += window.combatController.healthPotion(player.level);
 
         // add stairs
-        stairs = new Stairs(pos, tilemap, function() { nextLevel(true) });
+        stairs = new Stairs(pos, tilemap, function () { nextLevel(true) });
         window.entityManager.addEntity(stairs);
         //place new entities
         EntitySpawner.spawn(player, tilemap, 30, combatController.getPercentArray());
@@ -378,6 +382,6 @@ function fadeToBlack(completion) {
 
 function unfadeFromBlack() {
     isFadeOut = false;
-    fadeAnimationProgress = new ProgressManager(1000, function() { });
+    fadeAnimationProgress = new ProgressManager(1000, function () { });
     fadeAnimationProgress.isActive = true;
 }
