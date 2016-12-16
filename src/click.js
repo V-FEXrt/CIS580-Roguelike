@@ -2,7 +2,7 @@
 
 module.exports = exports = Click;
 
-function Click(position, tilemap, player, collisionCallback) {
+function Click(position, player, collisionCallback) {
   this.type = "Click";
   this.position = { x: position.x, y: position.y };
   // To change AOE change size of the click.
@@ -12,11 +12,10 @@ function Click(position, tilemap, player, collisionCallback) {
   }
 
   this.shouldRetain = true;
-  this.tilemap = tilemap;
   this.player = player;
   this.collisionCallback = collisionCallback;
   this.color = "green"
-  
+
   this.resolveCollision = false;
 }
 
@@ -41,7 +40,7 @@ Click.prototype.retain = function () {
 
 Click.prototype.render = function (elapsedTime, ctx) {
   if(window.debug){
-    var position = this.tilemap.toScreenCoords(this.position);
+    var position = window.tilemap.toScreenCoords(this.position);
     ctx.fillStyle = this.color;
     ctx.fillRect(position.x * this.size.width, position.y * this.size.height, this.size.width, this.size.height);
     this.color = "green"
