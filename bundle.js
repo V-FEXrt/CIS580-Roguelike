@@ -1128,7 +1128,7 @@ function Armor(aName, aLevel) {
 }
 
 Armor.prototype.collided = function(aEntity) {
-	if(this.resolveCollision && aEntity.type != "Player") {
+	if(this.resolveCollision && aEntity.type != "Player" && aEntity.type != "Click") {
 		this.resolveCollision = false;
 		this.position = tilemap.getRandomAdjacent(this.position);
 	}
@@ -3498,7 +3498,7 @@ Powerup.prototype.collided = function(entity) {
                 break;
         }
     }
-	else if(this.resolveCollision && entity.type != "Enemy") {
+	else if(this.resolveCollision && entity.type != "Enemy" && entity.type != "Click") {
 		this.resolveCollision = false;
 		this.position = tilemap.getRandomAdjacent(this.position);
 	}
@@ -4534,7 +4534,7 @@ function Weapon(aName, aLevel) {
 }
 
 Weapon.prototype.collided = function(aEntity) {
-	if(aEntity.type != "Player" && this.resolveCollision) {
+	if(aEntity.type != "Player" && this.resolveCollision && aEntity.type != "Click") {
 		this.resolveCollision = false;
 		this.position = tilemap.getRandomAdjacent(this.position);
 	}

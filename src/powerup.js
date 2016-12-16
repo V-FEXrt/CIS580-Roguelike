@@ -79,7 +79,7 @@ Powerup.prototype.collided = function(entity) {
                 break;
         }
     }
-	else if(this.resolveCollision && entity.type != "Enemy") {
+	else if(this.resolveCollision && entity.type != "Enemy" && entity.type != "Click") {
 		this.resolveCollision = false;
 		this.position = tilemap.getRandomAdjacent(this.position);
 	}

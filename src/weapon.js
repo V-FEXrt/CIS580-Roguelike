@@ -218,7 +218,7 @@ function Weapon(aName, aLevel) {
 }
 
 Weapon.prototype.collided = function(aEntity) {
-	if(aEntity.type != "Player" && this.resolveCollision) {
+	if(aEntity.type != "Player" && this.resolveCollision && aEntity.type != "Click") {
 		this.resolveCollision = false;
 		this.position = tilemap.getRandomAdjacent(this.position);
 	}
