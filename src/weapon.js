@@ -204,6 +204,19 @@ function Weapon(aName, aLevel) {
             this.propertiesShort = "-2 Acc";
             this.spriteIdx = 0;
             break;
+
+        case "Dragon's Breath":
+            this.attackType = "Magic";
+            this.damageMax = 25
+            this.damageMin = 5;
+            this.damageType = "m";
+            this.range = 5;
+            this.hitBonus = 0;
+            this.attackEffect = "Burned";
+            this.properties = "It's fire. From a fucking dragon.";
+            this.propertiesShort = "";
+            this.spriteIdx = 0;
+            break;
     }
 
     // static properties for entities
@@ -211,40 +224,40 @@ function Weapon(aName, aLevel) {
     this.size = { width: 96, height: 96 };
     this.spritesheet = new Image();
     this.spritesheet.src = './spritesheets/powerup.png';
-	this.resolveCollision = false;
+    this.resolveCollision = false;
 
     this.currY = 0;
     this.movingUp = true;
 }
 
-Weapon.prototype.collided = function(aEntity) {
-	if(aEntity.type != "Player" && this.resolveCollision && aEntity.type != "Click") {
-		this.resolveCollision = false;
-		this.position = tilemap.getRandomAdjacent(this.position);
-	}
+Weapon.prototype.collided = function (aEntity) {
+    if (aEntity.type != "Player" && this.resolveCollision && aEntity.type != "Click") {
+        this.resolveCollision = false;
+        this.position = tilemap.getRandomAdjacent(this.position);
+    }
 }
 
-Weapon.prototype.processTurn = function() {
+Weapon.prototype.processTurn = function () {
 
 }
 
-Weapon.prototype.retain = function() {
+Weapon.prototype.retain = function () {
     return this.shouldRetain;
 }
 
-Weapon.prototype.update = function() {
+Weapon.prototype.update = function () {
     if (this.currY >= 5) this.movingUp = false;
     else if (this.currY <= -5) this.movingUp = true;
     if (this.movingUp) this.currY += .2;
     else this.currY -= .2;
 }
 
-Weapon.prototype.render = function(time, ctx) {
+Weapon.prototype.render = function (time, ctx) {
     var position = window.tilemap.toScreenCoords(this.position);
     var spriteSource = this.spritePositions[this.spriteIdx];
     ctx.drawImage(this.spritesheet, spriteSource.x, spriteSource.y, 75, 75, (position.x * this.size.width), (position.y * this.size.height) + this.currY, 96, 96);
 }
 
-Weapon.prototype.toString = function() {
+Weapon.prototype.toString = function () {
     return `Level ${this.level} ${this.name} with damage range ${this.damageMin + parseInt(this.level)}-${this.damageMax + parseInt(this.level)}, with ${this.properties}`
 }

@@ -197,6 +197,57 @@ function CombatClass(aName, aLevel) {
                 }
             }
             break;
+
+        case "Fucking Dragon":
+            this.health = 30 + 2 * aLevel;
+            this.attackBonus = 3;
+            this.damageBonus = 5;
+            this.defenseBonus = 3;
+            this.weapon = new Weapon("Dragon's Breath", aLevel);
+            this.armor = new Armor("Dragonscale", aLevel);
+            this.status = { effect: "None", timer: 0 };
+            var senseRange = 20;
+            var prefDist = 3;
+            var attackCooldown = 3;
+            var moveOrAttack = 0;
+
+            this.turnAI = function (aEnemy) {
+                var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
+
+                if (distance.x > senseRange && distance.y > senseRange) {
+                    var nextTile = aEnemy.tilemap.getRandomAdjacent(aEnemy.position);
+                    aEnemy.position = { x: nextTile.x, y: nextTile.y };
+                } else {
+                    if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
+                        var path = pathfinder.findPath(aEnemy.position, aEnemy.target.position);
+                        var LoS = Vector.magnitude(distance) * 2 >= path.length;
+                        if (LoS) {
+                            if (moveOrAttack) {
+                                if (attackCooldown <= 0) {
+                                    combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
+                                    attackCooldown = 2;
+                                }
+                                moveOrAttack = 0;
+                            } else {
+                                if (distance.x < prefDist && distance.y < prefDist) {
+                                    aEnemy.position = moveBack(aEnemy.position, aEnemy.target.position, aEnemy.tilemap.getRandomAdjacentArray(aEnemy.position));
+                                } else if (distance.x >= prefDist && distance.y >= prefDist) {
+                                    aEnemy.position = moveToward(aEnemy.position, aEnemy.target.position);
+                                }
+                                moveOrAttack = 1;
+                                attackCooldown = 1;
+                            }
+                            attackCooldown--;
+                        } else {
+                            aEnemy.position = moveToward(aEnemy.position, aEnemy.target.position);
+                        }
+                    } else {
+                        aEnemy.position = moveToward(aEnemy.position, aEnemy.target.position);
+                    }
+                }
+            }
+
+            break;
     }
 }
 
