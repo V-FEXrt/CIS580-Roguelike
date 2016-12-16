@@ -16,9 +16,9 @@ var volume = 3;
 var volumeMatrix = [
     // bg, bgOnLoop, health, attack, damage, defense, click, weapon, armor
     [ 0.0,      0.0,    0.0,    0.0,    0.0,     0.0,   0.0,    0.0,   0.0 ], // Volume 0
-    [ 0.1,      0.1,    0.1,    0.1,    0.1,     0.1,   0.1,    0.1,   0.1 ], // Volume 1
-    [ 0.2,      0.2,    0.2,    0.2,    0.2,     0.2,   0.2,    0.2,   0.2 ], // Volume 2
-    [ 0.3,      0.3,    0.3,    0.3,    0.3,     0.3,   0.3,    0.3,   0.3 ]  // Volume 3
+    [ 0.1,      0.1,    0.05,    0.1,    0.033,     0.13,   0.1,    0.1,   0.6 ], // Volume 1
+    [ 0.2,      0.2,    0.1,    0.2,    0.067,     0.27,   0.2,    0.2,   0.13 ], // Volume 2
+    [ 0.3,      0.3,    0.15,    0.3,    0.1,     0.4,   0.3,    0.3,   0.2 ]  // Volume 3
 ];
 
 
@@ -105,4 +105,17 @@ SFX.prototype.setVolume = function(args) {
     click.volume = lvls[6];
     weaponPickUp.volume = lvls[7];
     armorPickUp.volume = lvls[8];
+}
+
+SFX.prototype.toggleVolume = function() {
+  if(volume == 3) {
+    this.setVolume(["volume", 0]);
+  }
+  else {
+    this.setVolume(["volume", parseInt(++volume)]);
+  }
+}
+
+SFX.prototype.returnVolume = function() {
+  return volume;
 }

@@ -725,15 +725,14 @@ window.combatController = new CombatController();
 
 var gui = new GUI(screenSize);
 
-var tilemap = new Tilemap(screenSize, 65, 65, tileset, {
+window.tilemap = new Tilemap(screenSize, 65, 65, tileset, false, {
     onload: function () {
         masterLoop(performance.now());
     }
 });
 
-var pathfinder = new Pathfinder(tilemap);
+var pathfinder = new Pathfinder();
 window.pathfinder = pathfinder;
-window.tilemap = tilemap;
 
 var input = {
     up: false,
@@ -748,7 +747,7 @@ var turnDelay = defaultTurnDelay; //current time between turns
 var autoTurn = false;           //If true, reduces time between turns and turns happen automatically
 var resetTimer = true;          //Take turn immediately on movement key press if true
 
-var player = new Player({ x: 0, y: 0 }, tilemap, "Mage");
+var player = new Player({ x: 0, y: 0 }, "Mage");
 
 window.player = player;
 player.shouldProcessTurn = false;
@@ -778,8 +777,8 @@ canvas.onclick = function (event) {
         y: parseInt(event.offsetY / 96)
     }
 
-    var clickedWorldPos = tilemap.toWorldCoords(node);
-    window.entityManager.addEntity(new Click(clickedWorldPos, tilemap, player, function (enemy) {
+    var clickedWorldPos = window.tilemap.toWorldCoords(node);
+    window.entityManager.addEntity(new Click(clickedWorldPos, player, function (enemy) {
         var distance = Vector.distance(player.position, enemy.position);
         if (distance.x <= player.combat.weapon.range && distance.y <= player.combat.weapon.range) {
             if (player.combat.weapon.attackType != "Melee" && player.combat.weapon.name != "Magic Missile") {
@@ -845,6 +844,10 @@ window.onkeydown = function (event) {
                 resetTimer = false;
             }
             player.changeDirection("right");
+            break;
+        case "v":
+            event.preventDefault();
+            window.sfx.toggleVolume();
             break;
         case "Escape":
             event.preventDefault();
@@ -961,7 +964,7 @@ function render(elapsedTime, ctx) {
     ctx.fillStyle = "black";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    tilemap.render(ctx);
+    window.tilemap.render(ctx);
     entityManager.render(elapsedTime, ctx);
 
     ctx.save();
@@ -988,6 +991,7 @@ function processTurn() {
 
 function nextLevel(fadeOut) {
     player.level++;
+    var isBossLevel = (player.level % 5 == 0);
     var init = function () {
         // clear terminal
         window.terminal.clear();
@@ -995,58 +999,97 @@ function nextLevel(fadeOut) {
         var padSpace = Math.floor((80 - msg.length) / 2);
         window.terminal.log(Array(padSpace).join(' ') + msg);
 
+        if(isBossLevel){
+          window.terminal.log("You sense an erie presence...");
+          window.terminal.log("The demon dragon appears to consume your soul");
+        }
+
         // reset entities
         window.entityManager.reset();
 
-        var regen = false;
-
-        do {
-            //reset the regen flag
-            regen = false;
-
-            //gen new map
-            tilemap.changeTileset();
-            tilemap.generateMap();
-
-            //move player to valid location
-            var pos = tilemap.findOpenSpace();
-            player.position = { x: pos.x, y: pos.y };
-            tilemap.moveTo({ x: pos.x - 5, y: pos.y - 5 });
-
-            // allow player to move
-            player.shouldProcessTurn = true;
-
-            // Find stairs location that is at least 8 away.
-            var pos;
-            var dist;
-            var iterations = 0;
-            do {
-                pos = tilemap.findOpenSpace();
-                dist = pathfinder.findPath(player.position, pos).length
-                iterations++;
-                if (iterations > 20) {
-                    regen = true;
-                    break;
-                }
-            } while (dist == 0 && dist < 8);
-
-        } while (regen);
-
-        // add player
-        window.entityManager.addEntity(player);
-        player.combat.health += window.combatController.healthPotion(player.level);
-
-        // add stairs
-        stairs = new Stairs(pos, tilemap, function () { nextLevel(true) });
-        window.entityManager.addEntity(stairs);
-        //place new entities
-        EntitySpawner.spawn(player, tilemap, 30, combatController.getPercentArray());
+        (isBossLevel) ? bossLevel() : standardLevel();
 
         unfadeFromBlack();
 
     };
 
     (fadeOut) ? fadeToBlack(init) : init()
+}
+function bossLevel(){
+  window.tilemap = new Tilemap(screenSize, 11, 11, tileset, true, {
+      onload: function () {}
+  });
+  window.tilemap.generateMap();
+
+  //move player to valid location
+  player.position = { x: 5, y: 6 };
+
+  // allow player to move
+  player.shouldProcessTurn = true;
+
+  // add player
+  window.entityManager.addEntity(player);
+  player.combat.health += window.combatController.healthPotion(player.level);
+
+  // add stairs
+  stairs = new Stairs({ x: 5, y: 2 }, function () { nextLevel(true) });
+  window.entityManager.addEntity(stairs);
+   
+  //place new entities
+  //EntitySpawner.spawn(player, tilemap, 30, combatController.getPercentArray());
+
+}
+function standardLevel(){
+
+          if(window.tilemap.isBoss){
+            window.tilemap = new Tilemap(screenSize, 65, 65, tileset, false, {
+                onload: function () {}
+            });
+          }
+
+          var regen = false;
+
+          do {
+              //reset the regen flag
+              regen = false;
+
+              //gen new map
+              window.tilemap.changeTileset();
+              window.tilemap.generateMap();
+
+              //move player to valid location
+              var pos = window.tilemap.findOpenSpace();
+              player.position = { x: pos.x, y: pos.y };
+              window.tilemap.moveTo({ x: pos.x - 5, y: pos.y - 5 });
+
+              // allow player to move
+              player.shouldProcessTurn = true;
+
+              // Find stairs location that is at least 8 away.
+              var pos;
+              var dist;
+              var iterations = 0;
+              do {
+                  pos = window.tilemap.findOpenSpace();
+                  dist = pathfinder.findPath(player.position, pos).length
+                  iterations++;
+                  if (iterations > 20) {
+                      regen = true;
+                      break;
+                  }
+              } while (dist == 0 && dist < 8);
+
+          } while (regen);
+
+          // add player
+          window.entityManager.addEntity(player);
+          player.combat.health += window.combatController.healthPotion(player.level);
+
+          // add stairs
+          stairs = new Stairs(pos, function () { nextLevel(true) });
+          window.entityManager.addEntity(stairs);
+          //place new entities
+          EntitySpawner.spawn(player, 30, combatController.getPercentArray());
 }
 
 function fadeToBlack(completion) {
@@ -1130,7 +1173,7 @@ function Armor(aName, aLevel) {
 Armor.prototype.collided = function(aEntity) {
 	if(this.resolveCollision && aEntity.type != "Player" && aEntity.type != "Click") {
 		this.resolveCollision = false;
-		this.position = tilemap.getRandomAdjacent(this.position);
+		this.position = window.tilemap.getRandomAdjacent(this.position);
 	}
 }
 
@@ -1164,7 +1207,7 @@ Armor.prototype.toString = function() {
 
 module.exports = exports = Click;
 
-function Click(position, tilemap, player, collisionCallback) {
+function Click(position, player, collisionCallback) {
   this.type = "Click";
   this.position = { x: position.x, y: position.y };
   // To change AOE change size of the click.
@@ -1174,11 +1217,10 @@ function Click(position, tilemap, player, collisionCallback) {
   }
 
   this.shouldRetain = true;
-  this.tilemap = tilemap;
   this.player = player;
   this.collisionCallback = collisionCallback;
   this.color = "green"
-  
+
   this.resolveCollision = false;
 }
 
@@ -1203,7 +1245,7 @@ Click.prototype.retain = function () {
 
 Click.prototype.render = function (elapsedTime, ctx) {
   if(window.debug){
-    var position = this.tilemap.toScreenCoords(this.position);
+    var position = window.tilemap.toScreenCoords(this.position);
     ctx.fillStyle = this.color;
     ctx.fillRect(position.x * this.size.width, position.y * this.size.height, this.size.width, this.size.height);
     this.color = "green"
@@ -1218,8 +1260,8 @@ const Vector = require('./vector');
 const RNG = require("./rng");
 
 // weapon/armor shouldnt be done here...
-// they can still be stored here if necessary, but 
-// I think it might make more sense to have them 
+// they can still be stored here if necessary, but
+// I think it might make more sense to have them
 // directly on the player/enemy?
 const Weapon = require("./weapon");
 const Armor = require("./armor");
@@ -1281,7 +1323,7 @@ function CombatClass(aName, aLevel) {
                 } else if (distance.x <= senseRange && distance.y <= senseRange) {
                     aEnemy.position = moveToward(aEnemy.position, aEnemy.target.position);
                 } else {
-                    var nextTile = aEnemy.tilemap.getRandomAdjacent(aEnemy.position);
+                    var nextTile = window.tilemap.getRandomAdjacent(aEnemy.position);
                     aEnemy.position = { x: nextTile.x, y: nextTile.y };
                 }
             }
@@ -1304,7 +1346,7 @@ function CombatClass(aName, aLevel) {
                 var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
 
                 if (distance.x > senseRange && distance.y > senseRange) {
-                    var nextTile = aEnemy.tilemap.getRandomAdjacent(aEnemy.position);
+                    var nextTile = window.tilemap.getRandomAdjacent(aEnemy.position);
                     aEnemy.position = { x: nextTile.x, y: nextTile.y };
                 } else {
                     if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
@@ -1319,7 +1361,7 @@ function CombatClass(aName, aLevel) {
                                 moveOrAttack = 0;
                             } else {
                                 if (distance.x < prefDist && distance.y < prefDist) {
-                                    aEnemy.position = moveBack(aEnemy.position, aEnemy.target.position, aEnemy.tilemap.getRandomAdjacentArray(aEnemy.position));
+                                    aEnemy.position = moveBack(aEnemy.position, aEnemy.target.position, window.tilemap.getRandomAdjacentArray(aEnemy.position));
                                 } else if (distance.x >= prefDist && distance.y >= prefDist) {
                                     aEnemy.position = moveToward(aEnemy.position, aEnemy.target.position);
                                 }
@@ -1355,7 +1397,7 @@ function CombatClass(aName, aLevel) {
                 } else if (distance.x <= senseRange && distance.y <= senseRange) {
                     aEnemy.position = moveToward(aEnemy.position, aEnemy.target.position);
                 } else {
-                    var nextTile = aEnemy.tilemap.getRandomAdjacent(aEnemy.position);
+                    var nextTile = window.tilemap.getRandomAdjacent(aEnemy.position);
                     aEnemy.position = { x: nextTile.x, y: nextTile.y };
                 }
             }
@@ -1378,7 +1420,7 @@ function CombatClass(aName, aLevel) {
                 var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
 
                 if (distance.x > senseRange && distance.y > senseRange) {
-                    var nextTile = aEnemy.tilemap.getRandomAdjacent(aEnemy.position);
+                    var nextTile = window.tilemap.getRandomAdjacent(aEnemy.position);
                     aEnemy.position = { x: nextTile.x, y: nextTile.y };
                 } else {
                     if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
@@ -1393,7 +1435,7 @@ function CombatClass(aName, aLevel) {
                                 moveOrAttack = 0;
                             } else {
                                 if (distance.x < prefDist && distance.y < prefDist) {
-                                    aEnemy.position = moveBack(aEnemy.position, aEnemy.target.position, aEnemy.tilemap.getRandomAdjacentArray(aEnemy.position));
+                                    aEnemy.position = moveBack(aEnemy.position, aEnemy.target.position, window.tilemap.getRandomAdjacentArray(aEnemy.position));
                                 } else if (distance.x >= prefDist && distance.y >= prefDist) {
                                     aEnemy.position = moveToward(aEnemy.position, aEnemy.target.position);
                                 }
@@ -1438,7 +1480,6 @@ function moveToward(a, b) {
     if (path.length > 1) return { x: path[1].x, y: path[1].y };
     else return a;
 }
-
 
 },{"./armor":6,"./rng":21,"./tilemap":25,"./vector":26,"./weapon":27}],9:[function(require,module,exports){
 "use strict";
@@ -1681,11 +1722,10 @@ const CombatClass = require("./combat_class");
 const Animator = require("./animator.js");
 module.exports = exports = Enemy;
 
-function Enemy(position, tilemap, combatClass, target, onDeathCB) {
+function Enemy(position, combatClass, target, onDeathCB) {
     this.state = "idle";
     this.position = { x: position.x, y: position.y };
     this.size = { width: 96, height: 96 };
-    this.tilemap = tilemap;
     this.spritesheet = new Image();
     this.spritesheet.src = "./spritesheets/enemy_animations.png";
     this.type = "Enemy";
@@ -1696,7 +1736,7 @@ function Enemy(position, tilemap, combatClass, target, onDeathCB) {
     this.oldX = this.position.x;
 	this.oldY = this.position.y;
 	this.resolveCollision = false;
-    
+
     if (this.class == "Shaman") {
         this.animator = new Animator(0, "idle", "Shaman");
     } else if (this.class == "Zombie") {
@@ -1714,7 +1754,7 @@ Enemy.prototype.processTurn = function () {
     if (this.state == "dead" || this.combat.status.effect == "Frozen" || this.combat.status.effect == "Stunned") return;
 
     this.combat.turnAI(this);
-        
+
     if(this.position.x < this.oldX) this.changeDirection("left");
     else if(this.position.x > this.oldX) this.changeDirection("right");
     this.oldX = this.position.x;
@@ -1736,7 +1776,7 @@ Enemy.prototype.collided = function (entity) {
 
 Enemy.prototype.retain = function () {
     if (this.combat.health <= 0) {
-        this.onDeathCB(this.position, this.tilemap);
+        this.onDeathCB(this.position, window.tilemap);
         return false;
     } else {
         return true;
@@ -1744,13 +1784,13 @@ Enemy.prototype.retain = function () {
 }
 
 Enemy.prototype.playAttack = function (clickPos) {
-    if (this.state != "dead" && this.target.state != "dead") {                
-        var position = this.tilemap.toScreenCoords(this.position);
-        var playerPos = this.tilemap.toScreenCoords(this.target.position);
+    if (this.state != "dead" && this.target.state != "dead") {
+        var position = window.tilemap.toScreenCoords(this.position);
+        var playerPos = window.tilemap.toScreenCoords(this.target.position);
 
         if (playerPos.x < position.x) this.changeDirection("left");
         else if(playerPos.x > position.x ) this.changeDirection("right");
-        
+
         this.animator.updateState("attacking");
     }
 }
@@ -1764,7 +1804,7 @@ Enemy.prototype.changeDirection = function (direction) {
 Enemy.prototype.render = function (elapsedTime, ctx) {
     if (this.state == "dead") return; // shouldnt be necessary
 
-    var position = this.tilemap.toScreenCoords(this.position);
+    var position = window.tilemap.toScreenCoords(this.position);
     ctx.drawImage(
         this.spritesheet,
         96 * this.animator.index.x, 96 * this.animator.index.y,
@@ -1773,7 +1813,6 @@ Enemy.prototype.render = function (elapsedTime, ctx) {
         96, 96
     );
 }
-
 
 },{"./animator.js":4,"./combat_class":8,"./tilemap":25}],11:[function(require,module,exports){
 "use strict";
@@ -1990,12 +2029,11 @@ var spawnArray = [
   function () { }
 ]
 
-var tilemap;
+
 var player;
 // percents should be an array of the percent everything should be spawned. in this format
 // [ crystal, red potion, blue potion, green potion, Zombie, Skeleton, Minotaur, Shaman, Empty ]
-function spawn(aPlayer, tmap, count, percents) {
-  tilemap = tmap;
+function spawn(aPlayer, count, percents) {
   player = aPlayer;
   for (var i = 0; i < count; i++) {
     var idx = RNG.rollWeighted(
@@ -2019,12 +2057,12 @@ function spawn(aPlayer, tmap, count, percents) {
 
 function spawnPowerup(pType) {
   pu++;
-  window.entityManager.addEntity(new Powerup(tilemap.findOpenSpace(), tilemap, pType));
+  window.entityManager.addEntity(new Powerup(window.tilemap.findOpenSpace(), pType));
 }
 
 function spawnEnemy(eType) {
   en++;
-  window.entityManager.addEntity(new Enemy(tilemap.findOpenSpace(), tilemap, eType, player, spawnDrop))
+  window.entityManager.addEntity(new Enemy(window.tilemap.findOpenSpace(), eType, player, spawnDrop))
 }
 
 function spawnDrop(position) {
@@ -2091,7 +2129,7 @@ function spawnCommand(args) {
           window.terminal.log("Invalid spawn location", window.colors.invalid);
           break;
         }
-        window.entityManager.addEntity(new Powerup({ x: args[3], y: args[4] }, tilemap, parseInt(args[2])));
+        window.entityManager.addEntity(new Powerup({ x: args[3], y: args[4] }, parseInt(args[2])));
         var potions = ["crystal", "health", "defense", "agility"];
         window.terminal.log(`Spawned ${potions[parseInt(args[2]) - 1]} potion`, window.colors.cmdResponse);
         break;
@@ -2104,12 +2142,12 @@ function spawnCommand(args) {
           window.terminal.log("Invalid enemy type. Please choose from Zombie, Skeleton, Minotaur, or Shaman", window.colors.invalid);
           break;
         }
-        
+
         if(args[3] != parseInt(args[3]) || args[4] != parseInt(args[4])) {
           window.terminal.log("Invalid spawn location", window.colors.invalid);
           break;
         }
-        window.entityManager.addEntity(new Enemy({ x: args[3], y: args[4] }, tilemap, args[2], window.player, spawnDrop));
+        window.entityManager.addEntity(new Enemy({ x: args[3], y: args[4] }, args[2], window.player, spawnDrop));
         window.terminal.log(`Spawned ${args[2]}`, window.colors.cmdResponse);
         break;
       default:
@@ -2214,11 +2252,24 @@ function GUI(size) {
   this.chosenClass = "";
 }
 
+//SFX Varuable for speaker rendering
+//const SFX = require("./sfx");
+//var sfx = new SFX();
+
 //declare gui elements
 var crest = new Image();
 var pow = new Image();
+var volume1 = new Image();
+var volume2 = new Image();
+var volume3 = new Image();
+var volumeMute = new Image();
 crest.src = encodeURI('healthbar/crest.png');
 pow.src = encodeURI('healthbar/pow.png');
+volume1.src = encodeURI('healthbar/speakerVol1.png');
+volume2.src = encodeURI('healthbar/speakerVol2.png');
+volume3.src = encodeURI('healthbar/speakerVol3.png');
+volumeMute.src = encodeURI('healthbar/speakerMute.png');
+
 
 var x, y;
 GUI.prototype.onmousemove = function(event)
@@ -2373,7 +2424,7 @@ GUI.prototype.render = function (elapsedTime, ctx) {
 		0, 672,
 		288, 96,
 		753 - this.swordHighlights[0]/2, 480 - this.swordHighlights[0]/2,
-		288 +this.swordHighlights[0], 96 + this.swordHighlights[0]
+		288 + this.swordHighlights[0], 96 + this.swordHighlights[0]
 	);
 
 	//Controls
@@ -2475,7 +2526,7 @@ GUI.prototype.render = function (elapsedTime, ctx) {
       1788,
       1116
     );
-    
+
     //Shadow
     ctx.drawImage(
         this.startSprites,
@@ -2484,7 +2535,7 @@ GUI.prototype.render = function (elapsedTime, ctx) {
         581, 338,
         576, 576
     );
-    
+
     //Credits
     ctx.drawImage(
       this.startSprites,
@@ -2506,7 +2557,7 @@ GUI.prototype.render = function (elapsedTime, ctx) {
       1788,
       1116
     );
-    
+
     //Shadow
     ctx.drawImage(
         this.startSprites,
@@ -2515,7 +2566,7 @@ GUI.prototype.render = function (elapsedTime, ctx) {
         581, 338,
         576, 576
     );
-    
+
     //Credits
     ctx.drawImage(
       this.startSprites,
@@ -2553,7 +2604,7 @@ GUI.prototype.render = function (elapsedTime, ctx) {
     ctx.fillStyle = "green";
     ctx.drawImage(crest, 136, 1061);
     if(window.player.combat.armor.level < 10) ctx.fillText(window.player.combat.armor.level, 148.5, 1093);
-    else ctx.fillText(window.player.combat.armor.level, 142.5, 1093);
+    else ctx.fillText(window.player.combat.armor.level, 140, 1093);
 
     ctx.fillStyle = "white";
     ctx.fillText(window.player.combat.armor.name, 187.5, 1094.5)
@@ -2565,15 +2616,28 @@ GUI.prototype.render = function (elapsedTime, ctx) {
 
     ctx.font = "25px Arial Black";
     ctx.fillStyle = "white";
-    var str=`${window.player.combat.weapon.name}, ${window.player.combat.weapon.damageMin + parseInt(window.player.combat.weapon.level)}-${window.player.combat.weapon.damageMax+parseInt(window.player.combat.weapon.level)} Damage, ${window.player.combat.weapon.propertiesShort}`;
+    var str =`${window.player.combat.weapon.name}, ${window.player.combat.weapon.damageMin + window.player.combat.weapon.level}-${window.player.combat.weapon.damageMax+window.player.combat.weapon.level} Damage, ${window.player.combat.weapon.propertiesShort}`;
     ctx.fillText(str, 450, 1095);
 
+    if(window.sfx.returnVolume() == 3) {
+      ctx.drawImage(volume3, 1006, 1061.5, 50, 50);
+    }
+    else if(window.sfx.returnVolume() == 2){
+      ctx.drawImage(volume2, 1006, 1061.5, 50, 50);
+    }
+    else if(window.sfx.returnVolume() == 1) {
+      ctx.drawImage(volume1, 1006, 1061.5, 50, 50);
+    }
+    else {
+      ctx.drawImage(volumeMute, 1006, 1061.5, 50, 50);
+    }
     }
   else if(this.state == "game over")
   {
 
   }
 }
+
 },{}],15:[function(require,module,exports){
 "use strict";
 
@@ -2773,7 +2837,7 @@ const RoomsHallways = require('./MapGeneration/rooms_hallways_generation');
 
 module.exports = exports = MapGenerator;
 
-function MapGenerator(edges, width, height){
+function MapGenerator(edges, width, height, isBoss){
   this.map = [];
   this.width = width;
   this.height = height;
@@ -2783,7 +2847,7 @@ function MapGenerator(edges, width, height){
   this.open = 0;
   this.filled = 1;
 
-  if(window.debug){
+  if(window.debug || isBoss){
     this.map = (new DebugMap(width, height, 50, this.open, this.filled)).generate();
   }else{
     if(Math.random() > 0.5){
@@ -2881,8 +2945,7 @@ module.exports = exports = Pathfinder;
  * @param {Tilemap} tilemap - the tilemap to
  * use in finding paths.
  */
-function Pathfinder(tilemap) {
-  this.tilemap = tilemap;
+function Pathfinder() {
   this.algorithm = 'a-star';
 }
 
@@ -2965,7 +3028,7 @@ Pathfinder.prototype.isExplored = function(node) {
  * @returns true if impassible, false if not.
  */
 Pathfinder.prototype.isImpassible = function(node) {
-  return this.tilemap.isWall(node.x, node.y);
+  return window.tilemap.isWall(node.x, node.y);
 }
 
 /**
@@ -3127,12 +3190,11 @@ module.exports = exports = Player;
  * Creates a new player object
  * @param {postition} position object specifying an x and y
  */
-function Player(position, tilemap, combatClass) {
+function Player(position, combatClass) {
     this.state = "idle";
     this.position = { x: position.x, y: position.y };
     this.size = { width: 96, height: 96 };
     this.spritesheet = new Image();
-    this.tilemap = tilemap;
     this.spritesheet.src = './spritesheets/player_animations.png';
     this.type = "Player";
     this.walk = [];
@@ -3143,7 +3205,7 @@ function Player(position, tilemap, combatClass) {
     this.hasMoved = false;
     this.direction = "right";
     this.oldDirection = "right";
-	this.resolveCollision = false;
+	  this.resolveCollision = false;
     window.terminal.addCommand("class", "Get your player class", this.getClass.bind(this));
     window.terminal.addCommand("kill", "Kill yourself", this.killPlayer.bind(this));
     window.terminal.addCommand("look", "Get info about the item at your feet", this.lookCommand.bind(this));
@@ -3198,7 +3260,7 @@ Player.prototype.teleportCommand = function (args) {
             window.terminal.log(`Teleporting player to x: ${x} y: ${y}`, window.colors.cmdResponse);
             window.player.position.x = parseInt(x);
             window.player.position.y = parseInt(y);
-            tilemap.moveTo({ x: x - 5, y: y - 5 });
+            window.tilemap.moveTo({ x: x - 5, y: y - 5 });
         }
     }
 }
@@ -3313,27 +3375,27 @@ Player.prototype.processTurn = function (input) {
         else if (input.left) change.x--;
 
         var position = Vector.add(this.position, change);
-        if (this.tilemap.isWall(position.x, position.y)) return;
+        if (window.tilemap.isWall(position.x, position.y)) return;
 
         this.position = { x: position.x, y: position.y };
     }
 
-    var screenCoor = this.tilemap.toScreenCoords(this.position);
+    var screenCoor = window.tilemap.toScreenCoords(this.position);
 
     if (screenCoor.y < 5) {
-        this.tilemap.moveBy({ x: 0, y: -1 });
+        window.tilemap.moveBy({ x: 0, y: -1 });
     }
 
-    if (screenCoor.y + 5 == this.tilemap.draw.size.height) {
-        this.tilemap.moveBy({ x: 0, y: 1 });
+    if (screenCoor.y + 5 == window.tilemap.draw.size.height) {
+        window.tilemap.moveBy({ x: 0, y: 1 });
     }
 
     if (screenCoor.x < 5) {
-        this.tilemap.moveBy({ x: -1, y: 0 });
+        window.tilemap.moveBy({ x: -1, y: 0 });
     }
 
-    if (screenCoor.x + 5 >= this.tilemap.draw.size.width) {
-        this.tilemap.moveBy({ x: 1, y: 0 });
+    if (screenCoor.x + 5 >= window.tilemap.draw.size.width) {
+        window.tilemap.moveBy({ x: 1, y: 0 });
     }
 
     this.hasMoved = true;
@@ -3364,7 +3426,7 @@ Player.prototype.retain = function () {
 Player.prototype.render = function (elapsedTime, ctx) {
     //if (this.state == "dead") return; // shouldnt be necessary
 
-    var position = this.tilemap.toScreenCoords(this.position);
+    var position = window.tilemap.toScreenCoords(this.position);
 
     ctx.drawImage(
         this.spritesheet,
@@ -3405,7 +3467,7 @@ Player.prototype.changeDirection = function (direction) {
 Player.prototype.playAttack = function (clickPos) {
     if (this.state != "dead") {
         this.animator.updateState("attacking");
-        var position = this.tilemap.toScreenCoords(this.position);
+        var position = window.tilemap.toScreenCoords(this.position);
 
         if (clickPos.x < (position.x * this.size.width + 40)) this.changeDirection("left");
         else this.changeDirection("right");
@@ -3432,11 +3494,10 @@ module.exports = exports = Powerup;
  * Creates a new Powerup object
  * @param {postition} position object specifying an x and y
  */
-function Powerup(position, tilemap, pType) {
+function Powerup(position, pType) {
     this.position = { x: position.x, y: position.y };
     this.size = { width: 96, height: 96 };
     this.spritesheet = new Image();
-    this.tilemap = tilemap;
     this.spritesheet.src = './spritesheets/powerup.png';
     this.type = "Powerup";
     this.animation = true;
@@ -3500,7 +3561,7 @@ Powerup.prototype.collided = function(entity) {
     }
 	else if(this.resolveCollision && entity.type != "Enemy" && entity.type != "Click") {
 		this.resolveCollision = false;
-		this.position = tilemap.getRandomAdjacent(this.position);
+		this.position = window.tilemap.getRandomAdjacent(this.position);
 	}
 }
 
@@ -3513,7 +3574,7 @@ Powerup.prototype.retain = function() {
  * {CanvasRenderingContext2D} ctx the context to render into
  */
 Powerup.prototype.render = function(elapsedTime, ctx) {
-    var position = this.tilemap.toScreenCoords(this.position);
+    var position = window.tilemap.toScreenCoords(this.position);
     switch (this.currPower) {
         case 1:
             ctx.drawImage(this.spritesheet, 0, 150, 75, 75, (position.x * this.size.width), (position.y * this.size.height) + this.currY, 96, 96);
@@ -3529,7 +3590,6 @@ Powerup.prototype.render = function(elapsedTime, ctx) {
             break;
     }
 }
-
 
 },{"./rng":21,"./tilemap":25}],20:[function(require,module,exports){
 "use strict";
@@ -3652,9 +3712,9 @@ var volume = 3;
 var volumeMatrix = [
     // bg, bgOnLoop, health, attack, damage, defense, click, weapon, armor
     [ 0.0,      0.0,    0.0,    0.0,    0.0,     0.0,   0.0,    0.0,   0.0 ], // Volume 0
-    [ 0.1,      0.1,    0.1,    0.1,    0.1,     0.1,   0.1,    0.1,   0.1 ], // Volume 1
-    [ 0.2,      0.2,    0.2,    0.2,    0.2,     0.2,   0.2,    0.2,   0.2 ], // Volume 2
-    [ 0.3,      0.3,    0.3,    0.3,    0.3,     0.3,   0.3,    0.3,   0.3 ]  // Volume 3
+    [ 0.1,      0.1,    0.05,    0.1,    0.033,     0.13,   0.1,    0.1,   0.6 ], // Volume 1
+    [ 0.2,      0.2,    0.1,    0.2,    0.067,     0.27,   0.2,    0.2,   0.13 ], // Volume 2
+    [ 0.3,      0.3,    0.15,    0.3,    0.1,     0.4,   0.3,    0.3,   0.2 ]  // Volume 3
 ];
 
 
@@ -3743,6 +3803,19 @@ SFX.prototype.setVolume = function(args) {
     armorPickUp.volume = lvls[8];
 }
 
+SFX.prototype.toggleVolume = function() {
+  if(volume == 3) {
+    this.setVolume(["volume", 0]);
+  }
+  else {
+    this.setVolume(["volume", parseInt(++volume)]);
+  }
+}
+
+SFX.prototype.returnVolume = function() {
+  return volume;
+}
+
 },{}],23:[function(require,module,exports){
 "use strict";
 
@@ -3756,11 +3829,10 @@ module.exports = exports = Stairs;
  * Creates a new Stairs object
  * @param {postition} position object specifying an x and y
  */
-function Stairs(position, tilemap, travelStairs) {
+function Stairs(position, travelStairs) {
     this.position = { x: position.x, y: position.y };
     this.size = { width: 96, height: 96 };
     this.type = "Stairs";
-    this.tilemap = tilemap;
     this.travelStairs = travelStairs;
 
     this.spritesheet = new Image();
@@ -3770,7 +3842,7 @@ function Stairs(position, tilemap, travelStairs) {
     this.time = 0;
 
     this.spriteOff = 0;
-	
+
 	this.resolveCollision = false;
 }
 
@@ -3813,7 +3885,7 @@ Stairs.prototype.retain = function () {
  * {CanvasRenderingContext2D} ctx the context to render into
  */
 Stairs.prototype.render = function (elapsedTime, ctx) {
-  var position = this.tilemap.toScreenCoords(this.position);
+  var position = window.tilemap.toScreenCoords(this.position);
 
   ctx.drawImage(this.spritesheet, 75 + this.spriteOff, 0, 75, 75, (position.x * this.size.width), (position.y * this.size.height), 96, 96);
 }
@@ -3987,7 +4059,7 @@ const Vector = require('./vector')
 module.exports = exports = Tilemap;
 
 
-function Tilemap(canvas, width, height, tileset, options) {
+function Tilemap(canvas, width, height, tileset, isBoss, options) {
 
   this.tiles = [];
   this.tileWidth = tileset.tilewidth;
@@ -4000,6 +4072,8 @@ function Tilemap(canvas, width, height, tileset, options) {
   this.draw.origin = { x: 0, y: 0 };
 
   this.idx = 0;
+
+  this.isBoss = isBoss;
 
   // We add one so that we go slightly beyond the canvas
   this.draw.size = {
@@ -4046,7 +4120,7 @@ Tilemap.prototype.changeTileset = function () {
   })
 }
 Tilemap.prototype.generateMap = function () {
-  var map = new MapGenerator(this.tileset.edges, this.mapWidth, this.mapHeight);
+  var map = new MapGenerator(this.tileset.edges, this.mapWidth, this.mapHeight, this.isBoss);
 
   // Set up the layer's data array.  We'll try to optimize
   // by keeping the index data type as small as possible
@@ -4203,7 +4277,6 @@ Tilemap.prototype.getRandomAdjacentArray = function (aTile) {
   adjacents = adjacents.filter(tile => !tile.wall);
   return adjacents;
 }
-
 
 },{"./map_generator":16,"./vector":26}],26:[function(require,module,exports){
 "use strict";

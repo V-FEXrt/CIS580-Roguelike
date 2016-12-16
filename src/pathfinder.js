@@ -14,8 +14,7 @@ module.exports = exports = Pathfinder;
  * @param {Tilemap} tilemap - the tilemap to
  * use in finding paths.
  */
-function Pathfinder(tilemap) {
-  this.tilemap = tilemap;
+function Pathfinder() {
   this.algorithm = 'a-star';
 }
 
@@ -98,7 +97,7 @@ Pathfinder.prototype.isExplored = function(node) {
  * @returns true if impassible, false if not.
  */
 Pathfinder.prototype.isImpassible = function(node) {
-  return this.tilemap.isWall(node.x, node.y);
+  return window.tilemap.isWall(node.x, node.y);
 }
 
 /**
