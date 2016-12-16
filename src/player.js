@@ -55,11 +55,10 @@ Player.prototype.update = function (time) {
         }
 
     }
-    if(this.animator.state == "dead") 
-    {
-      this.animator.updateState("nothing");
-      this.shouldEndGame = true;
-    } 
+    if (this.animator.state == "dead") {
+        this.animator.updateState("nothing");
+        this.shouldEndGame = true;
+    }
     this.animator.update(time);
 }
 
@@ -75,8 +74,8 @@ Player.prototype.debugModeChanged = function () {
 }
 
 Player.prototype.teleportCommand = function (args) {
-    if (args == 1) {
-        window.terminal.log("Must include parameters x and y", window.colors.invalid);
+    if (args.length != 3) {
+        window.terminal.log("Syntax: tp <x> <y>", window.colors.invalid);
     }
     else {
         var x = 0;
@@ -85,19 +84,23 @@ Player.prototype.teleportCommand = function (args) {
         else x = args[1];
         if (args[2].charAt(0) == "*") y = parseInt(args[2].slice(1)) + parseInt(this.position.y);
         else y = args[2];
-        window.terminal.log(`Teleporting player to x: ${x} y: ${y}`, window.colors.cmdResponse);
-        window.player.position.x = parseInt(x);
-        window.player.position.y = parseInt(y);
-        tilemap.moveTo({ x: x - 5, y: y - 5 });
+        if (parseInt(x) != x || parseInt(y) != y) window.terminal.log("Syntax: tp <x> <y>", window.colors.invalid);
+        else {
+            window.terminal.log(`Teleporting player to x: ${x} y: ${y}`, window.colors.cmdResponse);
+            window.player.position.x = parseInt(x);
+            window.player.position.y = parseInt(y);
+            tilemap.moveTo({ x: x - 5, y: y - 5 });
+        }
     }
 }
 
 Player.prototype.healthCommand = function (args) {
-    if (args.length == 1) window.terminal.log("You must provide an integer value", window.colors.invalid);
-    else {
-        window.terminal.log("Set health to " + args[1], window.colors.cmdResponse);
-        this.combat.health = parseInt(args[1]);
+    if (args.length != 2 || parseInt(args[1]) != args[1]) {
+        window.terminal.log("You must provide an integer value", window.colors.invalid);
+        return;
     }
+    window.terminal.log("Set health to " + args[1], window.colors.cmdResponse);
+    this.combat.health = parseInt(args[1]);
 }
 Player.prototype.walkPath = function (path, completion) {
     if (this.state == "dead") return; // shouldnt be necessary
@@ -161,6 +164,10 @@ Player.prototype.coordsCommand = function () {
 Player.prototype.getClass = function (args) {
     if (args.length > 1) {
         // we have args
+        if (args[1] != "Knight" && args[1] != "Mage" && args[1] != "Archer") {
+            window.terminal.log("Invalid class type", window.colors.invalid);
+            return;
+        }
         this.changeClass(args[1]);
         window.terminal.log("Changing class to " + this.class, window.colors.cmdResponse);
         return;
@@ -261,18 +268,15 @@ Player.prototype.render = function (elapsedTime, ctx) {
 
 Player.prototype.killPlayer = function () {
     this.combat.health = 0;
-    if(this.state != "dead")
-    {
-      if(this.direction == "down")
-      {
-          if(this.oldDirection == "right") this.animator.changeDirection("right");
-          else this.animator.changeDirection("left");
-      }
-      else
-      {
-          if(!this.direction == "up") this.oldDirection = direction;
-          this.animator.changeDirection(this.direction);
-      }
+    if (this.state != "dead") {
+        if (this.direction == "down") {
+            if (this.oldDirection == "right") this.animator.changeDirection("right");
+            else this.animator.changeDirection("left");
+        }
+        else {
+            if (!this.direction == "up") this.oldDirection = direction;
+            this.animator.changeDirection(this.direction);
+        }
     }
 }
 

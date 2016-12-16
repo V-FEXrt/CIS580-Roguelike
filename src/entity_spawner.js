@@ -91,8 +91,12 @@ function spawnCommand(args) {
         if (args[2] == "MagicMissile") args[2] = "Magic Missile";
         if (args[2] == "EldritchBlast") args[2] = "Eldritch Blast";
         var weapon = new Weapon(args[2], args[3]);
-        if (weapon.damageMin == "undefined") {
+        if (weapon.damageMin == "undefined" || parseInt(weapon.level) != weapon.level) {
           window.terminal.log("Invalid weapon", window.colors.invalid);
+          break;
+        }
+        if(args[4] != parseInt(args[4]) || args[5] != parseInt(args[5])) {
+          window.terminal.log("Invalid spawn location", window.colors.invalid);
           break;
         }
         weapon.position.x = args[4];
@@ -109,8 +113,12 @@ function spawnCommand(args) {
         if (args[2] == "LeatherArmor") args[2] = "Leather Armor";
         if (args[2] == "PlateArmor") args[2] = "Plate Armor";
         var armor = new Armor(args[2], args[3]);
-        if (armor.defense == "undefined") {
+        if (armor.defense == "undefined" || armor.level != parseInt(armor.level)) {
           window.terminal.log("Invalid armor", window.colors.invalid);
+          break;
+        }
+        if(args[4] != parseInt(args[4]) || args[5] != parseInt(args[5])) {
+          window.terminal.log("Invalid spawn location", window.colors.invalid);
           break;
         }
         armor.position.x = args[4];
@@ -121,6 +129,10 @@ function spawnCommand(args) {
       case "potion":
         if (args.length != 5) {
           window.terminal.log("Syntax: spawn potion <potionNum> <x> <y>", window.colors.invalid);
+          break;
+        }
+        if(args[3] != parseInt(args[3]) || args[4] != parseInt(args[4])) {
+          window.terminal.log("Invalid spawn location", window.colors.invalid);
           break;
         }
         window.entityManager.addEntity(new Powerup({ x: args[3], y: args[4] }, tilemap, parseInt(args[2])));
@@ -134,6 +146,11 @@ function spawnCommand(args) {
         }
         if (args[2] != "Zombie" && args[2] != "Skeleton" && args[2] != "Minotaur" && args[2] != "Shaman") {
           window.terminal.log("Invalid enemy type. Please choose from Zombie, Skeleton, Minotaur, or Shaman", window.colors.invalid);
+          break;
+        }
+        
+        if(args[3] != parseInt(args[3]) || args[4] != parseInt(args[4])) {
+          window.terminal.log("Invalid spawn location", window.colors.invalid);
           break;
         }
         window.entityManager.addEntity(new Enemy({ x: args[3], y: args[4] }, tilemap, args[2], window.player, spawnDrop));

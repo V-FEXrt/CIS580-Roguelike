@@ -701,7 +701,7 @@ window.terminal = new Terminal();
 window.terminal.log("Welcome to Roguelike");
 window.terminal.log("Good luck!");
 window.terminal.addCommand("debug", "Toggle debug",
-    function(args) {
+    function (args) {
         if (args.length == 1) window.terminal.log("You do not have permission to use this command", window.colors.invalid);
         else if (args[1] != 4747) window.terminal.log("Nice try, but that's incorrect", window.colors.invalid);
         else {
@@ -716,7 +716,7 @@ var canvas = document.getElementById('screen');
 var game = new Game(canvas, update, render);
 window.sfx = new SFX();
 window.entityManager = new EntityManager();
-var fadeAnimationProgress = new ProgressManager(0, function() { });
+var fadeAnimationProgress = new ProgressManager(0, function () { });
 var isFadeOut = true;
 var screenSize = { width: 1056, height: 1056 };
 var stairs;
@@ -726,7 +726,7 @@ window.combatController = new CombatController();
 var gui = new GUI(screenSize);
 
 var tilemap = new Tilemap(screenSize, 65, 65, tileset, {
-    onload: function() {
+    onload: function () {
         masterLoop(performance.now());
     }
 });
@@ -753,11 +753,11 @@ var player = new Player({ x: 0, y: 0 }, tilemap, "Mage");
 window.player = player;
 player.shouldProcessTurn = false;
 
-window.onmousemove = function(event) {
+window.onmousemove = function (event) {
     gui.onmousemove(event);
 }
 
-window.onmousedown = function(event) {
+window.onmousedown = function (event) {
     // Init the level when class is chosen
     if (player.shouldProcessTurn) player.playAttack({ x: event.offsetX, y: event.offsetY });
     if (gui.state == "start" || gui.state == "choose class") {
@@ -772,14 +772,14 @@ window.onmousedown = function(event) {
     }
 }
 
-canvas.onclick = function(event) {
+canvas.onclick = function (event) {
     var node = {
         x: parseInt(event.offsetX / 96),
         y: parseInt(event.offsetY / 96)
     }
 
     var clickedWorldPos = tilemap.toWorldCoords(node);
-    window.entityManager.addEntity(new Click(clickedWorldPos, tilemap, player, function(enemy) {
+    window.entityManager.addEntity(new Click(clickedWorldPos, tilemap, player, function (enemy) {
         var distance = Vector.distance(player.position, enemy.position);
         if (distance.x <= player.combat.weapon.range && distance.y <= player.combat.weapon.range) {
             if (player.combat.weapon.attackType != "Melee" && player.combat.weapon.name != "Magic Missile") {
@@ -795,7 +795,7 @@ canvas.onclick = function(event) {
     }));
 }
 
-canvas.oncontextmenu = function(event) {
+canvas.oncontextmenu = function (event) {
     event.preventDefault();
 }
 
@@ -803,7 +803,7 @@ canvas.oncontextmenu = function(event) {
  * @function onkeydown
  * Handles keydown events
  */
-window.onkeydown = function(event) {
+window.onkeydown = function (event) {
     if (window.terminal.onkeydown(event)) return;
     switch (event.key) {
         case "ArrowUp":
@@ -858,7 +858,7 @@ window.onkeydown = function(event) {
  * @function onkeyup
  * Handles keyup events
  */
-window.onkeyup = function(event) {
+window.onkeyup = function (event) {
     switch (event.key) {
         case "ArrowUp":
         case "w":
@@ -889,7 +889,7 @@ window.onkeyup = function(event) {
  * Advances the game in sync with the refresh rate of the screen
  * @param {DOMHighResTimeStamp} timestamp the current time
  */
-var masterLoop = function(timestamp) {
+var masterLoop = function (timestamp) {
     game.loop(timestamp);
     window.requestAnimationFrame(masterLoop);
 }
@@ -923,16 +923,20 @@ function update(elapsedTime) {
     window.terminal.update(elapsedTime);
     if (window.gameDebug) {
         window.terminal.addCommand("door", "Get the coordinates of the exit door",
-            function() {
+            function () {
                 window.terminal.log(`The coordinates of the exit door are x: ${stairs.position.x} y: ${stairs.position.y}`, window.colors.cmdResponse);
             });
-        window.terminal.addCommand("spawn", "Spawns a given entity", function(args) { EntitySpawner.spawnCommand(args); });
+        window.terminal.addCommand("spawn", "Spawns a given entity", function (args) { EntitySpawner.spawnCommand(args); });
         window.terminal.addCommand("level", "Sets the level to the given integer",
-            function(args) {
+            function (args) {
                 if (args.length != 2) {
                     window.terminal.log("Syntax: level <integer>", window.colors.invalid);
                 }
                 else {
+                    if (args[1] != parseInt(args[1]) || args[1] < 1) {
+                        window.terminal.log("Invalid level number", window.colors.invalid);
+                        return;
+                    }
                     window.player.position = { x: stairs.position.x, y: stairs.position.y };
                     window.terminal.log(`Setting level to ${args[1]}`, window.colors.cmdResponse);
                     window.player.level = parseInt(args[1]);
@@ -984,7 +988,7 @@ function processTurn() {
 
 function nextLevel(fadeOut) {
     player.level++;
-    var init = function() {
+    var init = function () {
         // clear terminal
         window.terminal.clear();
         var msg = `---===| LEVEL ${player.level} |===---`;
@@ -1033,7 +1037,7 @@ function nextLevel(fadeOut) {
         player.combat.health += window.combatController.healthPotion(player.level);
 
         // add stairs
-        stairs = new Stairs(pos, tilemap, function() { nextLevel(true) });
+        stairs = new Stairs(pos, tilemap, function () { nextLevel(true) });
         window.entityManager.addEntity(stairs);
         //place new entities
         EntitySpawner.spawn(player, tilemap, 30, combatController.getPercentArray());
@@ -1053,7 +1057,7 @@ function fadeToBlack(completion) {
 
 function unfadeFromBlack() {
     isFadeOut = false;
-    fadeAnimationProgress = new ProgressManager(1000, function() { });
+    fadeAnimationProgress = new ProgressManager(1000, function () { });
     fadeAnimationProgress.isActive = true;
 }
 
@@ -2006,8 +2010,12 @@ function spawnCommand(args) {
         if (args[2] == "MagicMissile") args[2] = "Magic Missile";
         if (args[2] == "EldritchBlast") args[2] = "Eldritch Blast";
         var weapon = new Weapon(args[2], args[3]);
-        if (weapon.damageMin == "undefined") {
+        if (weapon.damageMin == "undefined" || parseInt(weapon.level) != weapon.level) {
           window.terminal.log("Invalid weapon", window.colors.invalid);
+          break;
+        }
+        if(args[4] != parseInt(args[4]) || args[5] != parseInt(args[5])) {
+          window.terminal.log("Invalid spawn location", window.colors.invalid);
           break;
         }
         weapon.position.x = args[4];
@@ -2024,8 +2032,12 @@ function spawnCommand(args) {
         if (args[2] == "LeatherArmor") args[2] = "Leather Armor";
         if (args[2] == "PlateArmor") args[2] = "Plate Armor";
         var armor = new Armor(args[2], args[3]);
-        if (armor.defense == "undefined") {
+        if (armor.defense == "undefined" || armor.level != parseInt(armor.level)) {
           window.terminal.log("Invalid armor", window.colors.invalid);
+          break;
+        }
+        if(args[4] != parseInt(args[4]) || args[5] != parseInt(args[5])) {
+          window.terminal.log("Invalid spawn location", window.colors.invalid);
           break;
         }
         armor.position.x = args[4];
@@ -2036,6 +2048,10 @@ function spawnCommand(args) {
       case "potion":
         if (args.length != 5) {
           window.terminal.log("Syntax: spawn potion <potionNum> <x> <y>", window.colors.invalid);
+          break;
+        }
+        if(args[3] != parseInt(args[3]) || args[4] != parseInt(args[4])) {
+          window.terminal.log("Invalid spawn location", window.colors.invalid);
           break;
         }
         window.entityManager.addEntity(new Powerup({ x: args[3], y: args[4] }, tilemap, parseInt(args[2])));
@@ -2049,6 +2065,11 @@ function spawnCommand(args) {
         }
         if (args[2] != "Zombie" && args[2] != "Skeleton" && args[2] != "Minotaur" && args[2] != "Shaman") {
           window.terminal.log("Invalid enemy type. Please choose from Zombie, Skeleton, Minotaur, or Shaman", window.colors.invalid);
+          break;
+        }
+        
+        if(args[3] != parseInt(args[3]) || args[4] != parseInt(args[4])) {
+          window.terminal.log("Invalid spawn location", window.colors.invalid);
           break;
         }
         window.entityManager.addEntity(new Enemy({ x: args[3], y: args[4] }, tilemap, args[2], window.player, spawnDrop));
@@ -3105,11 +3126,10 @@ Player.prototype.update = function (time) {
         }
 
     }
-    if(this.animator.state == "dead") 
-    {
-      this.animator.updateState("nothing");
-      this.shouldEndGame = true;
-    } 
+    if (this.animator.state == "dead") {
+        this.animator.updateState("nothing");
+        this.shouldEndGame = true;
+    }
     this.animator.update(time);
 }
 
@@ -3125,8 +3145,8 @@ Player.prototype.debugModeChanged = function () {
 }
 
 Player.prototype.teleportCommand = function (args) {
-    if (args == 1) {
-        window.terminal.log("Must include parameters x and y", window.colors.invalid);
+    if (args.length != 3) {
+        window.terminal.log("Syntax: tp <x> <y>", window.colors.invalid);
     }
     else {
         var x = 0;
@@ -3135,19 +3155,23 @@ Player.prototype.teleportCommand = function (args) {
         else x = args[1];
         if (args[2].charAt(0) == "*") y = parseInt(args[2].slice(1)) + parseInt(this.position.y);
         else y = args[2];
-        window.terminal.log(`Teleporting player to x: ${x} y: ${y}`, window.colors.cmdResponse);
-        window.player.position.x = parseInt(x);
-        window.player.position.y = parseInt(y);
-        tilemap.moveTo({ x: x - 5, y: y - 5 });
+        if (parseInt(x) != x || parseInt(y) != y) window.terminal.log("Syntax: tp <x> <y>", window.colors.invalid);
+        else {
+            window.terminal.log(`Teleporting player to x: ${x} y: ${y}`, window.colors.cmdResponse);
+            window.player.position.x = parseInt(x);
+            window.player.position.y = parseInt(y);
+            tilemap.moveTo({ x: x - 5, y: y - 5 });
+        }
     }
 }
 
 Player.prototype.healthCommand = function (args) {
-    if (args.length == 1) window.terminal.log("You must provide an integer value", window.colors.invalid);
-    else {
-        window.terminal.log("Set health to " + args[1], window.colors.cmdResponse);
-        this.combat.health = parseInt(args[1]);
+    if (args.length != 2 || parseInt(args[1]) != args[1]) {
+        window.terminal.log("You must provide an integer value", window.colors.invalid);
+        return;
     }
+    window.terminal.log("Set health to " + args[1], window.colors.cmdResponse);
+    this.combat.health = parseInt(args[1]);
 }
 Player.prototype.walkPath = function (path, completion) {
     if (this.state == "dead") return; // shouldnt be necessary
@@ -3211,6 +3235,10 @@ Player.prototype.coordsCommand = function () {
 Player.prototype.getClass = function (args) {
     if (args.length > 1) {
         // we have args
+        if (args[1] != "Knight" && args[1] != "Mage" && args[1] != "Archer") {
+            window.terminal.log("Invalid class type", window.colors.invalid);
+            return;
+        }
         this.changeClass(args[1]);
         window.terminal.log("Changing class to " + this.class, window.colors.cmdResponse);
         return;
@@ -3311,18 +3339,15 @@ Player.prototype.render = function (elapsedTime, ctx) {
 
 Player.prototype.killPlayer = function () {
     this.combat.health = 0;
-    if(this.state != "dead")
-    {
-      if(this.direction == "down")
-      {
-          if(this.oldDirection == "right") this.animator.changeDirection("right");
-          else this.animator.changeDirection("left");
-      }
-      else
-      {
-          if(!this.direction == "up") this.oldDirection = direction;
-          this.animator.changeDirection(this.direction);
-      }
+    if (this.state != "dead") {
+        if (this.direction == "down") {
+            if (this.oldDirection == "right") this.animator.changeDirection("right");
+            else this.animator.changeDirection("left");
+        }
+        else {
+            if (!this.direction == "up") this.oldDirection = direction;
+            this.animator.changeDirection(this.direction);
+        }
     }
 }
 
