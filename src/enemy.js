@@ -28,6 +28,8 @@ function Enemy(position, combatClass, target, onDeathCB) {
         this.animator = new Animator(9, "idle", "Skeleton");
     } else if (this.class == "Minotaur") {
         this.animator = new Animator(6, "idle", "Minotaur");
+    } else if (this.class == "Fucking Dragon") {
+        this.animator = new Animator(12, "idle", "Fucking Dragon");
     }
 }
 
@@ -91,12 +93,22 @@ Enemy.prototype.changeDirection = function (direction) {
 Enemy.prototype.render = function (elapsedTime, ctx) {
     if (this.state == "dead") return; // shouldnt be necessary
 
+    ctx.imageSmoothingEnabled = false;
+
     var position = window.tilemap.toScreenCoords(this.position);
-    ctx.drawImage(
+    if (this.name != "Fucking Dragon") ctx.drawImage(
         this.spritesheet,
         96 * this.animator.index.x, 96 * this.animator.index.y,
         96, 96,
         position.x * this.size.width, position.y * this.size.height,
         96, 96
     );
+    else ctx.drawImage(
+        this.spritesheet,
+        96 * this.animator.index.x, 96 * this.animator.index.y,
+        96, 96,
+        position.x * this.size.width, position.y * this.size.height,
+        192, 192
+    );
 }
+
