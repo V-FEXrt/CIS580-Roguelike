@@ -1491,7 +1491,6 @@ CombatController.prototype.handleAttack = function (aAttackerClass, aDefenderCla
             lSelfDamage - (1 - aAttackerClass.health);
             aAttackerClass.health = 1;
         }
-        // attacker hit itself, play attacker hit sound
 
         // If attacker is player
         if (playerAttacker) {
@@ -1502,7 +1501,7 @@ CombatController.prototype.handleAttack = function (aAttackerClass, aDefenderCla
     } else if (lAttackRoll == 20 || (lAttackRoll >= 18 && (aAttackerClass.weapon.attackType == "Ranged" || aAttackerClass.weapon.name == "Battleaxe"))) {
         lDamageTotal += lDamageMax;
         aDefenderClass.health -= lDamageTotal;
-        // defender hit, play defender hit sound
+        window.sfx.play("attackSound");
 
         if (lAttackEffect != "") lApplyEffect = RNG.rollWeighted(1, 4);
 
@@ -1515,7 +1514,7 @@ CombatController.prototype.handleAttack = function (aAttackerClass, aDefenderCla
     } else {
         if (lAttackTotal > lDefenseTotal || aAttackerClass.weapon.name == "Magic Missile") {
             aDefenderClass.health -= lDamageTotal;
-            // defender hit, play defender hit sound
+            window.sfx.play("attackSound");
 
             if (lAttackEffect != "") lApplyEffect = RNG.rollWeighted(1, 1);
 
@@ -1675,7 +1674,6 @@ function getWeapons() {
         ["Magic Missile", "Fireball", "Frostbolt", "Eldritch Blast"]
     ];
 }
-
 
 },{"./armor":6,"./combat_class":8,"./rng":21,"./weapon":27}],10:[function(require,module,exports){
 "use strict";
@@ -3675,16 +3673,17 @@ var damageBonusPowerup = new Audio();
 var defensePowerup = new Audio();
 var weaponPickUp = new Audio();
 var armorPickUp = new Audio();
+var attackSound = new Audio();
 var click = new Audio();
 var backgroundMusicOnLoop = new Audio('sounds/tempBGMusicLoop.wav');
 var volume = 3;
 
 var volumeMatrix = [
-    // bg, bgOnLoop, health, attack, damage, defense, click, weapon, armor
-    [ 0.0,      0.0,    0.0,    0.0,    0.0,     0.0,   0.0,    0.0,   0.0 ], // Volume 0
-    [ 0.1,      0.1,    0.05,    0.1,    0.033,     0.13,   0.1,    0.1,   0.6 ], // Volume 1
-    [ 0.2,      0.2,    0.1,    0.2,    0.067,     0.27,   0.2,    0.2,   0.13 ], // Volume 2
-    [ 0.3,      0.3,    0.15,    0.3,    0.1,     0.4,   0.3,    0.3,   0.2 ]  // Volume 3
+    // bg, bgOnLoop, health, attack, damage, defense, click, weapon, armor, attackSound
+    [ 0.0,      0.0,    0.0,    0.0,    0.0,     0.0,   0.0,    0.0,   0.0,         0.0 ], // Volume 0
+    [ 0.1,      0.1,   0.05,    0.1,  0.033,    0.13,   0.1,    0.1,   0.6,         0.1 ], // Volume 1
+    [ 0.2,      0.2,    0.1,    0.2,  0.067,    0.27,   0.2,    0.2,  0.13,         0.2 ], // Volume 2
+    [ 0.3,      0.3,   0.15,    0.3,    0.1,     0.4,   0.3,    0.3,   0.2,         0.3 ]  // Volume 3
 ];
 
 
@@ -3705,6 +3704,7 @@ function SFX() {
     click.src = encodeURI("sounds/click.wav");
     weaponPickUp.src = encodeURI("sounds/weapon-pickup.wav");
     armorPickUp.src = encodeURI("sounds/armor-pickup.wav");
+    attackSound.src = encodeURI("sounds/EnemyHit.wav");
 
     this.setVolume(["volume", "3"]);
     window.terminal.addCommand("volume", "Set the volume", this.setVolume.bind(this));
@@ -3739,6 +3739,10 @@ SFX.prototype.play = function(aSound) {
         case "armorPickUp":
             armorPickUp.play();
             break;
+
+        case "attackSound":
+            attackSound.play();
+            break;
     }
 }
 
@@ -3771,6 +3775,7 @@ SFX.prototype.setVolume = function(args) {
     click.volume = lvls[6];
     weaponPickUp.volume = lvls[7];
     armorPickUp.volume = lvls[8];
+    attackSound.volume = lvls[9];
 }
 
 SFX.prototype.toggleVolume = function() {
