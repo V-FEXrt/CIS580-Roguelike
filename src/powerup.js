@@ -25,6 +25,7 @@ function Powerup(position, tilemap, pType) {
     this.movingUp = true;
     this.currPower = pType;
     this.used = false;
+	this.resolveCollision = false;
 }
 
 /**
@@ -78,6 +79,10 @@ Powerup.prototype.collided = function(entity) {
                 break;
         }
     }
+	else if(this.resolveCollision && entity.type != "Enemy" && entity.type != "Click") {
+		this.resolveCollision = false;
+		this.position = tilemap.getRandomAdjacent(this.position);
+	}
 }
 
 Powerup.prototype.retain = function() {

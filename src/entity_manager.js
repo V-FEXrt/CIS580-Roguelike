@@ -98,6 +98,7 @@ EntityManager.prototype.update = function(elapsedTime) {
   });
 
   collisions.forEach(function(pair){
+	pair.a.resolveCollision = true;
     pair.a.collided(pair.b);
     pair.b.collided(pair.a);
   })
@@ -137,6 +138,7 @@ function checkType(entity){
   if(typeof entity.update == 'undefined') failType();
   if(typeof entity.render == 'undefined') failType();
   if(typeof entity.type == 'undefined') failType();
+  if(typeof entity.resolveCollision == 'undefined') failType();
 }
 
 function failType(){

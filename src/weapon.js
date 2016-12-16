@@ -211,13 +211,17 @@ function Weapon(aName, aLevel) {
     this.size = { width: 96, height: 96 };
     this.spritesheet = new Image();
     this.spritesheet.src = './spritesheets/powerup.png';
+	this.resolveCollision = false;
 
     this.currY = 0;
     this.movingUp = true;
 }
 
 Weapon.prototype.collided = function(aEntity) {
-
+	if(aEntity.type != "Player" && this.resolveCollision && aEntity.type != "Click") {
+		this.resolveCollision = false;
+		this.position = tilemap.getRandomAdjacent(this.position);
+	}
 }
 
 Weapon.prototype.processTurn = function() {
@@ -242,5 +246,5 @@ Weapon.prototype.render = function(time, ctx) {
 }
 
 Weapon.prototype.toString = function() {
-    return `Level ${this.level} ${this.name} with damage range ${this.damageMin + this.level}-${this.damageMax + this.level}, with ${this.properties}`
+    return `Level ${this.level} ${this.name} with damage range ${this.damageMin + parseInt(this.level)}-${this.damageMax + parseInt(this.level)}, with ${this.properties}`
 }

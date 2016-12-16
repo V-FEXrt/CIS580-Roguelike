@@ -1125,13 +1125,17 @@ function Armor(aName, aLevel) {
     this.size = { width: 96, height: 96 };
     this.spritesheet = new Image();
     this.spritesheet.src = './spritesheets/powerup.png';
+	this.resolveCollision = false;
 
     this.currY = 0;
     this.movingUp = true;
 }
 
 Armor.prototype.collided = function(aEntity) {
-
+	if(this.resolveCollision && aEntity.type != "Player" && aEntity.type != "Click") {
+		this.resolveCollision = false;
+		this.position = tilemap.getRandomAdjacent(this.position);
+	}
 }
 
 Armor.prototype.processTurn = function() {
@@ -1178,6 +1182,8 @@ function Click(position, tilemap, player, collisionCallback) {
   this.player = player;
   this.collisionCallback = collisionCallback;
   this.color = "green"
+  
+  this.resolveCollision = false;
 }
 
 Click.prototype.update = function (time) {
@@ -1692,6 +1698,8 @@ function Enemy(position, tilemap, combatClass, target, onDeathCB) {
     this.target = target;
     this.onDeathCB = onDeathCB;
     this.oldX = this.position.x;
+	this.oldY = this.position.y;
+	this.resolveCollision = false;
     
     if (this.class == "Shaman") {
         this.animator = new Animator(0, "idle", "Shaman");
@@ -1714,6 +1722,7 @@ Enemy.prototype.processTurn = function () {
     if(this.position.x < this.oldX) this.changeDirection("left");
     else if(this.position.x > this.oldX) this.changeDirection("right");
     this.oldX = this.position.x;
+	this.oldY = this.position.y;
 }
 
 Enemy.prototype.update = function (time) {
@@ -1871,6 +1880,7 @@ EntityManager.prototype.update = function(elapsedTime) {
   });
 
   collisions.forEach(function(pair){
+	pair.a.resolveCollision = true;
     pair.a.collided(pair.b);
     pair.b.collided(pair.a);
   })
@@ -1910,6 +1920,7 @@ function checkType(entity){
   if(typeof entity.update == 'undefined') failType();
   if(typeof entity.render == 'undefined') failType();
   if(typeof entity.type == 'undefined') failType();
+  if(typeof entity.resolveCollision == 'undefined') failType();
 }
 
 function failType(){
@@ -3162,6 +3173,7 @@ function Player(position, tilemap, combatClass) {
     this.hasMoved = false;
     this.direction = "right";
     this.oldDirection = "right";
+	this.resolveCollision = false;
     window.terminal.addCommand("class", "Get your player class", this.getClass.bind(this));
     window.terminal.addCommand("kill", "Kill yourself", this.killPlayer.bind(this));
     window.terminal.addCommand("look", "Get info about the item at your feet", this.lookCommand.bind(this));
@@ -3462,6 +3474,7 @@ function Powerup(position, tilemap, pType) {
     this.movingUp = true;
     this.currPower = pType;
     this.used = false;
+	this.resolveCollision = false;
 }
 
 /**
@@ -3515,6 +3528,10 @@ Powerup.prototype.collided = function(entity) {
                 break;
         }
     }
+	else if(this.resolveCollision && entity.type != "Enemy" && entity.type != "Click") {
+		this.resolveCollision = false;
+		this.position = tilemap.getRandomAdjacent(this.position);
+	}
 }
 
 Powerup.prototype.retain = function() {
@@ -3796,6 +3813,8 @@ function Stairs(position, tilemap, travelStairs) {
     this.time = 0;
 
     this.spriteOff = 0;
+	
+	this.resolveCollision = false;
 }
 
 /**
@@ -3821,6 +3840,10 @@ Stairs.prototype.processTurn = function (input) {
 Stairs.prototype.collided = function (entity) {
   if(entity.type == "Player"){
     this.beginTransition = true;
+  }
+  else if(this.resolveCollision){
+	  this.resolveCollision = false;
+	  entity.resolveCollision = true;
   }
 }
 
@@ -4547,13 +4570,17 @@ function Weapon(aName, aLevel) {
     this.size = { width: 96, height: 96 };
     this.spritesheet = new Image();
     this.spritesheet.src = './spritesheets/powerup.png';
+	this.resolveCollision = false;
 
     this.currY = 0;
     this.movingUp = true;
 }
 
 Weapon.prototype.collided = function(aEntity) {
-
+	if(aEntity.type != "Player" && this.resolveCollision && aEntity.type != "Click") {
+		this.resolveCollision = false;
+		this.position = tilemap.getRandomAdjacent(this.position);
+	}
 }
 
 Weapon.prototype.processTurn = function() {
@@ -4578,7 +4605,7 @@ Weapon.prototype.render = function(time, ctx) {
 }
 
 Weapon.prototype.toString = function() {
-    return `Level ${this.level} ${this.name} with damage range ${this.damageMin + this.level}-${this.damageMax + this.level}, with ${this.properties}`
+    return `Level ${this.level} ${this.name} with damage range ${this.damageMin + parseInt(this.level)}-${this.damageMax + parseInt(this.level)}, with ${this.properties}`
 }
 
 },{}],28:[function(require,module,exports){

@@ -35,6 +35,7 @@ function Player(position, tilemap, combatClass) {
     this.hasMoved = false;
     this.direction = "right";
     this.oldDirection = "right";
+	this.resolveCollision = false;
     window.terminal.addCommand("class", "Get your player class", this.getClass.bind(this));
     window.terminal.addCommand("kill", "Kill yourself", this.killPlayer.bind(this));
     window.terminal.addCommand("look", "Get info about the item at your feet", this.lookCommand.bind(this));
