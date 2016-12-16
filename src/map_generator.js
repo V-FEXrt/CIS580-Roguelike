@@ -6,7 +6,7 @@ const RoomsHallways = require('./MapGeneration/rooms_hallways_generation');
 
 module.exports = exports = MapGenerator;
 
-function MapGenerator(edges, width, height){
+function MapGenerator(edges, width, height, isBoss){
   this.map = [];
   this.width = width;
   this.height = height;
@@ -16,7 +16,7 @@ function MapGenerator(edges, width, height){
   this.open = 0;
   this.filled = 1;
 
-  if(window.debug){
+  if(window.debug || isBoss){
     this.map = (new DebugMap(width, height, 50, this.open, this.filled)).generate();
   }else{
     if(Math.random() > 0.5){
