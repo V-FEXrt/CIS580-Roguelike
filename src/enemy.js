@@ -17,7 +17,8 @@ function Enemy(position, tilemap, combatClass, target, onDeathCB) {
     this.combat = new CombatClass(this.class, target.level);
     this.target = target;
     this.onDeathCB = onDeathCB;
-
+    this.oldX = this.position.x;
+    
     if (this.class == "Shaman") {
         this.animator = new Animator(0, "idle", "Shaman");
     } else if (this.class == "Zombie") {
@@ -35,6 +36,10 @@ Enemy.prototype.processTurn = function () {
     if (this.state == "dead" || this.combat.status.effect == "Frozen" || this.combat.status.effect == "Stunned") return;
 
     this.combat.turnAI(this);
+        
+    if(this.position.x < this.oldX) this.changeDirection("left");
+    else if(this.position.x > this.oldX) this.changeDirection("right");
+    this.oldX = this.position.x;
 }
 
 Enemy.prototype.update = function (time) {
@@ -42,6 +47,7 @@ Enemy.prototype.update = function (time) {
     if (this.combat.health <= 0) {
         this.state = "dead";
     }
+
     this.animator.update(time);
 }
 
@@ -56,6 +62,24 @@ Enemy.prototype.retain = function () {
     } else {
         return true;
     }
+}
+
+Enemy.prototype.playAttack = function (clickPos) {
+    if (this.state != "dead" && this.target.state != "dead") {                
+        var position = this.tilemap.toScreenCoords(this.position);
+        var playerPos = this.tilemap.toScreenCoords(this.target.position);
+
+        if (playerPos.x < position.x) this.changeDirection("left");
+        else if(playerPos.x > position.x ) this.changeDirection("right");
+        
+        this.animator.updateState("attacking");
+    }
+}
+
+Enemy.prototype.changeDirection = function (direction) {
+    if (this.state != "dead") {
+            this.animator.changeDirection(direction);
+        }
 }
 
 Enemy.prototype.render = function (elapsedTime, ctx) {
