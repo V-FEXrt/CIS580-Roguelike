@@ -44,7 +44,6 @@ CombatController.prototype.handleAttack = function (aAttackerClass, aDefenderCla
             lSelfDamage - (1 - aAttackerClass.health);
             aAttackerClass.health = 1;
         }
-        // attacker hit itself, play attacker hit sound
 
         // If attacker is player
         if (playerAttacker) {
@@ -55,7 +54,7 @@ CombatController.prototype.handleAttack = function (aAttackerClass, aDefenderCla
     } else if (lAttackRoll == 20 || (lAttackRoll >= 18 && (aAttackerClass.weapon.attackType == "Ranged" || aAttackerClass.weapon.name == "Battleaxe"))) {
         lDamageTotal += lDamageMax;
         aDefenderClass.health -= lDamageTotal;
-        // defender hit, play defender hit sound
+        window.sfx.play("attackSound");
 
         if (lAttackEffect != "") lApplyEffect = RNG.rollWeighted(1, 4);
 
@@ -68,7 +67,7 @@ CombatController.prototype.handleAttack = function (aAttackerClass, aDefenderCla
     } else {
         if (lAttackTotal > lDefenseTotal || aAttackerClass.weapon.name == "Magic Missile") {
             aDefenderClass.health -= lDamageTotal;
-            // defender hit, play defender hit sound
+            window.sfx.play("attackSound");
 
             if (lAttackEffect != "") lApplyEffect = RNG.rollWeighted(1, 1);
 
@@ -235,4 +234,3 @@ function getWeapons() {
         ["Magic Missile", "Fireball", "Frostbolt", "Eldritch Blast"]
     ];
 }
-

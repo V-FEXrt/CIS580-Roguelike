@@ -268,7 +268,7 @@ function update(elapsedTime) {
                     }
                     window.player.position = { x: stairs.position.x, y: stairs.position.y };
                     window.terminal.log(`Setting level to ${args[1]}`, window.colors.cmdResponse);
-                    window.player.level = parseInt(args[1]);
+                    window.player.level = parseInt(args[1]) - 1;
                 }
             });
     }
@@ -329,6 +329,8 @@ function nextLevel(fadeOut) {
             window.terminal.log("You sense an erie presence...");
             window.terminal.log("The demon dragon appears to consume your soul");
         }
+		
+		if(player.level == 1) window.terminal.instructions();
 
         // reset entities
         window.entityManager.reset();

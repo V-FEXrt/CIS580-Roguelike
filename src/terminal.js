@@ -23,6 +23,7 @@ function Terminal() {
 
     this.addCommand("help", "Print out all available commands", this.helpCommand.bind(this));
     this.addCommand("clear", "Clear the terminal", this.clear.bind(this));
+	this.addCommand("instructions", "Displays the instruction to play the game", this.instructions.bind(this));
 }
 
 Terminal.prototype.log = function (message, color) {
@@ -40,6 +41,23 @@ Terminal.prototype.clear = function () {
 
 Terminal.prototype.update = function (time) {
 
+}
+
+Terminal.prototype.instructions = function () {
+	this.log("Use WASD or the Arrow Keys to move your player");
+	this.log("Click on an enemy to attack them");
+	this.log("For the most part, you cannot attack through walls");
+	this.log("Attack range is based on class. Knight is 1, Archer is 4 and Mage is anything you can see");
+	this.log("To advance to the next level, find the door");
+	this.log("Health is displayed in the bottom left corner, followed by your armor level and name, then your weapon level, name, and properties");
+	this.log("To toggle the volume, you can hit v on the keyboard");
+	this.log("To activate the terminal, type /");
+	this.log("For further information about the terminal, type help");
+	this.log("A command will appear in this color", window.colors.cmd);
+	this.log("A response to a command will appear in this color", window.colors.cmdResponse);
+	this.log("Invalid command input will appear in this color", window.colors.invalid);
+	this.log("Combat information will appear in this color", window.colors.combat);
+	this.log("Any loot you pick up will appear in this color", window.colors.pickup);
 }
 
 Terminal.prototype.render = function (elapsedTime, ctx) {
