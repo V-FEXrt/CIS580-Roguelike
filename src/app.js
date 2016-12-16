@@ -171,6 +171,10 @@ window.onkeydown = function (event) {
             }
             player.changeDirection("right");
             break;
+        case "v":
+            event.preventDefault();
+            window.sfx.toggleVolume();
+            break;
         case "Escape":
             event.preventDefault();
             if (gui.state == "controls" || gui.state == "credits" || gui.state == "choose class") {

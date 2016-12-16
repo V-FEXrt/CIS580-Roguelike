@@ -846,6 +846,10 @@ window.onkeydown = function (event) {
             }
             player.changeDirection("right");
             break;
+        case "v":
+            event.preventDefault();
+            window.sfx.toggleVolume();
+            break;
         case "Escape":
             event.preventDefault();
             if (gui.state == "controls" || gui.state == "credits" || gui.state == "choose class") {
@@ -2214,11 +2218,24 @@ function GUI(size) {
   this.chosenClass = "";
 }
 
+//SFX Varuable for speaker rendering
+//const SFX = require("./sfx");
+//var sfx = new SFX();
+
 //declare gui elements
 var crest = new Image();
 var pow = new Image();
+var volume1 = new Image();
+var volume2 = new Image();
+var volume3 = new Image();
+var volumeMute = new Image();
 crest.src = encodeURI('healthbar/crest.png');
 pow.src = encodeURI('healthbar/pow.png');
+volume1.src = encodeURI('healthbar/speakerVol1.png');
+volume2.src = encodeURI('healthbar/speakerVol2.png');
+volume3.src = encodeURI('healthbar/speakerVol3.png');
+volumeMute.src = encodeURI('healthbar/speakerMute.png');
+
 
 var x, y;
 GUI.prototype.onmousemove = function(event)
@@ -2373,7 +2390,7 @@ GUI.prototype.render = function (elapsedTime, ctx) {
 		0, 672,
 		288, 96,
 		753 - this.swordHighlights[0]/2, 480 - this.swordHighlights[0]/2,
-		288 +this.swordHighlights[0], 96 + this.swordHighlights[0]
+		288 + this.swordHighlights[0], 96 + this.swordHighlights[0]
 	);
 
 	//Controls
@@ -2475,7 +2492,7 @@ GUI.prototype.render = function (elapsedTime, ctx) {
       1788,
       1116
     );
-    
+
     //Shadow
     ctx.drawImage(
         this.startSprites,
@@ -2484,7 +2501,7 @@ GUI.prototype.render = function (elapsedTime, ctx) {
         581, 338,
         576, 576
     );
-    
+
     //Credits
     ctx.drawImage(
       this.startSprites,
@@ -2506,7 +2523,7 @@ GUI.prototype.render = function (elapsedTime, ctx) {
       1788,
       1116
     );
-    
+
     //Shadow
     ctx.drawImage(
         this.startSprites,
@@ -2515,7 +2532,7 @@ GUI.prototype.render = function (elapsedTime, ctx) {
         581, 338,
         576, 576
     );
-    
+
     //Credits
     ctx.drawImage(
       this.startSprites,
@@ -2553,7 +2570,7 @@ GUI.prototype.render = function (elapsedTime, ctx) {
     ctx.fillStyle = "green";
     ctx.drawImage(crest, 136, 1061);
     if(window.player.combat.armor.level < 10) ctx.fillText(window.player.combat.armor.level, 148.5, 1093);
-    else ctx.fillText(window.player.combat.armor.level, 142.5, 1093);
+    else ctx.fillText(window.player.combat.armor.level, 140, 1093);
 
     ctx.fillStyle = "white";
     ctx.fillText(window.player.combat.armor.name, 187.5, 1094.5)
@@ -2565,15 +2582,28 @@ GUI.prototype.render = function (elapsedTime, ctx) {
 
     ctx.font = "25px Arial Black";
     ctx.fillStyle = "white";
-    var str=`${window.player.combat.weapon.name}, ${window.player.combat.weapon.damageMin + parseInt(window.player.combat.weapon.level)}-${window.player.combat.weapon.damageMax+parseInt(window.player.combat.weapon.level)} Damage, ${window.player.combat.weapon.propertiesShort}`;
+    var str =`${window.player.combat.weapon.name}, ${window.player.combat.weapon.damageMin + window.player.combat.weapon.level}-${window.player.combat.weapon.damageMax+window.player.combat.weapon.level} Damage, ${window.player.combat.weapon.propertiesShort}`;
     ctx.fillText(str, 450, 1095);
 
+    if(window.sfx.returnVolume() == 3) {
+      ctx.drawImage(volume3, 1006, 1061.5, 50, 50);
+    }
+    else if(window.sfx.returnVolume() == 2){
+      ctx.drawImage(volume2, 1006, 1061.5, 50, 50);
+    }
+    else if(window.sfx.returnVolume() == 1) {
+      ctx.drawImage(volume1, 1006, 1061.5, 50, 50);
+    }
+    else {
+      ctx.drawImage(volumeMute, 1006, 1061.5, 50, 50);
+    }
     }
   else if(this.state == "game over")
   {
 
   }
 }
+
 },{}],15:[function(require,module,exports){
 "use strict";
 
@@ -3652,9 +3682,9 @@ var volume = 3;
 var volumeMatrix = [
     // bg, bgOnLoop, health, attack, damage, defense, click, weapon, armor
     [ 0.0,      0.0,    0.0,    0.0,    0.0,     0.0,   0.0,    0.0,   0.0 ], // Volume 0
-    [ 0.1,      0.1,    0.1,    0.1,    0.1,     0.1,   0.1,    0.1,   0.1 ], // Volume 1
-    [ 0.2,      0.2,    0.2,    0.2,    0.2,     0.2,   0.2,    0.2,   0.2 ], // Volume 2
-    [ 0.3,      0.3,    0.3,    0.3,    0.3,     0.3,   0.3,    0.3,   0.3 ]  // Volume 3
+    [ 0.1,      0.1,    0.05,    0.1,    0.033,     0.13,   0.1,    0.1,   0.6 ], // Volume 1
+    [ 0.2,      0.2,    0.1,    0.2,    0.067,     0.27,   0.2,    0.2,   0.13 ], // Volume 2
+    [ 0.3,      0.3,    0.15,    0.3,    0.1,     0.4,   0.3,    0.3,   0.2 ]  // Volume 3
 ];
 
 
@@ -3741,6 +3771,19 @@ SFX.prototype.setVolume = function(args) {
     click.volume = lvls[6];
     weaponPickUp.volume = lvls[7];
     armorPickUp.volume = lvls[8];
+}
+
+SFX.prototype.toggleVolume = function() {
+  if(volume == 3) {
+    this.setVolume(["volume", 0]);
+  }
+  else {
+    this.setVolume(["volume", parseInt(++volume)]);
+  }
+}
+
+SFX.prototype.returnVolume = function() {
+  return volume;
 }
 
 },{}],23:[function(require,module,exports){
