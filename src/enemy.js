@@ -62,7 +62,7 @@ Enemy.prototype.retain = function () {
         if (this.class == "Fucking Dragon") {
             // add stairs
         } else {
-            this.onDeathCB(this.position, this.tilemap);
+            this.onDeathCB(this.position, window.tilemap);
         }
         return false;
     } else {
