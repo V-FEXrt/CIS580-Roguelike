@@ -40,7 +40,7 @@ function SFX() {
     click.src = encodeURI("sounds/click.wav");
     weaponPickUp.src = encodeURI("sounds/weapon-pickup.wav");
     armorPickUp.src = encodeURI("sounds/armor-pickup.wav");
-    attackSound.src = encodeURI("soudns/EnemyHit.wav");
+    attackSound.src = encodeURI("sounds/EnemyHit.wav");
 
     this.setVolume(["volume", "3"]);
     window.terminal.addCommand("volume", "Set the volume", this.setVolume.bind(this));
@@ -111,6 +111,7 @@ SFX.prototype.setVolume = function(args) {
     click.volume = lvls[6];
     weaponPickUp.volume = lvls[7];
     armorPickUp.volume = lvls[8];
+    attackSound.volume = lvls[9];
 }
 
 SFX.prototype.toggleVolume = function() {
