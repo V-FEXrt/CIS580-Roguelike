@@ -3,6 +3,7 @@
 const Tilemap = require('./tilemap');
 const CombatClass = require("./combat_class");
 const Animator = require("./animator.js");
+const Projectile = require ("./projectile_renderer.js");
 module.exports = exports = Enemy;
 
 function Enemy(position, combatClass, target, onDeathCB) {
@@ -17,8 +18,9 @@ function Enemy(position, combatClass, target, onDeathCB) {
     this.target = target;
     this.onDeathCB = onDeathCB;
     this.oldX = this.position.x;
-	this.oldY = this.position.y;
-	this.resolveCollision = false;
+    this.oldY = this.position.y;
+    this.resolveCollision = false;
+    this.projectiles = new Projectile();
 
     if (this.class == "Shaman") {
         this.animator = new Animator(0, "idle", "Shaman");
@@ -70,6 +72,8 @@ Enemy.prototype.playAttack = function (clickPos) {
     if (this.state != "dead" && this.target.state != "dead") {
         var position = window.tilemap.toScreenCoords(this.position);
         var playerPos = window.tilemap.toScreenCoords(this.target.position);
+
+        //if(this.class == "Shaman" || this.class == "Skeleton") this.projectiles.createProjectile(position, playerPos, this.class);
 
         if (playerPos.x < position.x) this.changeDirection("left");
         else if(playerPos.x > position.x ) this.changeDirection("right");

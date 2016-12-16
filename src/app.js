@@ -36,7 +36,6 @@ window.terminal.addCommand("debug", "Toggle debug",
         }
     });
 
-
 var canvas = document.getElementById('screen');
 var game = new Game(canvas, update, render);
 window.sfx = new SFX();
@@ -109,9 +108,11 @@ canvas.onclick = function (event) {
             if (player.combat.weapon.attackType != "Melee" && player.combat.weapon.name != "Magic Missile") {
                 var path = pathfinder.findPath(player.position, enemy.position);
                 if (Vector.magnitude(distance) * 2 >= path.length) {
+                    player.shootProjectile(tilemap.toScreenCoords(enemy.position));
                     combatController.handleAttack(player.combat, enemy.combat);
                 }
             } else {
+                if(player.combat.weapon.name == "Magic Missile") player.shootProjectile(tilemap.toScreenCoords(enemy.position));
                 combatController.handleAttack(player.combat, enemy.combat);
             }
             processTurn();
@@ -276,6 +277,7 @@ function update(elapsedTime) {
         window.terminal.removeCommand("spawn");
         window.terminal.removeCommand("level");
     }
+
 }
 
 /**

@@ -101,6 +101,7 @@ function CombatClass(aName, aLevel) {
                             if (moveOrAttack) {
                                 if (attackCooldown <= 0) {
                                     combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
+                                    aEnemy.playAttack();
                                     attackCooldown = 2;
                                 }
                                 moveOrAttack = 0;
@@ -175,6 +176,7 @@ function CombatClass(aName, aLevel) {
                             if (moveOrAttack) {
                                 if (attackCooldown <= 0) {
                                     combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
+                                    aEnemy.playAttack();
                                     attackCooldown = 2;
                                 }
                                 moveOrAttack = 0;

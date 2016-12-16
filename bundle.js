@@ -480,7 +480,7 @@ function pickAdjacent(room) {
   return {x: x, y: y};
 }
 
-},{"./../vector":26}],4:[function(require,module,exports){
+},{"./../vector":27}],4:[function(require,module,exports){
 "use strict";
 
 const sheetColumns = 10;
@@ -711,7 +711,6 @@ window.terminal.addCommand("debug", "Toggle debug",
         }
     });
 
-
 var canvas = document.getElementById('screen');
 var game = new Game(canvas, update, render);
 window.sfx = new SFX();
@@ -784,9 +783,11 @@ canvas.onclick = function (event) {
             if (player.combat.weapon.attackType != "Melee" && player.combat.weapon.name != "Magic Missile") {
                 var path = pathfinder.findPath(player.position, enemy.position);
                 if (Vector.magnitude(distance) * 2 >= path.length) {
+                    player.shootProjectile(tilemap.toScreenCoords(enemy.position));
                     combatController.handleAttack(player.combat, enemy.combat);
                 }
             } else {
+                if(player.combat.weapon.name == "Magic Missile") player.shootProjectile(tilemap.toScreenCoords(enemy.position));
                 combatController.handleAttack(player.combat, enemy.combat);
             }
             processTurn();
@@ -951,6 +952,7 @@ function update(elapsedTime) {
         window.terminal.removeCommand("spawn");
         window.terminal.removeCommand("level");
     }
+
 }
 
 /**
@@ -1106,7 +1108,7 @@ function unfadeFromBlack() {
     fadeAnimationProgress.isActive = true;
 }
 
-},{"../tilemaps/tiledef.json":28,"./click":7,"./combat_controller":9,"./entity_manager":11,"./entity_spawner":12,"./game":13,"./gui":14,"./pathfinder.js":17,"./player":18,"./progress_manager":20,"./sfx":22,"./stairs":23,"./terminal.js":24,"./tilemap":25,"./vector":26}],6:[function(require,module,exports){
+},{"../tilemaps/tiledef.json":29,"./click":7,"./combat_controller":9,"./entity_manager":11,"./entity_spawner":12,"./game":13,"./gui":14,"./pathfinder.js":17,"./player":18,"./progress_manager":20,"./sfx":23,"./stairs":24,"./terminal.js":25,"./tilemap":26,"./vector":27}],6:[function(require,module,exports){
 "use strict";
 
 module.exports = exports = Armor;
@@ -1358,6 +1360,7 @@ function CombatClass(aName, aLevel) {
                             if (moveOrAttack) {
                                 if (attackCooldown <= 0) {
                                     combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
+                                    aEnemy.playAttack();
                                     attackCooldown = 2;
                                 }
                                 moveOrAttack = 0;
@@ -1432,6 +1435,7 @@ function CombatClass(aName, aLevel) {
                             if (moveOrAttack) {
                                 if (attackCooldown <= 0) {
                                     combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
+                                    aEnemy.playAttack();
                                     attackCooldown = 2;
                                 }
                                 moveOrAttack = 0;
@@ -1483,7 +1487,7 @@ function moveToward(a, b) {
     else return a;
 }
 
-},{"./armor":6,"./rng":21,"./tilemap":25,"./vector":26,"./weapon":27}],9:[function(require,module,exports){
+},{"./armor":6,"./rng":22,"./tilemap":26,"./vector":27,"./weapon":28}],9:[function(require,module,exports){
 "use strict";
 
 module.exports = exports = CombatController;
@@ -1522,6 +1526,8 @@ CombatController.prototype.handleAttack = function (aAttackerClass, aDefenderCla
     var attacker = aAttackerClass.name;
     var defender = aDefenderClass.name;
     var playerAttacker = (attacker == "Knight" || attacker == "Archer" || attacker == "Mage");
+
+
 
     if (lAttackRoll == 1) {
         var lSelfDamage = RNG.rollMultiple(1, 3, Math.max(1, aAttackerClass.weapon.level / 5));
@@ -1714,12 +1720,13 @@ function getWeapons() {
     ];
 }
 
-},{"./armor":6,"./combat_class":8,"./rng":21,"./weapon":27}],10:[function(require,module,exports){
+},{"./armor":6,"./combat_class":8,"./rng":22,"./weapon":28}],10:[function(require,module,exports){
 "use strict";
 
 const Tilemap = require('./tilemap');
 const CombatClass = require("./combat_class");
 const Animator = require("./animator.js");
+const Projectile = require ("./projectile_renderer.js");
 module.exports = exports = Enemy;
 
 function Enemy(position, combatClass, target, onDeathCB) {
@@ -1734,8 +1741,9 @@ function Enemy(position, combatClass, target, onDeathCB) {
     this.target = target;
     this.onDeathCB = onDeathCB;
     this.oldX = this.position.x;
-	this.oldY = this.position.y;
-	this.resolveCollision = false;
+    this.oldY = this.position.y;
+    this.resolveCollision = false;
+    this.projectiles = new Projectile();
 
     if (this.class == "Shaman") {
         this.animator = new Animator(0, "idle", "Shaman");
@@ -1788,6 +1796,8 @@ Enemy.prototype.playAttack = function (clickPos) {
         var position = window.tilemap.toScreenCoords(this.position);
         var playerPos = window.tilemap.toScreenCoords(this.target.position);
 
+        //if(this.class == "Shaman" || this.class == "Skeleton") this.projectiles.createProjectile(position, playerPos, this.class);
+
         if (playerPos.x < position.x) this.changeDirection("left");
         else if(playerPos.x > position.x ) this.changeDirection("right");
 
@@ -1814,7 +1824,7 @@ Enemy.prototype.render = function (elapsedTime, ctx) {
     );
 }
 
-},{"./animator.js":4,"./combat_class":8,"./tilemap":25}],11:[function(require,module,exports){
+},{"./animator.js":4,"./combat_class":8,"./projectile_renderer.js":21,"./tilemap":26}],11:[function(require,module,exports){
 "use strict";
 
 /**
@@ -2157,7 +2167,7 @@ function spawnCommand(args) {
   }
 }
 
-},{"./armor":6,"./enemy":10,"./powerup":19,"./rng":21,"./weapon":27}],13:[function(require,module,exports){
+},{"./armor":6,"./enemy":10,"./powerup":19,"./rng":22,"./weapon":28}],13:[function(require,module,exports){
 "use strict";
 
 /**
@@ -3180,6 +3190,7 @@ const Armor = require('./armor.js');
 const Powerup = require('./powerup.js');
 const Animator = require('./animator.js');
 const EntitySpawner = require('./entity_spawner');
+const Projectile = require('./projectile_renderer');
 /**
  * @module exports the Player class
  */
@@ -3193,6 +3204,7 @@ module.exports = exports = Player;
 function Player(position, combatClass) {
     this.state = "idle";
     this.position = { x: position.x, y: position.y };
+    this.projectiles = new Projectile();
     this.size = { width: 96, height: 96 };
     this.spritesheet = new Image();
     this.spritesheet.src = './spritesheets/player_animations.png';
@@ -3231,6 +3243,7 @@ Player.prototype.update = function (time) {
         this.shouldEndGame = true;
     }
     this.animator.update(time);
+    this.projectiles.update(time);
 }
 
 Player.prototype.debugModeChanged = function () {
@@ -3435,6 +3448,8 @@ Player.prototype.render = function (elapsedTime, ctx) {
         position.x * this.size.width, position.y * this.size.height,
         96, 96
     );
+
+    this.projectiles.render(elapsedTime, ctx);
 }
 
 Player.prototype.killPlayer = function () {
@@ -3468,17 +3483,21 @@ Player.prototype.playAttack = function (clickPos) {
     if (this.state != "dead") {
         this.animator.updateState("attacking");
         var position = window.tilemap.toScreenCoords(this.position);
-
         if (clickPos.x < (position.x * this.size.width + 40)) this.changeDirection("left");
         else this.changeDirection("right");
     }
+}
+
+Player.prototype.shootProjectile = function(enemy)
+{
+  this.projectiles.createProjectile(window.tilemap.toScreenCoords(this.position), enemy, this.class);
 }
 
 function hasUserInput(input) {
     return input.up || input.down || input.right || input.left;
 }
 
-},{"./animator.js":4,"./armor.js":6,"./combat_class":8,"./entity_spawner":12,"./inventory.js":15,"./powerup.js":19,"./tilemap":25,"./vector":26,"./weapon.js":27}],19:[function(require,module,exports){
+},{"./animator.js":4,"./armor.js":6,"./combat_class":8,"./entity_spawner":12,"./inventory.js":15,"./powerup.js":19,"./projectile_renderer":21,"./tilemap":26,"./vector":27,"./weapon.js":28}],19:[function(require,module,exports){
 "use strict";
 
 const Tilemap = require('./tilemap');
@@ -3591,7 +3610,7 @@ Powerup.prototype.render = function(elapsedTime, ctx) {
     }
 }
 
-},{"./rng":21,"./tilemap":25}],20:[function(require,module,exports){
+},{"./rng":22,"./tilemap":26}],20:[function(require,module,exports){
 "use strict";
 
 module.exports = exports = ProgressManager;
@@ -3626,6 +3645,69 @@ ProgressManager.prototype.reset = function(){
 }
 
 },{}],21:[function(require,module,exports){
+"use strict";
+
+const Vector = require('./vector.js');
+const Tilemap = require('./tilemap.js');
+const PROJECTILE_SPEED = 1/5;
+module.exports = exports = Projectile;
+
+/**
+ * @constructor Projectile
+ * Creates a new projectile object
+ * @param {start} desired sprites start Y index on the spritesheet
+ * @param {state} the state of the entity to animate
+ * @param {entityClass} the kind of entity being animated
+ */
+function Projectile() {
+  this.projectiles = [];
+  this.spritesheet = new Image();
+  this.spritesheet.src = './spritesheets/projectile_sprites.png';
+}
+
+Projectile.prototype.createProjectile = function(start, target, type)
+{
+
+  var direction = Vector.subtract(
+    target,
+    start
+   );
+  var velocity = Vector.scale(Vector.normalize(direction), PROJECTILE_SPEED);
+
+  if(type == "Archer" || type == "Skeleton")
+  {
+    var spriteLoc = {x: 0, y: 0};
+  }
+  else if(type == "Mage" || type == "Shaman")
+  {
+    var spriteLoc = {x: 1, y: 0};
+  }
+  var angle =
+  this.projectiles.push({position: start, target: target, velocity: velocity, spriteLoc: spriteLoc, angle: angle });
+}
+
+Projectile.prototype.update = function(time){
+  this.projectiles.forEach(function(projectile, i){
+    projectile.position = Vector.add(projectile.position, projectile.velocity);
+  });
+
+}
+
+Projectile.prototype.render = function (elapsedTime, ctx) {
+  var self = this;
+  this.projectiles.forEach(function(projectile, i){
+
+  ctx.drawImage(
+      self.spritesheet,
+      96 * projectile.spriteLoc.x, 96 * projectile.spriteLoc.y,
+      96, 96,
+      projectile.position.x * 96, projectile.position.y * 96,
+      96, 96
+    );
+  });
+}
+
+},{"./tilemap.js":26,"./vector.js":27}],22:[function(require,module,exports){
 "use strict";
 
 module.exports = exports = {
@@ -3693,7 +3775,7 @@ function oneIn(x) {
 }
 
 
-},{}],22:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 "use strict;"
 
 module.exports = exports = SFX;
@@ -3823,7 +3905,7 @@ SFX.prototype.returnVolume = function() {
   return volume;
 }
 
-},{}],23:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 "use strict";
 
 /**
@@ -3897,7 +3979,7 @@ Stairs.prototype.render = function (elapsedTime, ctx) {
   ctx.drawImage(this.spritesheet, 75 + this.spriteOff, 0, 75, 75, (position.x * this.size.width), (position.y * this.size.height), 96, 96);
 }
 
-},{}],24:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 "use strict";
 
 window.colors = {
@@ -4075,7 +4157,7 @@ function splitMessage(message, messages, color) {
     }
 }
 
-},{}],25:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 "use strict";
 
 const MapGenerator = require('./map_generator');
@@ -4303,7 +4385,7 @@ Tilemap.prototype.getRandomAdjacentArray = function (aTile) {
   return adjacents;
 }
 
-},{"./map_generator":16,"./vector":26}],26:[function(require,module,exports){
+},{"./map_generator":16,"./vector":27}],27:[function(require,module,exports){
 "use strict";
 
 /**
@@ -4411,7 +4493,7 @@ function equals(a, b){
   return a.x == b.x && a.y == b.y;
 }
 
-},{}],27:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 "use strict";
 
 module.exports = exports = Weapon;
@@ -4663,7 +4745,7 @@ Weapon.prototype.toString = function() {
     return `Level ${this.level} ${this.name} with damage range ${this.damageMin + parseInt(this.level)}-${this.damageMax + parseInt(this.level)}, with ${this.properties}`
 }
 
-},{}],28:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 module.exports={
  "tileheight":96,
  "tilewidth":96,

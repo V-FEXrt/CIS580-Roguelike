@@ -9,6 +9,7 @@ const Armor = require('./armor.js');
 const Powerup = require('./powerup.js');
 const Animator = require('./animator.js');
 const EntitySpawner = require('./entity_spawner');
+const Projectile = require('./projectile_renderer');
 /**
  * @module exports the Player class
  */
@@ -22,6 +23,7 @@ module.exports = exports = Player;
 function Player(position, combatClass) {
     this.state = "idle";
     this.position = { x: position.x, y: position.y };
+    this.projectiles = new Projectile();
     this.size = { width: 96, height: 96 };
     this.spritesheet = new Image();
     this.spritesheet.src = './spritesheets/player_animations.png';
@@ -60,6 +62,7 @@ Player.prototype.update = function (time) {
         this.shouldEndGame = true;
     }
     this.animator.update(time);
+    this.projectiles.update(time);
 }
 
 Player.prototype.debugModeChanged = function () {
@@ -264,6 +267,8 @@ Player.prototype.render = function (elapsedTime, ctx) {
         position.x * this.size.width, position.y * this.size.height,
         96, 96
     );
+
+    this.projectiles.render(elapsedTime, ctx);
 }
 
 Player.prototype.killPlayer = function () {
@@ -297,10 +302,14 @@ Player.prototype.playAttack = function (clickPos) {
     if (this.state != "dead") {
         this.animator.updateState("attacking");
         var position = window.tilemap.toScreenCoords(this.position);
-
         if (clickPos.x < (position.x * this.size.width + 40)) this.changeDirection("left");
         else this.changeDirection("right");
     }
+}
+
+Player.prototype.shootProjectile = function(enemy)
+{
+  this.projectiles.createProjectile(window.tilemap.toScreenCoords(this.position), enemy, this.class);
 }
 
 function hasUserInput(input) {

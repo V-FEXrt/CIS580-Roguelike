@@ -37,6 +37,8 @@ CombatController.prototype.handleAttack = function (aAttackerClass, aDefenderCla
     var defender = aDefenderClass.name;
     var playerAttacker = (attacker == "Knight" || attacker == "Archer" || attacker == "Mage");
 
+
+
     if (lAttackRoll == 1) {
         var lSelfDamage = RNG.rollMultiple(1, 3, Math.max(1, aAttackerClass.weapon.level / 5));
         aAttackerClass.health -= lSelfDamage;
