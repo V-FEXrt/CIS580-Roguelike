@@ -93,8 +93,11 @@ Player.prototype.teleportCommand = function (args) {
 }
 
 Player.prototype.healthCommand = function (args) {
-    if (args == 1) window.terminal.log("You must provide an integer value", window.colors.invalid);
-    else this.combat.health = args[1];
+    if (args.length == 1) window.terminal.log("You must provide an integer value", window.colors.invalid);
+    else {
+        window.terminal.log("Set health to " + args[1], window.colors.cmdResponse);
+        this.combat.health = parseInt(args[1]);
+    }
 }
 Player.prototype.walkPath = function (path, completion) {
     if (this.state == "dead") return; // shouldnt be necessary
