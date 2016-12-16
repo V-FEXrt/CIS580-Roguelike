@@ -5,8 +5,8 @@ const Vector = require('./vector');
 const RNG = require("./rng");
 
 // weapon/armor shouldnt be done here...
-// they can still be stored here if necessary, but 
-// I think it might make more sense to have them 
+// they can still be stored here if necessary, but
+// I think it might make more sense to have them
 // directly on the player/enemy?
 const Weapon = require("./weapon");
 const Armor = require("./armor");
@@ -68,7 +68,7 @@ function CombatClass(aName, aLevel) {
                 } else if (distance.x <= senseRange && distance.y <= senseRange) {
                     aEnemy.position = moveToward(aEnemy.position, aEnemy.target.position);
                 } else {
-                    var nextTile = aEnemy.tilemap.getRandomAdjacent(aEnemy.position);
+                    var nextTile = window.tilemap.getRandomAdjacent(aEnemy.position);
                     aEnemy.position = { x: nextTile.x, y: nextTile.y };
                 }
             }
@@ -91,7 +91,7 @@ function CombatClass(aName, aLevel) {
                 var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
 
                 if (distance.x > senseRange && distance.y > senseRange) {
-                    var nextTile = aEnemy.tilemap.getRandomAdjacent(aEnemy.position);
+                    var nextTile = window.tilemap.getRandomAdjacent(aEnemy.position);
                     aEnemy.position = { x: nextTile.x, y: nextTile.y };
                 } else {
                     if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
@@ -106,7 +106,7 @@ function CombatClass(aName, aLevel) {
                                 moveOrAttack = 0;
                             } else {
                                 if (distance.x < prefDist && distance.y < prefDist) {
-                                    aEnemy.position = moveBack(aEnemy.position, aEnemy.target.position, aEnemy.tilemap.getRandomAdjacentArray(aEnemy.position));
+                                    aEnemy.position = moveBack(aEnemy.position, aEnemy.target.position, window.tilemap.getRandomAdjacentArray(aEnemy.position));
                                 } else if (distance.x >= prefDist && distance.y >= prefDist) {
                                     aEnemy.position = moveToward(aEnemy.position, aEnemy.target.position);
                                 }
@@ -142,7 +142,7 @@ function CombatClass(aName, aLevel) {
                 } else if (distance.x <= senseRange && distance.y <= senseRange) {
                     aEnemy.position = moveToward(aEnemy.position, aEnemy.target.position);
                 } else {
-                    var nextTile = aEnemy.tilemap.getRandomAdjacent(aEnemy.position);
+                    var nextTile = window.tilemap.getRandomAdjacent(aEnemy.position);
                     aEnemy.position = { x: nextTile.x, y: nextTile.y };
                 }
             }
@@ -165,7 +165,7 @@ function CombatClass(aName, aLevel) {
                 var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
 
                 if (distance.x > senseRange && distance.y > senseRange) {
-                    var nextTile = aEnemy.tilemap.getRandomAdjacent(aEnemy.position);
+                    var nextTile = window.tilemap.getRandomAdjacent(aEnemy.position);
                     aEnemy.position = { x: nextTile.x, y: nextTile.y };
                 } else {
                     if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
@@ -180,7 +180,7 @@ function CombatClass(aName, aLevel) {
                                 moveOrAttack = 0;
                             } else {
                                 if (distance.x < prefDist && distance.y < prefDist) {
-                                    aEnemy.position = moveBack(aEnemy.position, aEnemy.target.position, aEnemy.tilemap.getRandomAdjacentArray(aEnemy.position));
+                                    aEnemy.position = moveBack(aEnemy.position, aEnemy.target.position, window.tilemap.getRandomAdjacentArray(aEnemy.position));
                                 } else if (distance.x >= prefDist && distance.y >= prefDist) {
                                     aEnemy.position = moveToward(aEnemy.position, aEnemy.target.position);
                                 }
@@ -276,4 +276,3 @@ function moveToward(a, b) {
     if (path.length > 1) return { x: path[1].x, y: path[1].y };
     else return a;
 }
-

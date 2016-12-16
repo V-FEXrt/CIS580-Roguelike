@@ -13,11 +13,10 @@ module.exports = exports = Powerup;
  * Creates a new Powerup object
  * @param {postition} position object specifying an x and y
  */
-function Powerup(position, tilemap, pType) {
+function Powerup(position, pType) {
     this.position = { x: position.x, y: position.y };
     this.size = { width: 96, height: 96 };
     this.spritesheet = new Image();
-    this.tilemap = tilemap;
     this.spritesheet.src = './spritesheets/powerup.png';
     this.type = "Powerup";
     this.animation = true;
@@ -81,7 +80,7 @@ Powerup.prototype.collided = function(entity) {
     }
 	else if(this.resolveCollision && entity.type != "Enemy" && entity.type != "Click") {
 		this.resolveCollision = false;
-		this.position = tilemap.getRandomAdjacent(this.position);
+		this.position = window.tilemap.getRandomAdjacent(this.position);
 	}
 }
 
@@ -94,7 +93,7 @@ Powerup.prototype.retain = function() {
  * {CanvasRenderingContext2D} ctx the context to render into
  */
 Powerup.prototype.render = function(elapsedTime, ctx) {
-    var position = this.tilemap.toScreenCoords(this.position);
+    var position = window.tilemap.toScreenCoords(this.position);
     switch (this.currPower) {
         case 1:
             ctx.drawImage(this.spritesheet, 0, 150, 75, 75, (position.x * this.size.width), (position.y * this.size.height) + this.currY, 96, 96);
@@ -110,4 +109,3 @@ Powerup.prototype.render = function(elapsedTime, ctx) {
             break;
     }
 }
-

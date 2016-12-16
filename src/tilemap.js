@@ -6,7 +6,7 @@ const Vector = require('./vector')
 module.exports = exports = Tilemap;
 
 
-function Tilemap(canvas, width, height, tileset, options) {
+function Tilemap(canvas, width, height, tileset, isBoss, options) {
 
   this.tiles = [];
   this.tileWidth = tileset.tilewidth;
@@ -19,6 +19,8 @@ function Tilemap(canvas, width, height, tileset, options) {
   this.draw.origin = { x: 0, y: 0 };
 
   this.idx = 0;
+
+  this.isBoss = isBoss;
 
   // We add one so that we go slightly beyond the canvas
   this.draw.size = {
@@ -65,7 +67,7 @@ Tilemap.prototype.changeTileset = function () {
   })
 }
 Tilemap.prototype.generateMap = function () {
-  var map = new MapGenerator(this.tileset.edges, this.mapWidth, this.mapHeight);
+  var map = new MapGenerator(this.tileset.edges, this.mapWidth, this.mapHeight, this.isBoss);
 
   // Set up the layer's data array.  We'll try to optimize
   // by keeping the index data type as small as possible
@@ -222,4 +224,3 @@ Tilemap.prototype.getRandomAdjacentArray = function (aTile) {
   adjacents = adjacents.filter(tile => !tile.wall);
   return adjacents;
 }
-

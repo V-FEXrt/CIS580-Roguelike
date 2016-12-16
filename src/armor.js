@@ -72,7 +72,7 @@ function Armor(aName, aLevel) {
 Armor.prototype.collided = function (aEntity) {
     if (this.resolveCollision && aEntity.type != "Player" && aEntity.type != "Click") {
         this.resolveCollision = false;
-        this.position = tilemap.getRandomAdjacent(this.position);
+		this.position = window.tilemap.getRandomAdjacent(this.position);
     }
 }
 

@@ -5,11 +5,10 @@ const CombatClass = require("./combat_class");
 const Animator = require("./animator.js");
 module.exports = exports = Enemy;
 
-function Enemy(position, tilemap, combatClass, target, onDeathCB) {
+function Enemy(position, combatClass, target, onDeathCB) {
     this.state = "idle";
     this.position = { x: position.x, y: position.y };
     this.size = { width: 96, height: 96 };
-    this.tilemap = tilemap;
     this.spritesheet = new Image();
     this.spritesheet.src = "./spritesheets/enemy_animations.png";
     this.type = "Enemy";
@@ -73,8 +72,8 @@ Enemy.prototype.retain = function () {
 
 Enemy.prototype.playAttack = function (clickPos) {
     if (this.state != "dead" && this.target.state != "dead") {
-        var position = this.tilemap.toScreenCoords(this.position);
-        var playerPos = this.tilemap.toScreenCoords(this.target.position);
+        var position = window.tilemap.toScreenCoords(this.position);
+        var playerPos = window.tilemap.toScreenCoords(this.target.position);
 
         if (playerPos.x < position.x) this.changeDirection("left");
         else if (playerPos.x > position.x) this.changeDirection("right");
@@ -92,7 +91,7 @@ Enemy.prototype.changeDirection = function (direction) {
 Enemy.prototype.render = function (elapsedTime, ctx) {
     if (this.state == "dead") return; // shouldnt be necessary
 
-    var position = this.tilemap.toScreenCoords(this.position);
+    var position = window.tilemap.toScreenCoords(this.position);
     ctx.drawImage(
         this.spritesheet,
         96 * this.animator.index.x, 96 * this.animator.index.y,
@@ -101,4 +100,3 @@ Enemy.prototype.render = function (elapsedTime, ctx) {
         96, 96
     );
 }
-

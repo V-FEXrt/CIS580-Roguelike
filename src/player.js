@@ -19,12 +19,11 @@ module.exports = exports = Player;
  * Creates a new player object
  * @param {postition} position object specifying an x and y
  */
-function Player(position, tilemap, combatClass) {
+function Player(position, combatClass) {
     this.state = "idle";
     this.position = { x: position.x, y: position.y };
     this.size = { width: 96, height: 96 };
     this.spritesheet = new Image();
-    this.tilemap = tilemap;
     this.spritesheet.src = './spritesheets/player_animations.png';
     this.type = "Player";
     this.walk = [];
@@ -35,7 +34,7 @@ function Player(position, tilemap, combatClass) {
     this.hasMoved = false;
     this.direction = "right";
     this.oldDirection = "right";
-	this.resolveCollision = false;
+	  this.resolveCollision = false;
     window.terminal.addCommand("class", "Get your player class", this.getClass.bind(this));
     window.terminal.addCommand("kill", "Kill yourself", this.killPlayer.bind(this));
     window.terminal.addCommand("look", "Get info about the item at your feet", this.lookCommand.bind(this));
@@ -90,7 +89,7 @@ Player.prototype.teleportCommand = function (args) {
             window.terminal.log(`Teleporting player to x: ${x} y: ${y}`, window.colors.cmdResponse);
             window.player.position.x = parseInt(x);
             window.player.position.y = parseInt(y);
-            tilemap.moveTo({ x: x - 5, y: y - 5 });
+            window.tilemap.moveTo({ x: x - 5, y: y - 5 });
         }
     }
 }
@@ -205,27 +204,27 @@ Player.prototype.processTurn = function (input) {
         else if (input.left) change.x--;
 
         var position = Vector.add(this.position, change);
-        if (this.tilemap.isWall(position.x, position.y)) return;
+        if (window.tilemap.isWall(position.x, position.y)) return;
 
         this.position = { x: position.x, y: position.y };
     }
 
-    var screenCoor = this.tilemap.toScreenCoords(this.position);
+    var screenCoor = window.tilemap.toScreenCoords(this.position);
 
     if (screenCoor.y < 5) {
-        this.tilemap.moveBy({ x: 0, y: -1 });
+        window.tilemap.moveBy({ x: 0, y: -1 });
     }
 
-    if (screenCoor.y + 5 == this.tilemap.draw.size.height) {
-        this.tilemap.moveBy({ x: 0, y: 1 });
+    if (screenCoor.y + 5 == window.tilemap.draw.size.height) {
+        window.tilemap.moveBy({ x: 0, y: 1 });
     }
 
     if (screenCoor.x < 5) {
-        this.tilemap.moveBy({ x: -1, y: 0 });
+        window.tilemap.moveBy({ x: -1, y: 0 });
     }
 
-    if (screenCoor.x + 5 >= this.tilemap.draw.size.width) {
-        this.tilemap.moveBy({ x: 1, y: 0 });
+    if (screenCoor.x + 5 >= window.tilemap.draw.size.width) {
+        window.tilemap.moveBy({ x: 1, y: 0 });
     }
 
     this.hasMoved = true;
@@ -256,7 +255,7 @@ Player.prototype.retain = function () {
 Player.prototype.render = function (elapsedTime, ctx) {
     //if (this.state == "dead") return; // shouldnt be necessary
 
-    var position = this.tilemap.toScreenCoords(this.position);
+    var position = window.tilemap.toScreenCoords(this.position);
 
     ctx.drawImage(
         this.spritesheet,
@@ -297,7 +296,7 @@ Player.prototype.changeDirection = function (direction) {
 Player.prototype.playAttack = function (clickPos) {
     if (this.state != "dead") {
         this.animator.updateState("attacking");
-        var position = this.tilemap.toScreenCoords(this.position);
+        var position = window.tilemap.toScreenCoords(this.position);
 
         if (clickPos.x < (position.x * this.size.width + 40)) this.changeDirection("left");
         else this.changeDirection("right");

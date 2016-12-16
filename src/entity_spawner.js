@@ -34,12 +34,11 @@ var spawnArray = [
   function () { }
 ]
 
-var tilemap;
+
 var player;
 // percents should be an array of the percent everything should be spawned. in this format
 // [ crystal, red potion, blue potion, green potion, Zombie, Skeleton, Minotaur, Shaman, Empty ]
-function spawn(aPlayer, tmap, count, percents) {
-  tilemap = tmap;
+function spawn(aPlayer, count, percents) {
   player = aPlayer;
   for (var i = 0; i < count; i++) {
     var idx = RNG.rollWeighted(
@@ -63,12 +62,12 @@ function spawn(aPlayer, tmap, count, percents) {
 
 function spawnPowerup(pType) {
   pu++;
-  window.entityManager.addEntity(new Powerup(tilemap.findOpenSpace(), tilemap, pType));
+  window.entityManager.addEntity(new Powerup(window.tilemap.findOpenSpace(), pType));
 }
 
 function spawnEnemy(eType) {
   en++;
-  window.entityManager.addEntity(new Enemy(tilemap.findOpenSpace(), tilemap, eType, player, spawnDrop))
+  window.entityManager.addEntity(new Enemy(window.tilemap.findOpenSpace(), eType, player, spawnDrop))
 }
 
 function spawnDrop(position) {
@@ -135,7 +134,7 @@ function spawnCommand(args) {
           window.terminal.log("Invalid spawn location", window.colors.invalid);
           break;
         }
-        window.entityManager.addEntity(new Powerup({ x: args[3], y: args[4] }, tilemap, parseInt(args[2])));
+        window.entityManager.addEntity(new Powerup({ x: args[3], y: args[4] }, parseInt(args[2])));
         var potions = ["crystal", "health", "defense", "agility"];
         window.terminal.log(`Spawned ${potions[parseInt(args[2]) - 1]} potion`, window.colors.cmdResponse);
         break;
@@ -148,12 +147,12 @@ function spawnCommand(args) {
           window.terminal.log("Invalid enemy type. Please choose from Zombie, Skeleton, Minotaur, or Shaman", window.colors.invalid);
           break;
         }
-        
+
         if(args[3] != parseInt(args[3]) || args[4] != parseInt(args[4])) {
           window.terminal.log("Invalid spawn location", window.colors.invalid);
           break;
         }
-        window.entityManager.addEntity(new Enemy({ x: args[3], y: args[4] }, tilemap, args[2], window.player, spawnDrop));
+        window.entityManager.addEntity(new Enemy({ x: args[3], y: args[4] }, args[2], window.player, spawnDrop));
         window.terminal.log(`Spawned ${args[2]}`, window.colors.cmdResponse);
         break;
       default:

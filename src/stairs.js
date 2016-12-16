@@ -10,11 +10,10 @@ module.exports = exports = Stairs;
  * Creates a new Stairs object
  * @param {postition} position object specifying an x and y
  */
-function Stairs(position, tilemap, travelStairs) {
+function Stairs(position, travelStairs) {
     this.position = { x: position.x, y: position.y };
     this.size = { width: 96, height: 96 };
     this.type = "Stairs";
-    this.tilemap = tilemap;
     this.travelStairs = travelStairs;
 
     this.spritesheet = new Image();
@@ -24,7 +23,7 @@ function Stairs(position, tilemap, travelStairs) {
     this.time = 0;
 
     this.spriteOff = 0;
-	
+
 	this.resolveCollision = false;
 }
 
@@ -67,7 +66,7 @@ Stairs.prototype.retain = function () {
  * {CanvasRenderingContext2D} ctx the context to render into
  */
 Stairs.prototype.render = function (elapsedTime, ctx) {
-  var position = this.tilemap.toScreenCoords(this.position);
+  var position = window.tilemap.toScreenCoords(this.position);
 
   ctx.drawImage(this.spritesheet, 75 + this.spriteOff, 0, 75, 75, (position.x * this.size.width), (position.y * this.size.height), 96, 96);
 }
