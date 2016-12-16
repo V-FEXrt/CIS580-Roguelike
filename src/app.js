@@ -363,7 +363,7 @@ function bossLevel() {
     //place new entities
     EntitySpawner.spawn(player, tilemap, 15, combatController.getPercentArray(true));
 
-    var dragon = new Enemy({ x: 5, y: 2 }, "Fucking Dragon", player, function () {
+    var dragon = new Enemy({ x: 2, y: 1 }, "Fucking Dragon", player, function () {
         stairs = new Stairs({ x: 5, y: 2 }, function () { nextLevel(true) });
         window.entityManager.addEntity(stairs);
     });
