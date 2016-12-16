@@ -19,6 +19,7 @@ const ProgressManager = require('./progress_manager');
 const GUI = require('./gui');
 const Terminal = require('./terminal.js');
 const SFX = require("./sfx");
+const Enemy = require("./enemy");
 
 /* Global variables */
 // Terminal MUST be defined first so that anyone can add commands at any point
@@ -324,9 +325,9 @@ function nextLevel(fadeOut) {
         var padSpace = Math.floor((80 - msg.length) / 2);
         window.terminal.log(Array(padSpace).join(' ') + msg);
 
-        if(isBossLevel){
-          window.terminal.log("You sense an erie presence...");
-          window.terminal.log("The demon dragon appears to consume your soul");
+        if (isBossLevel) {
+            window.terminal.log("You sense an erie presence...");
+            window.terminal.log("The demon dragon appears to consume your soul");
         }
 
         // reset entities
@@ -340,81 +341,84 @@ function nextLevel(fadeOut) {
 
     (fadeOut) ? fadeToBlack(init) : init()
 }
-function bossLevel(){
-  window.tilemap = new Tilemap(screenSize, 11, 11, tileset, true, {
-      onload: function () {}
-  });
-  window.tilemap.generateMap();
 
-  //move player to valid location
-  player.position = { x: 5, y: 6 };
+function bossLevel() {
+    window.tilemap = new Tilemap(screenSize, 11, 11, tileset, true, {
+        onload: function () { }
+    });
+    window.tilemap.generateMap();
 
-  // allow player to move
-  player.shouldProcessTurn = true;
+    //move player to valid location
+    player.position = { x: 5, y: 6 };
 
-  // add player
-  window.entityManager.addEntity(player);
-  player.combat.health += window.combatController.healthPotion(player.level);
+    // allow player to move
+    player.shouldProcessTurn = true;
 
-  // add stairs
-  stairs = new Stairs({ x: 5, y: 2 }, function () { nextLevel(true) });
-  window.entityManager.addEntity(stairs);
-   
-  //place new entities
-  //EntitySpawner.spawn(player, tilemap, 30, combatController.getPercentArray());
+    // add player
+    window.entityManager.addEntity(player);
+    player.combat.health += window.combatController.healthPotion(player.level);
 
+    //place new entities
+    EntitySpawner.spawn(player, tilemap, 15, combatController.getPercentArray(true));
+
+    var dragon = new Enemy({ x: 5, y: 2 }, "Fucking Dragon", player, function () {
+        stairs = new Stairs({ x: 5, y: 2 }, function () { nextLevel(true) });
+        window.entityManager.addEntity(stairs);
+    });
+    dragon.size = { width: 192, height: 192 };
+    entityManager.addEntity(dragon);
 }
-function standardLevel(){
 
-          if(window.tilemap.isBoss){
-            window.tilemap = new Tilemap(screenSize, 65, 65, tileset, false, {
-                onload: function () {}
-            });
-          }
+function standardLevel() {
+    if (window.tilemap.isBoss) {
+        window.tilemap = new Tilemap(screenSize, 65, 65, tileset, false, {
+            onload: function () { }
+        });
+    }
 
-          var regen = false;
+    var regen = false;
 
-          do {
-              //reset the regen flag
-              regen = false;
+    do {
+        //reset the regen flag
+        regen = false;
 
-              //gen new map
-              window.tilemap.changeTileset();
-              window.tilemap.generateMap();
+        //gen new map
+        window.tilemap.changeTileset();
+        window.tilemap.generateMap();
 
-              //move player to valid location
-              var pos = window.tilemap.findOpenSpace();
-              player.position = { x: pos.x, y: pos.y };
-              window.tilemap.moveTo({ x: pos.x - 5, y: pos.y - 5 });
+        //move player to valid location
+        var pos = window.tilemap.findOpenSpace();
+        player.position = { x: pos.x, y: pos.y };
+        window.tilemap.moveTo({ x: pos.x - 5, y: pos.y - 5 });
 
-              // allow player to move
-              player.shouldProcessTurn = true;
+        // allow player to move
+        player.shouldProcessTurn = true;
 
-              // Find stairs location that is at least 8 away.
-              var pos;
-              var dist;
-              var iterations = 0;
-              do {
-                  pos = window.tilemap.findOpenSpace();
-                  dist = pathfinder.findPath(player.position, pos).length
-                  iterations++;
-                  if (iterations > 20) {
-                      regen = true;
-                      break;
-                  }
-              } while (dist == 0 && dist < 8);
+        // Find stairs location that is at least 8 away.
+        var pos;
+        var dist;
+        var iterations = 0;
+        do {
+            pos = window.tilemap.findOpenSpace();
+            dist = pathfinder.findPath(player.position, pos).length
+            iterations++;
+            if (iterations > 20) {
+                regen = true;
+                break;
+            }
+        } while (dist == 0 && dist < 8);
 
-          } while (regen);
+    } while (regen);
 
-          // add player
-          window.entityManager.addEntity(player);
-          player.combat.health += window.combatController.healthPotion(player.level);
+    // add player
+    window.entityManager.addEntity(player);
+    player.combat.health += window.combatController.healthPotion(player.level);
 
-          // add stairs
-          stairs = new Stairs(pos, function () { nextLevel(true) });
-          window.entityManager.addEntity(stairs);
-          //place new entities
-          EntitySpawner.spawn(player, 30, combatController.getPercentArray());
+    // add stairs
+    stairs = new Stairs(pos, function () { nextLevel(true) });
+    window.entityManager.addEntity(stairs);
+    //place new entities
+    EntitySpawner.spawn(player, 30, combatController.getPercentArray(false));
 }
 
 function fadeToBlack(completion) {
@@ -428,3 +432,4 @@ function unfadeFromBlack() {
     fadeAnimationProgress = new ProgressManager(1000, function () { });
     fadeAnimationProgress.isActive = true;
 }
+
