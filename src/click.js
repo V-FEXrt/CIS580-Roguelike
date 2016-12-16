@@ -16,6 +16,8 @@ function Click(position, tilemap, player, collisionCallback) {
   this.player = player;
   this.collisionCallback = collisionCallback;
   this.color = "green"
+  
+  this.resolveCollision = false;
 }
 
 Click.prototype.update = function (time) {

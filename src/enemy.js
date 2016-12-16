@@ -18,6 +18,8 @@ function Enemy(position, tilemap, combatClass, target, onDeathCB) {
     this.target = target;
     this.onDeathCB = onDeathCB;
     this.oldX = this.position.x;
+	this.oldY = this.position.y;
+	this.resolveCollision = false;
     
     if (this.class == "Shaman") {
         this.animator = new Animator(0, "idle", "Shaman");
@@ -40,6 +42,7 @@ Enemy.prototype.processTurn = function () {
     if(this.position.x < this.oldX) this.changeDirection("left");
     else if(this.position.x > this.oldX) this.changeDirection("right");
     this.oldX = this.position.x;
+	this.oldY = this.position.y;
 }
 
 Enemy.prototype.update = function (time) {

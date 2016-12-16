@@ -24,6 +24,8 @@ function Stairs(position, tilemap, travelStairs) {
     this.time = 0;
 
     this.spriteOff = 0;
+	
+	this.resolveCollision = false;
 }
 
 /**
@@ -49,6 +51,10 @@ Stairs.prototype.processTurn = function (input) {
 Stairs.prototype.collided = function (entity) {
   if(entity.type == "Player"){
     this.beginTransition = true;
+  }
+  else if(this.resolveCollision){
+	  this.resolveCollision = false;
+	  entity.resolveCollision = true;
   }
 }
 
