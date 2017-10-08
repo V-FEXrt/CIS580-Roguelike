@@ -694,6 +694,7 @@ const ProgressManager = require('./progress_manager');
 const GUI = require('./gui');
 const Terminal = require('./terminal.js');
 const SFX = require("./sfx");
+const Enemy = require("./enemy");
 
 /* Global variables */
 // Terminal MUST be defined first so that anyone can add commands at any point
@@ -999,9 +1000,9 @@ function nextLevel(fadeOut) {
         var padSpace = Math.floor((80 - msg.length) / 2);
         window.terminal.log(Array(padSpace).join(' ') + msg);
 
-        if(isBossLevel){
-          window.terminal.log("You sense an erie presence...");
-          window.terminal.log("The demon dragon appears to consume your soul");
+        if (isBossLevel) {
+            window.terminal.log("You sense an erie presence...");
+            window.terminal.log("The demon dragon appears to consume your soul");
         }
 		
 		if(player.level == 1) window.terminal.instructions();
@@ -1017,81 +1018,84 @@ function nextLevel(fadeOut) {
 
     (fadeOut) ? fadeToBlack(init) : init()
 }
-function bossLevel(){
-  window.tilemap = new Tilemap(screenSize, 11, 11, tileset, true, {
-      onload: function () {}
-  });
-  window.tilemap.generateMap();
 
-  //move player to valid location
-  player.position = { x: 5, y: 6 };
+function bossLevel() {
+    window.tilemap = new Tilemap(screenSize, 11, 11, tileset, true, {
+        onload: function () { }
+    });
+    window.tilemap.generateMap();
 
-  // allow player to move
-  player.shouldProcessTurn = true;
+    //move player to valid location
+    player.position = { x: 5, y: 6 };
 
-  // add player
-  window.entityManager.addEntity(player);
-  player.combat.health += window.combatController.healthPotion(player.level);
+    // allow player to move
+    player.shouldProcessTurn = true;
 
-  // add stairs
-  stairs = new Stairs({ x: 5, y: 2 }, function () { nextLevel(true) });
-  window.entityManager.addEntity(stairs);
-   
-  //place new entities
-  //EntitySpawner.spawn(player, tilemap, 30, combatController.getPercentArray());
+    // add player
+    window.entityManager.addEntity(player);
+    player.combat.health += window.combatController.healthPotion(player.level);
 
+    //place new entities
+    EntitySpawner.spawn(player, tilemap, 15, combatController.getPercentArray(true));
+
+    var dragon = new Enemy({ x: 2, y: 1 }, "Fucking Dragon", player, function () {
+        stairs = new Stairs({ x: 5, y: 2 }, function () { nextLevel(true) });
+        window.entityManager.addEntity(stairs);
+    });
+    dragon.size = { width: 192, height: 192 };
+    entityManager.addEntity(dragon);
 }
-function standardLevel(){
 
-          if(window.tilemap.isBoss){
-            window.tilemap = new Tilemap(screenSize, 65, 65, tileset, false, {
-                onload: function () {}
-            });
-          }
+function standardLevel() {
+    if (window.tilemap.isBoss) {
+        window.tilemap = new Tilemap(screenSize, 65, 65, tileset, false, {
+            onload: function () { }
+        });
+    }
 
-          var regen = false;
+    var regen = false;
 
-          do {
-              //reset the regen flag
-              regen = false;
+    do {
+        //reset the regen flag
+        regen = false;
 
-              //gen new map
-              window.tilemap.changeTileset();
-              window.tilemap.generateMap();
+        //gen new map
+        window.tilemap.changeTileset();
+        window.tilemap.generateMap();
 
-              //move player to valid location
-              var pos = window.tilemap.findOpenSpace();
-              player.position = { x: pos.x, y: pos.y };
-              window.tilemap.moveTo({ x: pos.x - 5, y: pos.y - 5 });
+        //move player to valid location
+        var pos = window.tilemap.findOpenSpace();
+        player.position = { x: pos.x, y: pos.y };
+        window.tilemap.moveTo({ x: pos.x - 5, y: pos.y - 5 });
 
-              // allow player to move
-              player.shouldProcessTurn = true;
+        // allow player to move
+        player.shouldProcessTurn = true;
 
-              // Find stairs location that is at least 8 away.
-              var pos;
-              var dist;
-              var iterations = 0;
-              do {
-                  pos = window.tilemap.findOpenSpace();
-                  dist = pathfinder.findPath(player.position, pos).length
-                  iterations++;
-                  if (iterations > 20) {
-                      regen = true;
-                      break;
-                  }
-              } while (dist == 0 && dist < 8);
+        // Find stairs location that is at least 8 away.
+        var pos;
+        var dist;
+        var iterations = 0;
+        do {
+            pos = window.tilemap.findOpenSpace();
+            dist = pathfinder.findPath(player.position, pos).length
+            iterations++;
+            if (iterations > 20) {
+                regen = true;
+                break;
+            }
+        } while (dist == 0 && dist < 8);
 
-          } while (regen);
+    } while (regen);
 
-          // add player
-          window.entityManager.addEntity(player);
-          player.combat.health += window.combatController.healthPotion(player.level);
+    // add player
+    window.entityManager.addEntity(player);
+    player.combat.health += window.combatController.healthPotion(player.level);
 
-          // add stairs
-          stairs = new Stairs(pos, function () { nextLevel(true) });
-          window.entityManager.addEntity(stairs);
-          //place new entities
-          EntitySpawner.spawn(player, 30, combatController.getPercentArray());
+    // add stairs
+    stairs = new Stairs(pos, function () { nextLevel(true) });
+    window.entityManager.addEntity(stairs);
+    //place new entities
+    EntitySpawner.spawn(player, 30, combatController.getPercentArray(false));
 }
 
 function fadeToBlack(completion) {
@@ -1106,7 +1110,8 @@ function unfadeFromBlack() {
     fadeAnimationProgress.isActive = true;
 }
 
-},{"../tilemaps/tiledef.json":28,"./click":7,"./combat_controller":9,"./entity_manager":11,"./entity_spawner":12,"./game":13,"./gui":14,"./pathfinder.js":17,"./player":18,"./progress_manager":20,"./sfx":22,"./stairs":23,"./terminal.js":24,"./tilemap":25,"./vector":26}],6:[function(require,module,exports){
+
+},{"../tilemaps/tiledef.json":28,"./click":7,"./combat_controller":9,"./enemy":10,"./entity_manager":11,"./entity_spawner":12,"./game":13,"./gui":14,"./pathfinder.js":17,"./player":18,"./progress_manager":20,"./sfx":22,"./stairs":23,"./terminal.js":24,"./tilemap":25,"./vector":26}],6:[function(require,module,exports){
 "use strict";
 
 module.exports = exports = Armor;
@@ -1137,7 +1142,7 @@ function Armor(aName, aLevel) {
             break;
 
         case "Hide Armor":
-            this.defense = 6;
+            this.defense = 8;
             this.strongType = "b";
             this.weakType = "s";
             break;
@@ -1149,15 +1154,21 @@ function Armor(aName, aLevel) {
             break;
 
         case "Chainmail":
-            this.defense = 14;
+            this.defense = 12;
             this.strongType = "s";
             this.weakType = "p";
             break;
 
         case "Plate Armor":
-            this.defense = 18;
+            this.defense = 15;
             this.strongType = "p";
             this.weakType = "b";
+            break;
+
+        case "Dragonscale":
+            this.defense = 18;
+            this.strongType = "spb"
+            this.weakType = "";
             break;
     }
 
@@ -1166,41 +1177,41 @@ function Armor(aName, aLevel) {
     this.size = { width: 96, height: 96 };
     this.spritesheet = new Image();
     this.spritesheet.src = './spritesheets/powerup.png';
-	this.resolveCollision = false;
+    this.resolveCollision = false;
 
     this.currY = 0;
     this.movingUp = true;
 }
 
-Armor.prototype.collided = function(aEntity) {
-	if(this.resolveCollision && aEntity.type != "Player" && aEntity.type != "Click") {
-		this.resolveCollision = false;
+Armor.prototype.collided = function (aEntity) {
+    if (this.resolveCollision && aEntity.type != "Player" && aEntity.type != "Click") {
+        this.resolveCollision = false;
 		this.position = window.tilemap.getRandomAdjacent(this.position);
-	}
+    }
 }
 
-Armor.prototype.processTurn = function() {
+Armor.prototype.processTurn = function () {
 
 }
 
-Armor.prototype.retain = function() {
+Armor.prototype.retain = function () {
     return this.shouldRetain;
 }
 
-Armor.prototype.update = function() {
+Armor.prototype.update = function () {
     if (this.currY >= 5) this.movingUp = false;
     else if (this.currY <= -5) this.movingUp = true;
     if (this.movingUp) this.currY += .2;
     else this.currY -= .2;
 }
 
-Armor.prototype.render = function(time, ctx) {
+Armor.prototype.render = function (time, ctx) {
     var position = window.tilemap.toScreenCoords(this.position);
     ctx.drawImage(this.spritesheet, 305, 225, 75, 75, (position.x * this.size.width), (position.y * this.size.height) + this.currY, 96, 96);
 
 }
 
-Armor.prototype.toString = function() {
+Armor.prototype.toString = function () {
     return `Level ${this.level} ${this.name} with ${this.defense} defense`;
 }
 
@@ -1454,6 +1465,57 @@ function CombatClass(aName, aLevel) {
                 }
             }
             break;
+
+        case "Fucking Dragon":
+            this.health = 30 + 2 * aLevel;
+            this.attackBonus = 3;
+            this.damageBonus = 5;
+            this.defenseBonus = 3;
+            this.weapon = new Weapon("Dragon's Breath", aLevel);
+            this.armor = new Armor("Dragonscale", aLevel);
+            this.status = { effect: "None", timer: 0 };
+            var senseRange = 20;
+            var prefDist = 3;
+            var attackCooldown = 3;
+            var moveOrAttack = 0;
+
+            this.turnAI = function (aEnemy) {
+                var distance = Vector.distance(aEnemy.position, aEnemy.target.position);
+
+                if (distance.x > senseRange && distance.y > senseRange) {
+                    var nextTile = aEnemy.tilemap.getRandomAdjacent(aEnemy.position);
+                    aEnemy.position = { x: nextTile.x, y: nextTile.y };
+                } else {
+                    if (distance.x <= aEnemy.combat.weapon.range && distance.y <= aEnemy.combat.weapon.range) {
+                        var path = pathfinder.findPath(aEnemy.position, aEnemy.target.position);
+                        var LoS = Vector.magnitude(distance) * 2 >= path.length;
+                        if (LoS) {
+                            if (moveOrAttack) {
+                                if (attackCooldown <= 0) {
+                                    combatController.handleAttack(aEnemy.combat, aEnemy.target.combat);
+                                    attackCooldown = 2;
+                                }
+                                moveOrAttack = 0;
+                            } else {
+                                if (distance.x < prefDist && distance.y < prefDist) {
+                                    aEnemy.position = moveBack(aEnemy.position, aEnemy.target.position, aEnemy.tilemap.getRandomAdjacentArray(aEnemy.position));
+                                } else if (distance.x >= prefDist && distance.y >= prefDist) {
+                                    aEnemy.position = moveToward(aEnemy.position, aEnemy.target.position);
+                                }
+                                moveOrAttack = 1;
+                                attackCooldown = 1;
+                            }
+                            attackCooldown--;
+                        } else {
+                            aEnemy.position = moveToward(aEnemy.position, aEnemy.target.position);
+                        }
+                    } else {
+                        aEnemy.position = moveToward(aEnemy.position, aEnemy.target.position);
+                    }
+                }
+            }
+
+            break;
     }
 }
 
@@ -1636,51 +1698,58 @@ CombatController.prototype.randomDrop = function (aPosition) {
     return lDrop;
 }
 
-CombatController.prototype.getPercentArray = function () {
-    // damage, health, defense, attack, zombie, skeleton, minotaur, shaman, empty
-    var baseWeights = [10, 10, 15, 15, 20, 10, 3, 2, 5];
-    var level = window.player.level;
-    var diff = this.getDifficulty(level);
+CombatController.prototype.getPercentArray = function (aDragonLevel) {
+    if (aDragonLevel) {
+        // damage, health, defense, attack, zombie, skeleton, minotaur, shaman, empty
+        var baseWeights = [15, 25, 15, 15, 0, 0, 0, 0, 5];
+        return baseWeights;
+    } else {
+        // damage, health, defense, attack, zombie, skeleton, minotaur, shaman, empty
+        var baseWeights = [10, 10, 15, 15, 20, 10, 3, 2, 5];
+        var level = window.player.level;
+        var diff = this.getDifficulty(level);
 
-    var damageWeight = baseWeights[0];
-    var healthWeight = baseWeights[1];
-    var defenseWeight = baseWeights[2];
-    var attackWeight = baseWeights[3];
+        var damageWeight = baseWeights[0];
+        var healthWeight = baseWeights[1];
+        var defenseWeight = baseWeights[2];
+        var attackWeight = baseWeights[3];
 
-    var zombieWeight = baseWeights[4] + diff;
-    var skeletonWeight;
-    var minotaurWeight;
-    var shamanWeight;
-    switch (level) {
-        case 1:
-            skeletonWeight = 0;
-            minotaurWeight = 0;
-            shamanWeight = 0;
-            break;
+        var zombieWeight = baseWeights[4] + diff;
+        var skeletonWeight;
+        var minotaurWeight;
+        var shamanWeight;
+        switch (level) {
+            case 1:
+                skeletonWeight = 0;
+                minotaurWeight = 0;
+                shamanWeight = 0;
+                break;
 
-        case 2:
-            skeletonWeight = baseWeights[5] / 2;
-            minotaurWeight = 0;
-            shamanWeight = 0;
-            break;
+            case 2:
+                skeletonWeight = baseWeights[5] / 2;
+                minotaurWeight = 0;
+                shamanWeight = 0;
+                break;
 
-        case 3:
-            skeletonWeight = baseWeights[5];
-            minotaurWeight = 0;
-            shamanWeight = 0;
-            break;
+            case 3:
+                skeletonWeight = baseWeights[5];
+                minotaurWeight = 0;
+                shamanWeight = 0;
+                break;
 
-        default:
-            skeletonWeight = baseWeights[5] + diff;
-            minotaurWeight = diff * baseWeights[6];
-            shamanWeight = diff * baseWeights[7];
-            break;
+            default:
+                skeletonWeight = baseWeights[5] + diff;
+                minotaurWeight = diff * baseWeights[6];
+                shamanWeight = diff * baseWeights[7];
+                break;
+        }
+
+        var emptyWeight = baseWeights[8];
+
+        return [damageWeight, healthWeight, defenseWeight, attackWeight,
+            zombieWeight, skeletonWeight, minotaurWeight, shamanWeight, emptyWeight];
     }
 
-    var emptyWeight = baseWeights[8];
-
-    return [damageWeight, healthWeight, defenseWeight, attackWeight,
-        zombieWeight, skeletonWeight, minotaurWeight, shamanWeight, emptyWeight];
 }
 
 CombatController.prototype.getDifficulty = function (aLevel) {
@@ -1734,8 +1803,8 @@ function Enemy(position, combatClass, target, onDeathCB) {
     this.target = target;
     this.onDeathCB = onDeathCB;
     this.oldX = this.position.x;
-	this.oldY = this.position.y;
-	this.resolveCollision = false;
+    this.oldY = this.position.y;
+    this.resolveCollision = false;
 
     if (this.class == "Shaman") {
         this.animator = new Animator(0, "idle", "Shaman");
@@ -1745,6 +1814,8 @@ function Enemy(position, combatClass, target, onDeathCB) {
         this.animator = new Animator(9, "idle", "Skeleton");
     } else if (this.class == "Minotaur") {
         this.animator = new Animator(6, "idle", "Minotaur");
+    } else if (this.class == "Fucking Dragon") {
+        this.animator = new Animator(12, "idle", "Fucking Dragon");
     }
 }
 
@@ -1755,10 +1826,10 @@ Enemy.prototype.processTurn = function () {
 
     this.combat.turnAI(this);
 
-    if(this.position.x < this.oldX) this.changeDirection("left");
-    else if(this.position.x > this.oldX) this.changeDirection("right");
+    if (this.position.x < this.oldX) this.changeDirection("left");
+    else if (this.position.x > this.oldX) this.changeDirection("right");
     this.oldX = this.position.x;
-	this.oldY = this.position.y;
+    this.oldY = this.position.y;
 }
 
 Enemy.prototype.update = function (time) {
@@ -1776,7 +1847,11 @@ Enemy.prototype.collided = function (entity) {
 
 Enemy.prototype.retain = function () {
     if (this.combat.health <= 0) {
-        this.onDeathCB(this.position, window.tilemap);
+        if (this.class == "Fucking Dragon") {
+            // add stairs
+        } else {
+            this.onDeathCB(this.position, window.tilemap);
+        }
         return false;
     } else {
         return true;
@@ -1789,7 +1864,7 @@ Enemy.prototype.playAttack = function (clickPos) {
         var playerPos = window.tilemap.toScreenCoords(this.target.position);
 
         if (playerPos.x < position.x) this.changeDirection("left");
-        else if(playerPos.x > position.x ) this.changeDirection("right");
+        else if (playerPos.x > position.x) this.changeDirection("right");
 
         this.animator.updateState("attacking");
     }
@@ -1797,22 +1872,32 @@ Enemy.prototype.playAttack = function (clickPos) {
 
 Enemy.prototype.changeDirection = function (direction) {
     if (this.state != "dead") {
-            this.animator.changeDirection(direction);
-        }
+        this.animator.changeDirection(direction);
+    }
 }
 
 Enemy.prototype.render = function (elapsedTime, ctx) {
     if (this.state == "dead") return; // shouldnt be necessary
 
+    ctx.imageSmoothingEnabled = false;
+
     var position = window.tilemap.toScreenCoords(this.position);
-    ctx.drawImage(
+    if (this.name != "Fucking Dragon") ctx.drawImage(
         this.spritesheet,
         96 * this.animator.index.x, 96 * this.animator.index.y,
         96, 96,
         position.x * this.size.width, position.y * this.size.height,
         96, 96
     );
+    else ctx.drawImage(
+        this.spritesheet,
+        96 * this.animator.index.x, 96 * this.animator.index.y,
+        96, 96,
+        position.x * this.size.width, position.y * this.size.height,
+        192, 192
+    );
 }
+
 
 },{"./animator.js":4,"./combat_class":8,"./tilemap":25}],11:[function(require,module,exports){
 "use strict";
@@ -2616,7 +2701,8 @@ GUI.prototype.render = function (elapsedTime, ctx) {
 
     ctx.font = "25px Arial Black";
     ctx.fillStyle = "white";
-    var str =`${window.player.combat.weapon.name}, ${window.player.combat.weapon.damageMin + window.player.combat.weapon.level}-${window.player.combat.weapon.damageMax+window.player.combat.weapon.level} Damage, ${window.player.combat.weapon.propertiesShort}`;
+    var str =`${window.player.combat.weapon.name}, ${window.player.combat.weapon.damageMin + window.player.combat.weapon.level}-${window.player.combat.weapon.damageMax+window.player.combat.weapon.level} Damage`;
+    if(window.player.combat.weapon.proppropertiesShort !="") str = str.concat(`, ${window.player.combat.weapon.propertiesShort}`);
     ctx.fillText(str, 450, 1095);
 
     if(window.sfx.returnVolume() == 3) {
@@ -4618,6 +4704,19 @@ function Weapon(aName, aLevel) {
             this.propertiesShort = "-2 Acc";
             this.spriteIdx = 0;
             break;
+
+        case "Dragon's Breath":
+            this.attackType = "Magic";
+            this.damageMax = 25
+            this.damageMin = 5;
+            this.damageType = "m";
+            this.range = 5;
+            this.hitBonus = 0;
+            this.attackEffect = "Burned";
+            this.properties = "It's fire. From a fucking dragon.";
+            this.propertiesShort = "";
+            this.spriteIdx = 0;
+            break;
     }
 
     // static properties for entities
@@ -4625,41 +4724,41 @@ function Weapon(aName, aLevel) {
     this.size = { width: 96, height: 96 };
     this.spritesheet = new Image();
     this.spritesheet.src = './spritesheets/powerup.png';
-	this.resolveCollision = false;
+    this.resolveCollision = false;
 
     this.currY = 0;
     this.movingUp = true;
 }
 
-Weapon.prototype.collided = function(aEntity) {
-	if(aEntity.type != "Player" && this.resolveCollision && aEntity.type != "Click") {
-		this.resolveCollision = false;
-		this.position = tilemap.getRandomAdjacent(this.position);
-	}
+Weapon.prototype.collided = function (aEntity) {
+    if (aEntity.type != "Player" && this.resolveCollision && aEntity.type != "Click") {
+        this.resolveCollision = false;
+        this.position = tilemap.getRandomAdjacent(this.position);
+    }
 }
 
-Weapon.prototype.processTurn = function() {
+Weapon.prototype.processTurn = function () {
 
 }
 
-Weapon.prototype.retain = function() {
+Weapon.prototype.retain = function () {
     return this.shouldRetain;
 }
 
-Weapon.prototype.update = function() {
+Weapon.prototype.update = function () {
     if (this.currY >= 5) this.movingUp = false;
     else if (this.currY <= -5) this.movingUp = true;
     if (this.movingUp) this.currY += .2;
     else this.currY -= .2;
 }
 
-Weapon.prototype.render = function(time, ctx) {
+Weapon.prototype.render = function (time, ctx) {
     var position = window.tilemap.toScreenCoords(this.position);
     var spriteSource = this.spritePositions[this.spriteIdx];
     ctx.drawImage(this.spritesheet, spriteSource.x, spriteSource.y, 75, 75, (position.x * this.size.width), (position.y * this.size.height) + this.currY, 96, 96);
 }
 
-Weapon.prototype.toString = function() {
+Weapon.prototype.toString = function () {
     return `Level ${this.level} ${this.name} with damage range ${this.damageMin + parseInt(this.level)}-${this.damageMax + parseInt(this.level)}, with ${this.properties}`
 }
 
