@@ -39,6 +39,7 @@ window.terminal.addCommand("debug", "Toggle debug",
 
 
 var canvas = document.getElementById('screen');
+var scale = canvas.width/1788;
 var game = new Game(canvas, update, render);
 window.sfx = new SFX();
 window.entityManager = new EntityManager();
@@ -79,12 +80,12 @@ window.player = player;
 player.shouldProcessTurn = false;
 
 window.onmousemove = function (event) {
-    gui.onmousemove(event);
+    gui.onmousemove(event, scale);
 }
 
 window.onmousedown = function (event) {
     // Init the level when class is chosen
-    if (player.shouldProcessTurn) player.playAttack({ x: event.offsetX, y: event.offsetY });
+    if (player.shouldProcessTurn) player.playAttack({ x: event.offsetX, y: event.offsetY }, scale);
     if (gui.state == "start" || gui.state == "choose class") {
         window.sfx.play("click");
         gui.onmousedown(event);
@@ -99,8 +100,8 @@ window.onmousedown = function (event) {
 
 canvas.onclick = function (event) {
     var node = {
-        x: parseInt(event.offsetX / 96),
-        y: parseInt(event.offsetY / 96)
+        x: parseInt(event.offsetX / (96 * scale)),
+        y: parseInt(event.offsetY / (96 * scale))
     }
 
     var clickedWorldPos = window.tilemap.toWorldCoords(node);
@@ -286,16 +287,20 @@ function update(elapsedTime) {
   * the number of milliseconds passed since the last frame.
   * @param {CanvasRenderingContext2D} ctx the context to render to
   */
-function render(elapsedTime, ctx) {
+
+function render(elapsedTime, ctx) { 
     ctx.fillStyle = "black";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
+ 
+    ctx.scale(scale, scale);
+
 
     window.tilemap.render(ctx);
     entityManager.render(elapsedTime, ctx);
 
     ctx.save();
     ctx.globalAlpha = (isFadeOut) ? fadeAnimationProgress.percent : 1 - fadeAnimationProgress.percent;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, canvas.width/scale, canvas.height/scale);
     ctx.restore();
 
     ctx.fillRect(1060, 0, 732, 1116);
@@ -305,6 +310,8 @@ function render(elapsedTime, ctx) {
     window.terminal.render(elapsedTime, ctx);
 
     gui.render(elapsedTime, ctx);
+
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
 }
 
 /**

@@ -293,12 +293,12 @@ Player.prototype.changeDirection = function (direction) {
     }
 }
 
-Player.prototype.playAttack = function (clickPos) {
+Player.prototype.playAttack = function (clickPos, scale) {
     if (this.state != "dead") {
         this.animator.updateState("attacking");
         var position = window.tilemap.toScreenCoords(this.position);
 
-        if (clickPos.x < (position.x * this.size.width + 40)) this.changeDirection("left");
+        if (clickPos.x < (position.x * (this.size.width + 40) * scale)) this.changeDirection("left");
         else this.changeDirection("right");
     }
 }
