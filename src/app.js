@@ -39,7 +39,7 @@ window.terminal.addCommand("debug", "Toggle debug",
 
 
 var canvas = document.getElementById('screen');
-var scale = canvas.width/1788;
+var scale = canvas.width / 1788;
 var game = new Game(canvas, update, render);
 window.sfx = new SFX();
 window.entityManager = new EntityManager();
@@ -288,10 +288,10 @@ function update(elapsedTime) {
   * @param {CanvasRenderingContext2D} ctx the context to render to
   */
 
-function render(elapsedTime, ctx) { 
+function render(elapsedTime, ctx) {
     ctx.fillStyle = "black";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
- 
+
     ctx.scale(scale, scale);
 
 
@@ -300,7 +300,7 @@ function render(elapsedTime, ctx) {
 
     ctx.save();
     ctx.globalAlpha = (isFadeOut) ? fadeAnimationProgress.percent : 1 - fadeAnimationProgress.percent;
-    ctx.fillRect(0, 0, canvas.width/scale, canvas.height/scale);
+    ctx.fillRect(0, 0, canvas.width / scale, canvas.height / scale);
     ctx.restore();
 
     ctx.fillRect(1060, 0, 732, 1116);
@@ -323,8 +323,11 @@ function processTurn() {
 }
 
 function nextLevel(fadeOut) {
+    if (player.level > 0) {
+        player.score += (player.score * .1) + (Math.floor(player.level / 5 + 1) * 10);
+    }
     player.level++;
-    var isBossLevel = (player.level % 5 == 0);
+    //var isBossLevel = (player.level % 5 == 0);
     var init = function () {
         // clear terminal
         window.terminal.clear();
@@ -332,17 +335,18 @@ function nextLevel(fadeOut) {
         var padSpace = Math.floor((80 - msg.length) / 2);
         window.terminal.log(Array(padSpace).join(' ') + msg);
 
-        if (isBossLevel) {
+        /*if (isBossLevel) {
             window.terminal.log("You sense an erie presence...");
             window.terminal.log("The demon dragon appears to consume your soul");
-        }
-		
-		if(player.level == 1) window.terminal.instructions();
+        }*/
+
+        if (player.level == 1) window.terminal.instructions();
 
         // reset entities
         window.entityManager.reset();
 
-        (isBossLevel) ? bossLevel() : standardLevel();
+        //(isBossLevel) ? bossLevel() : standardLevel();
+        standardLevel();
 
         unfadeFromBlack();
 
