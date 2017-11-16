@@ -24,25 +24,25 @@ function Powerup(position, pType) {
     this.movingUp = true;
     this.currPower = pType;
     this.used = false;
-	this.resolveCollision = false;
+    this.resolveCollision = false;
 }
 
 /**
  * @function updates the Powerup object
  * {DOMHighResTimeStamp} time the elapsed time since the last frame
  */
-Powerup.prototype.update = function(time) {
+Powerup.prototype.update = function (time) {
     if (this.currY >= 5) this.movingUp = false;
     else if (this.currY <= -5) this.movingUp = true;
     if (this.movingUp) this.currY += .2;
     else this.currY -= .2;
 }
 
-Powerup.prototype.processTurn = function(input) {
+Powerup.prototype.processTurn = function (input) {
 
 }
 
-Powerup.prototype.collided = function(entity) {
+Powerup.prototype.collided = function (entity) {
     if (this.used) return;
     if (entity.type == "Player") {
         //Update player's health/strength/item
@@ -77,14 +77,15 @@ Powerup.prototype.collided = function(entity) {
                 this.used = true;
                 break;
         }
+        player.score++;
     }
-	else if(this.resolveCollision && entity.type != "Enemy" && entity.type != "Click") {
-		this.resolveCollision = false;
-		this.position = window.tilemap.getRandomAdjacent(this.position);
-	}
+    else if (this.resolveCollision && entity.type != "Enemy" && entity.type != "Click") {
+        this.resolveCollision = false;
+        this.position = window.tilemap.getRandomAdjacent(this.position);
+    }
 }
 
-Powerup.prototype.retain = function() {
+Powerup.prototype.retain = function () {
     return !this.used;
 }
 
@@ -92,7 +93,7 @@ Powerup.prototype.retain = function() {
  * @function renders the Powerup into the provided context
  * {CanvasRenderingContext2D} ctx the context to render into
  */
-Powerup.prototype.render = function(elapsedTime, ctx) {
+Powerup.prototype.render = function (elapsedTime, ctx) {
     var position = window.tilemap.toScreenCoords(this.position);
     switch (this.currPower) {
         case 1:

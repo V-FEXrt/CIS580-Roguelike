@@ -34,7 +34,8 @@ function Player(position, combatClass) {
     this.hasMoved = false;
     this.direction = "right";
     this.oldDirection = "right";
-	  this.resolveCollision = false;
+    this.resolveCollision = false;
+    this.score = 0;
     window.terminal.addCommand("class", "Get your player class", this.getClass.bind(this));
     window.terminal.addCommand("kill", "Kill yourself", this.killPlayer.bind(this));
     window.terminal.addCommand("look", "Get info about the item at your feet", this.lookCommand.bind(this));
@@ -53,7 +54,6 @@ Player.prototype.update = function (time) {
             this.animator.updateState("dying");
             this.shouldProcessTurn = false;
         }
-
     }
     if (this.animator.state == "dead") {
         this.animator.updateState("nothing");
